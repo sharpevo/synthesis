@@ -27,12 +27,11 @@ type StatementGroup struct {
 func ParseLine(line string) (*Statement, error) {
 	itemList := strings.Split(line, " ")
 	statement := &Statement{}
-	if len(itemList) > 1 {
-		statement.CommandName = itemList[0]
-		statement.Arguments = itemList[1:]
-	} else {
+	if len(itemList) < 2 {
 		return statement, fmt.Errorf("Error: %s", "Invalid syntax")
 	}
+	statement.CommandName = itemList[0]
+	statement.Arguments = itemList[1:]
 	return statement, nil
 }
 
