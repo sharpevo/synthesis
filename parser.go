@@ -88,7 +88,7 @@ func ParseFile(
 				subStatementGroup)
 		case "ASYNC":
 			subStatementGroup, _ := ParseFile(
-				filePath,
+				statement.Arguments[0],
 				ASYNC)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
