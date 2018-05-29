@@ -93,6 +93,8 @@ func TestParseFile(t *testing.T) {
 				"42_test",
 				"43_test",
 				"44_test",
+				"21_test",
+				"22_test",
 				"45_test",
 				"46_test",
 				"47_test",
@@ -120,15 +122,17 @@ func TestParseFile(t *testing.T) {
 					resultList)
 			}
 		case 1:
+
+			expect := append([]string{}, test.r...)
+			get := append([]string{}, resultList...)
 			sort.Strings(test.r)
 			sort.Strings(resultList)
-
 			if !reflect.DeepEqual(resultList, test.r) {
 				t.Errorf(
 					"%d# EXPECT: %v\nGET:%v\n",
 					i,
-					test.r,
-					resultList)
+					expect,
+					get)
 			}
 		}
 	}
