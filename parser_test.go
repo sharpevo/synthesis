@@ -1,6 +1,7 @@
 package commandparser_test
 
 import (
+	"fmt"
 	"posam/commandparser"
 	"reflect"
 	"testing"
@@ -62,6 +63,41 @@ func TestExecute(t *testing.T) {
 				test.r,
 				result)
 
+		}
+	}
+}
+
+func TestParseFile(t *testing.T) {
+	var tests = []struct {
+		f string
+		r []string
+	}{
+		{
+			f: "/home/yang/go/src/posam/commandparser/script1",
+			r: []string{
+				"11_test",
+				"12_test",
+				"21_test",
+				"22_test",
+				"13_test",
+				"14_test",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		statementGroup, err := commandparser.ParseFile(
+			test.f,
+			commandparser.SYNC)
+		if err != nil {
+			fmt.Println(err)
+		}
+		resultList, _ := statementGroup.Execute()
+		if !reflect.DeepEqual(resultList, test.r) {
+			t.Errorf(
+				"EXPECT: %v\nGET:%v\n",
+				test.r,
+				resultList)
 		}
 	}
 }
