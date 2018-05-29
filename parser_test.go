@@ -74,7 +74,7 @@ func TestParseFile(t *testing.T) {
 		r []string
 	}{
 		{
-			f: "/home/yang/go/src/posam/commandparser/script1",
+			f: "/home/yang/go/src/posam/commandparser/testscripts/script1",
 			r: []string{
 				"11_test",
 				"12_test",
@@ -85,7 +85,7 @@ func TestParseFile(t *testing.T) {
 			},
 		},
 		{
-			f: "/home/yang/go/src/posam/commandparser/script3",
+			f: "/home/yang/go/src/posam/commandparser/testscripts/script3",
 			r: []string{
 				"31_test",
 				"32_test",

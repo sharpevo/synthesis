@@ -1,0 +1,5 @@
+TEST 11
+TEST 12
+IMPORT /home/yang/go/src/posam/commandparser/testscripts/script2
+TEST 13
+TEST 14
