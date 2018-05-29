@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"posam/commandparser"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -83,9 +84,25 @@ func TestParseFile(t *testing.T) {
 				"14_test",
 			},
 		},
+		{
+			f: "/home/yang/go/src/posam/commandparser/script3",
+			r: []string{
+				"31_test",
+				"32_test",
+				"41_test",
+				"42_test",
+				"43_test",
+				"44_test",
+				"45_test",
+				"46_test",
+				"47_test",
+				"33_test",
+				"34_test",
+			},
+		},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		statementGroup, err := commandparser.ParseFile(
 			test.f,
 			commandparser.SYNC)
@@ -93,11 +110,26 @@ func TestParseFile(t *testing.T) {
 			fmt.Println(err)
 		}
 		resultList, _ := statementGroup.Execute()
-		if !reflect.DeepEqual(resultList, test.r) {
-			t.Errorf(
-				"EXPECT: %v\nGET:%v\n",
-				test.r,
-				resultList)
+		switch i {
+		case 0:
+			if !reflect.DeepEqual(resultList, test.r) {
+				t.Errorf(
+					"%d# EXPECT: %v\nGET:%v\n",
+					i,
+					test.r,
+					resultList)
+			}
+		case 1:
+			sort.Strings(test.r)
+			sort.Strings(resultList)
+
+			if !reflect.DeepEqual(resultList, test.r) {
+				t.Errorf(
+					"%d# EXPECT: %v\nGET:%v\n",
+					i,
+					test.r,
+					resultList)
+			}
 		}
 	}
 }

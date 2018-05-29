@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
 type ExecutionType int
@@ -57,6 +58,30 @@ func (g *StatementGroup) Execute() ([]string, error) {
 				fmt.Printf("NO MATCH %T!\n", t)
 			}
 		}
+	case ASYNC:
+		var wg sync.WaitGroup
+		wg.Add(len(g.ItemList))
+		for _, itemInterface := range g.ItemList {
+			switch t := itemInterface.(type) {
+			case Statement, *Statement:
+				item, _ := itemInterface.(*Statement)
+				go func() {
+					defer wg.Done()
+					result, _ := item.Execute()
+					resultList = append(resultList, result)
+				}()
+			case StatementGroup, *StatementGroup:
+				item, _ := itemInterface.(*StatementGroup)
+				go func() {
+					defer wg.Done()
+					results, _ := item.Execute()
+					resultList = append(resultList, results...)
+				}()
+			default:
+				fmt.Printf("NO MATCH %T!\n", t)
+			}
+		}
+		wg.Wait()
 	}
 	return resultList, nil
 }
