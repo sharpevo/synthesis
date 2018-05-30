@@ -103,7 +103,7 @@ func ParseFile(
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	defer file.Close()
 	statementGroup := StatementGroup{
