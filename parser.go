@@ -3,6 +3,7 @@ package commandparser
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -44,6 +45,9 @@ func ParseLine(line string) (*Statement, error) {
 }
 
 func (s *Statement) Execute() (string, error) {
+	if _, ok := CommandMap[s.CommandName]; !ok {
+		panic(fmt.Sprintf("Invalid command %q", s.CommandName))
+	}
 	return CommandMap[s.CommandName](s.Arguments...)
 }
 
@@ -96,17 +100,22 @@ func (g *StatementGroup) Execute() ([]string, error) {
 func ParseFile(
 	filePath string,
 	execution ExecutionType) (*StatementGroup, error) {
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 	statementGroup := StatementGroup{
 		Execution: execution,
 	}
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		return &statementGroup, err
-	}
-	defer file.Close()
+	return ParseReader(file, &statementGroup)
+}
 
-	scanner := bufio.NewScanner(file)
+func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGroup, error) {
+
+	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
 		statement, _ := ParseLine(line)
@@ -131,5 +140,6 @@ func ParseFile(
 				statement)
 		}
 	}
-	return &statementGroup, nil
+	return statementGroup, nil
+
 }
