@@ -19,21 +19,13 @@ func TestMain(m *testing.M) {
 var TestCommandMap = map[string]commandparser.FunctionType{
 	"TEST":   CmdTest,
 	"PRINT":  CmdTest,
-	"IMPORT": CmdImport,
-	"ASYNC":  CmdAsync,
-	//"RETRY":  CmdRetry,
+	"IMPORT": commandparser.CmdImport,
+	"ASYNC":  commandparser.CmdAsync,
+	"RETRY":  commandparser.CmdRetry,
 }
 
 func CmdTest(args ...string) (string, error) {
 	return args[0] + "_test", nil
-}
-
-func CmdImport(args ...string) (string, error) {
-	return "", nil
-}
-
-func CmdAsync(args ...string) (string, error) {
-	return "", nil
 }
 
 func TestParseLine(t *testing.T) {
