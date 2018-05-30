@@ -1,0 +1,5 @@
+PRINT 31
+PRINT 32
+ASYNC /home/yang/go/src/posam/ui/testscripts/script4
+PRINT 33
+PRINT 34
