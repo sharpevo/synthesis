@@ -34,15 +34,15 @@ func main() {
 
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(
-		`PRINT 10
-PRINT 11
-IMPORT testscripts/script2
-PRINT 12
-PRINT 13
-RETRY -1 5
-ASYNC testscripts/script3
-PRINT 14
-PRINT 15`)
+		`PRINT 0-1
+PRINT 0-2
+IMPORT testscripts/script1
+PRINT 0-3
+PRINT 0-4
+RETRY -2 5
+ASYNC testscripts/script2
+PRINT 0-5
+PRINT 0-6`)
 
 	widget.Layout().AddWidget(input)
 
