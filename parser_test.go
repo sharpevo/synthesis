@@ -17,6 +17,7 @@ func TestMain(m *testing.M) {
 
 var TestCommandMap = map[string]commandparser.FunctionType{
 	"TEST":   CmdTest,
+	"PRINT":  CmdTest,
 	"IMPORT": CmdImport,
 	"ASYNC":  CmdAsync,
 	//"RETRY":  CmdRetry,

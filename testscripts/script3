@@ -1,5 +1,5 @@
-TEST 31
-TEST 32
+PRINT 31
+PRINT 32
 ASYNC /home/yang/go/src/posam/commandparser/testscripts/script4
-TEST 33
-TEST 34
+PRINT 33
+PRINT 34
