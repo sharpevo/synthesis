@@ -156,6 +156,28 @@ PRINT 15`,
 				"15_test",
 			},
 		},
+		{
+			s: "string",
+			f: `PRINT 10
+PRINT 11
+ASYNC /home/yang/go/src/posam/commandparser/testscripts/scriptWithAsync
+PRINT 12
+PRINT 13`,
+			r: []string{
+				"10_test",
+				"11_test",
+				"31_test",
+				"32_test",
+				"33_test",
+				"34_test",
+				"51_test",
+				"52_test",
+				"53_test",
+				"54_test",
+				"12_test",
+				"13_test",
+			},
+		},
 	}
 
 	for i, test := range tests {
