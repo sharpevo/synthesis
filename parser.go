@@ -99,6 +99,7 @@ func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 			}
 		}
 	case ASYNC:
+		mux := &sync.Mutex{}
 		var wg sync.WaitGroup
 		wg.Add(len(g.ItemList))
 		for _, itemInterface := range g.ItemList {
@@ -108,13 +109,17 @@ func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 				go func() {
 					defer wg.Done()
 					result, _ := item.Execute()
+					mux.Lock()
 					resultList = append(resultList, result)
+					mux.Unlock()
 				}()
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				go func() {
 					results, _ := item.Execute(&wg)
+					mux.Lock()
 					resultList = append(resultList, results...)
+					mux.Unlock()
 				}()
 			default:
 				fmt.Printf("NO MATCH %T!\n", t)
@@ -125,6 +130,7 @@ func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 	if parentWg != nil {
 		parentWg.Done()
 	}
+
 	return resultList, nil
 }
 
