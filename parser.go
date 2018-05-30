@@ -52,7 +52,7 @@ func (s *Statement) Execute() (string, error) {
 	return CommandMap[s.CommandName](s.Arguments...)
 }
 
-func (g *StatementGroup) Execute() ([]string, error) {
+func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 	resultList := []string{}
 	switch g.Execution {
 	case SYNC:
@@ -92,7 +92,7 @@ func (g *StatementGroup) Execute() ([]string, error) {
 				}
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
-				result, _ := item.Execute()
+				result, _ := item.Execute(nil)
 				resultList = append(resultList, result...)
 			default:
 				fmt.Printf("NO MATCH %T!\n", t)
@@ -113,8 +113,7 @@ func (g *StatementGroup) Execute() ([]string, error) {
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				go func() {
-					defer wg.Done()
-					results, _ := item.Execute()
+					results, _ := item.Execute(&wg)
 					resultList = append(resultList, results...)
 				}()
 			default:
@@ -122,6 +121,9 @@ func (g *StatementGroup) Execute() ([]string, error) {
 			}
 		}
 		wg.Wait()
+	}
+	if parentWg != nil {
+		parentWg.Done()
 	}
 	return resultList, nil
 }

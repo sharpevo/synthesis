@@ -165,12 +165,12 @@ PRINT 15`,
 			statementGroup, _ := commandparser.ParseFile(
 				test.f,
 				commandparser.SYNC)
-			resultList, _ = statementGroup.Execute()
+			resultList, _ = statementGroup.Execute(nil)
 		case "string":
 			statementGroup := commandparser.StatementGroup{Execution: commandparser.SYNC}
 			reader := strings.NewReader(test.f)
 			commandparser.ParseReader(reader, &statementGroup)
-			resultList, _ = statementGroup.Execute()
+			resultList, _ = statementGroup.Execute(nil)
 		}
 		switch i {
 		case 0:
