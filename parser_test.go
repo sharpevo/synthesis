@@ -1,11 +1,12 @@
 package commandparser_test
 
 import (
-	"fmt"
+	//"fmt"
 	"os"
 	"posam/commandparser"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -97,10 +98,12 @@ func TestExecute(t *testing.T) {
 
 func TestParseFile(t *testing.T) {
 	var tests = []struct {
+		s string
 		f string
 		r []string
 	}{
 		{
+			s: "file",
 			f: "/home/yang/go/src/posam/commandparser/testscripts/script1",
 			r: []string{
 				"11_test",
@@ -112,33 +115,67 @@ func TestParseFile(t *testing.T) {
 			},
 		},
 		{
+			s: "file",
 			f: "/home/yang/go/src/posam/commandparser/testscripts/script3",
 			r: []string{
 				"31_test",
 				"32_test",
+				"51_test",
+				"52_test",
+				"53_test",
+				"54_test",
+				"33_test",
+				"34_test",
+			},
+		},
+		{
+			s: "string",
+			f: `PRINT 10
+PRINT 11
+IMPORT /home/yang/go/src/posam/commandparser/testscripts/script2
+PRINT 12
+PRINT 13
+ASYNC /home/yang/go/src/posam/commandparser/testscripts/script4
+PRINT 14
+PRINT 15`,
+			r: []string{
+				"10_test",
+				"11_test",
+				"21_test",
+				"22_test",
+				"12_test",
+				"13_test",
 				"41_test",
 				"42_test",
 				"43_test",
 				"44_test",
-				"21_test",
-				"22_test",
 				"45_test",
 				"46_test",
 				"47_test",
-				"33_test",
-				"34_test",
+				"51_test",
+				"52_test",
+				"53_test",
+				"54_test",
+				"14_test",
+				"15_test",
 			},
 		},
 	}
 
 	for i, test := range tests {
-		statementGroup, err := commandparser.ParseFile(
-			test.f,
-			commandparser.SYNC)
-		if err != nil {
-			fmt.Println(err)
+		var resultList []string
+		switch test.s {
+		case "file":
+			statementGroup, _ := commandparser.ParseFile(
+				test.f,
+				commandparser.SYNC)
+			resultList, _ = statementGroup.Execute()
+		case "string":
+			statementGroup := commandparser.StatementGroup{Execution: commandparser.SYNC}
+			reader := strings.NewReader(test.f)
+			commandparser.ParseReader(reader, &statementGroup)
+			resultList, _ = statementGroup.Execute()
 		}
-		resultList, _ := statementGroup.Execute()
 		switch i {
 		case 0:
 			if !reflect.DeepEqual(resultList, test.r) {
@@ -148,8 +185,7 @@ func TestParseFile(t *testing.T) {
 					test.r,
 					resultList)
 			}
-		case 1:
-
+		default:
 			expect := append([]string{}, test.r...)
 			get := append([]string{}, resultList...)
 			sort.Strings(test.r)
@@ -163,4 +199,5 @@ func TestParseFile(t *testing.T) {
 			}
 		}
 	}
+
 }
