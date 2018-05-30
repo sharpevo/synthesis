@@ -135,6 +135,7 @@ PRINT 11
 IMPORT /home/yang/go/src/posam/commandparser/testscripts/script2
 PRINT 12
 PRINT 13
+RETRY -1 3
 ASYNC /home/yang/go/src/posam/commandparser/testscripts/script4
 PRINT 14
 PRINT 15`,
@@ -144,6 +145,9 @@ PRINT 15`,
 				"21_test",
 				"22_test",
 				"12_test",
+				"13_test",
+				"13_test",
+				"13_test",
 				"13_test",
 				"41_test",
 				"42_test",
