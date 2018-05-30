@@ -2,11 +2,37 @@ package commandparser_test
 
 import (
 	"fmt"
+	"os"
 	"posam/commandparser"
 	"reflect"
 	"sort"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	commandparser.Init(TestCommandMap)
+	ret := m.Run()
+	os.Exit(ret)
+}
+
+var TestCommandMap = map[string]commandparser.FunctionType{
+	"TEST":   CmdTest,
+	"IMPORT": CmdImport,
+	"ASYNC":  CmdAsync,
+	//"RETRY":  CmdRetry,
+}
+
+func CmdTest(args ...string) (string, error) {
+	return args[0] + "_test", nil
+}
+
+func CmdImport(args ...string) (string, error) {
+	return "", nil
+}
+
+func CmdAsync(args ...string) (string, error) {
+	return "", nil
+}
 
 func TestParseLine(t *testing.T) {
 	var tests = []struct {

@@ -25,6 +25,13 @@ type StatementGroup struct {
 	ItemList  []interface{}
 }
 
+var CommandMap map[string]FunctionType
+
+func Init(commandMap map[string]FunctionType) error {
+	CommandMap = commandMap
+	return nil
+}
+
 func ParseLine(line string) (*Statement, error) {
 	itemList := strings.Split(line, " ")
 	statement := &Statement{}
