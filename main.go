@@ -46,7 +46,7 @@ PRINT 0-6`)
 
 	widget.Layout().AddWidget(input)
 
-	button := widgets.NewQPushButton2("and click me!", nil)
+	button := widgets.NewQPushButton2("RUN", nil)
 	button.ConnectClicked(func(bool) {
 		command.Init(CommandMap)
 		statementGroup := command.StatementGroup{Execution: command.SYNC}
