@@ -54,7 +54,7 @@ PRINT 0-6`)
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
 		)
-		resultList, _ := statementGroup.Execute()
+		resultList, _ := statementGroup.Execute(nil)
 		widgets.QMessageBox_Information(nil, "OK", strings.Join(resultList, "\n"), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 	})
 	widget.Layout().AddWidget(button)
