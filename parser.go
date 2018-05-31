@@ -53,7 +53,7 @@ func (s *Statement) Execute() (string, error) {
 }
 
 func AsyncExecute(g StatementGroup) []string {
-	resultCh := make(chan interface{})
+	outputCh := make(chan interface{})
 	var wg sync.WaitGroup
 	wg.Add(len(g.ItemList))
 	for _, itemInterface := range g.ItemList {
@@ -62,7 +62,7 @@ func AsyncExecute(g StatementGroup) []string {
 			item, _ := itemInterface.(*Statement)
 			go func() {
 				result, _ := item.Execute()
-				resultCh <- result
+				outputCh <- result
 			}()
 		case StatementGroup, *StatementGroup:
 			item, _ := itemInterface.(*StatementGroup)
@@ -70,7 +70,7 @@ func AsyncExecute(g StatementGroup) []string {
 			go func() {
 				results, _ := item.Execute(nil)
 				for _, result := range results {
-					resultCh <- result
+					outputCh <- result
 				}
 			}()
 		default:
@@ -80,13 +80,13 @@ func AsyncExecute(g StatementGroup) []string {
 	resultList := []string{}
 
 	go func() {
-		for result := range resultCh {
+		for result := range outputCh {
 			resultList = append(resultList, result.(string))
 			wg.Done()
 		}
 	}()
 	wg.Wait()
-	close(resultCh)
+	close(outputCh)
 	return resultList
 }
 
