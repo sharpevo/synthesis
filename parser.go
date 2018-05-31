@@ -99,52 +99,59 @@ func (g *StatementGroup) ExecuteAsync() []string {
 	return outputList
 }
 
+func (g *StatementGroup) ExecuteSync() (outputList []string) {
+
+	for i := 0; i < len(g.ItemList); i++ {
+		itemInterface := g.ItemList[i]
+		switch t := itemInterface.(type) {
+		case Statement, *Statement:
+			item, _ := itemInterface.(*Statement)
+			if item.CommandName == "RETRY" &&
+				// TODO: previous error
+				true {
+				lineNum, _ := strconv.Atoi(item.Arguments[0])
+				count, _ := strconv.Atoi(item.Arguments[1])
+				//fmt.Printf("lineNum: %d\ncount:%d\n", lineNum, count)
+				if count < 1 {
+					// TODO: panic
+					fmt.Printf(
+						"Failed to retry at line %d in %d attempts\n",
+						lineNum,
+						count)
+					continue
+				}
+				newLineIndex := i + lineNum
+				//fmt.Println("ret:", newLineIndex)
+				if newLineIndex < 0 {
+					i = 0
+				} else {
+					i = newLineIndex
+				}
+				count -= 1
+				item.Arguments[1] = strconv.Itoa(count)
+				i -= 1 //trade off the i++
+				continue
+			} else {
+				result, _ := item.Execute()
+				outputList = append(outputList, result)
+			}
+		case StatementGroup, *StatementGroup:
+			item, _ := itemInterface.(*StatementGroup)
+			result, _ := item.Execute(nil)
+			outputList = append(outputList, result...)
+		default:
+			fmt.Printf("NO MATCH %T!\n", t)
+		}
+	}
+	return
+
+}
+
 func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 	outputList := []string{}
 	switch g.Execution {
 	case SYNC:
-		for i := 0; i < len(g.ItemList); i++ {
-			itemInterface := g.ItemList[i]
-			switch t := itemInterface.(type) {
-			case Statement, *Statement:
-				item, _ := itemInterface.(*Statement)
-				if item.CommandName == "RETRY" &&
-					// TODO: previous error
-					true {
-					lineNum, _ := strconv.Atoi(item.Arguments[0])
-					count, _ := strconv.Atoi(item.Arguments[1])
-					//fmt.Printf("lineNum: %d\ncount:%d\n", lineNum, count)
-					if count < 1 {
-						// TODO: panic
-						fmt.Printf(
-							"Failed to retry at line %d in %d attempts\n",
-							lineNum,
-							count)
-						continue
-					}
-					newLineIndex := i + lineNum
-					//fmt.Println("ret:", newLineIndex)
-					if newLineIndex < 0 {
-						i = 0
-					} else {
-						i = newLineIndex
-					}
-					count -= 1
-					item.Arguments[1] = strconv.Itoa(count)
-					i -= 1 //trade off the i++
-					continue
-				} else {
-					result, _ := item.Execute()
-					outputList = append(outputList, result)
-				}
-			case StatementGroup, *StatementGroup:
-				item, _ := itemInterface.(*StatementGroup)
-				result, _ := item.Execute(nil)
-				outputList = append(outputList, result...)
-			default:
-				fmt.Printf("NO MATCH %T!\n", t)
-			}
-		}
+		outputList = append(outputList, g.ExecuteSync()...)
 	case ASYNC:
 		outputList = append(outputList, g.ExecuteAsync()...)
 	}
