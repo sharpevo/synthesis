@@ -52,7 +52,7 @@ func (s *Statement) Execute() (string, error) {
 	return CommandMap[s.CommandName](s.Arguments...)
 }
 
-func AsyncExecute(g StatementGroup) []string {
+func (g *StatementGroup) ExecuteAsync() []string {
 	outputCh := make(chan interface{})
 	errorCh := make(chan error)
 	var wg sync.WaitGroup
@@ -78,14 +78,14 @@ func AsyncExecute(g StatementGroup) []string {
 			fmt.Printf("NO MATCH %T!\n", t)
 		}
 	}
-	resultList := []string{}
+	outputList := []string{}
 
 	go func() {
 		for {
 			select {
 			case output, ok := <-outputCh:
 				if ok {
-					resultList = append(resultList, output.(string))
+					outputList = append(outputList, output.(string))
 					wg.Done()
 				}
 			case err := <-errorCh:
@@ -96,11 +96,11 @@ func AsyncExecute(g StatementGroup) []string {
 	}()
 	wg.Wait()
 	close(outputCh)
-	return resultList
+	return outputList
 }
 
 func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
-	resultList := []string{}
+	outputList := []string{}
 	switch g.Execution {
 	case SYNC:
 		for i := 0; i < len(g.ItemList); i++ {
@@ -135,24 +135,24 @@ func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 					continue
 				} else {
 					result, _ := item.Execute()
-					resultList = append(resultList, result)
+					outputList = append(outputList, result)
 				}
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				result, _ := item.Execute(nil)
-				resultList = append(resultList, result...)
+				outputList = append(outputList, result...)
 			default:
 				fmt.Printf("NO MATCH %T!\n", t)
 			}
 		}
 	case ASYNC:
-		resultList = append(resultList, AsyncExecute(*g)...)
+		outputList = append(outputList, g.ExecuteAsync()...)
 	}
 	if parentWg != nil {
 		parentWg.Done()
 	}
 
-	return resultList, nil
+	return outputList, nil
 }
 
 func ParseFile(
