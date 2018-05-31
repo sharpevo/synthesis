@@ -52,6 +52,44 @@ func (s *Statement) Execute() (string, error) {
 	return CommandMap[s.CommandName](s.Arguments...)
 }
 
+func AsyncExecute(g StatementGroup) []string {
+	resultCh := make(chan string)
+	var wg sync.WaitGroup
+	wg.Add(len(g.ItemList))
+	for _, itemInterface := range g.ItemList {
+		switch t := itemInterface.(type) {
+		case Statement, *Statement:
+			item, _ := itemInterface.(*Statement)
+			go func() {
+				result, _ := item.Execute()
+				resultCh <- result
+			}()
+		case StatementGroup, *StatementGroup:
+			item, _ := itemInterface.(*StatementGroup)
+			wg.Add(len(item.ItemList) - 1)
+			go func() {
+				results, _ := item.Execute(nil)
+				for _, result := range results {
+					resultCh <- result
+				}
+			}()
+		default:
+			fmt.Printf("NO MATCH %T!\n", t)
+		}
+	}
+	resultList := []string{}
+
+	go func() {
+		for result := range resultCh {
+			resultList = append(resultList, result)
+			wg.Done()
+		}
+	}()
+	wg.Wait()
+	close(resultCh)
+	return resultList
+}
+
 func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 	resultList := []string{}
 	switch g.Execution {
@@ -99,33 +137,7 @@ func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 			}
 		}
 	case ASYNC:
-		mux := &sync.Mutex{}
-		var wg sync.WaitGroup
-		wg.Add(len(g.ItemList))
-		for _, itemInterface := range g.ItemList {
-			switch t := itemInterface.(type) {
-			case Statement, *Statement:
-				item, _ := itemInterface.(*Statement)
-				go func() {
-					defer wg.Done()
-					result, _ := item.Execute()
-					mux.Lock()
-					resultList = append(resultList, result)
-					mux.Unlock()
-				}()
-			case StatementGroup, *StatementGroup:
-				item, _ := itemInterface.(*StatementGroup)
-				go func() {
-					results, _ := item.Execute(&wg)
-					mux.Lock()
-					resultList = append(resultList, results...)
-					mux.Unlock()
-				}()
-			default:
-				fmt.Printf("NO MATCH %T!\n", t)
-			}
-		}
-		wg.Wait()
+		resultList = append(resultList, AsyncExecute(*g)...)
 	}
 	if parentWg != nil {
 		parentWg.Done()
