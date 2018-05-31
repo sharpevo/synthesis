@@ -25,8 +25,8 @@ func main() {
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
 	window := widgets.NewQMainWindow(nil, 0)
-	window.SetMinimumSize2(250, 200)
-	window.SetWindowTitle("Hello Widgets Example")
+	window.SetMinimumSize2(500, 400)
+	window.SetWindowTitle("POSaM Control Software by iGeneTech")
 
 	widget := widgets.NewQWidget(nil, 0)
 	widget.SetLayout(widgets.NewQVBoxLayout())
@@ -55,7 +55,7 @@ PRINT 0-6`)
 			&statementGroup,
 		)
 		resultList, _ := statementGroup.Execute(nil)
-		widgets.QMessageBox_Information(nil, "OK", strings.Join(resultList, "\n"), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+		widgets.QMessageBox_Information(nil, "Result", strings.Join(resultList, "\n"), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 	})
 	widget.Layout().AddWidget(button)
 
