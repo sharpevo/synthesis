@@ -109,7 +109,6 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 				true {
 				lineNum, _ := strconv.Atoi(item.Arguments[0])
 				count, _ := strconv.Atoi(item.Arguments[1])
-				//fmt.Printf("lineNum: %d\ncount:%d\n", lineNum, count)
 				if count < 1 {
 					// TODO: panic
 					fmt.Printf(
@@ -119,7 +118,6 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 					continue
 				}
 				newLineIndex := i + lineNum
-				//fmt.Println("ret:", newLineIndex)
 				if newLineIndex < 0 {
 					i = 0
 				} else {
@@ -142,7 +140,6 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 		}
 	}
 	return
-
 }
 
 func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
