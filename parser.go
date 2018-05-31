@@ -52,7 +52,7 @@ func (s *Statement) Execute() (string, error) {
 	return CommandMap[s.CommandName](s.Arguments...)
 }
 
-func (g *StatementGroup) ExecuteAsync() []string {
+func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 	outputCh := make(chan interface{})
 	errorCh := make(chan error)
 	var wg sync.WaitGroup
@@ -78,8 +78,6 @@ func (g *StatementGroup) ExecuteAsync() []string {
 			fmt.Printf("NO MATCH %T!\n", t)
 		}
 	}
-	outputList := []string{}
-
 	go func() {
 		for {
 			select {
@@ -96,7 +94,7 @@ func (g *StatementGroup) ExecuteAsync() []string {
 	}()
 	wg.Wait()
 	close(outputCh)
-	return outputList
+	return
 }
 
 func (g *StatementGroup) ExecuteSync() (outputList []string) {
