@@ -142,8 +142,8 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 	return
 }
 
-func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
-	outputList := []string{}
+func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) (outputList []string, err error) {
+	err = nil
 	switch g.Execution {
 	case SYNC:
 		outputList = append(outputList, g.ExecuteSync()...)
@@ -154,7 +154,7 @@ func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) ([]string, error) {
 		parentWg.Done()
 	}
 
-	return outputList, nil
+	return
 }
 
 func ParseFile(
