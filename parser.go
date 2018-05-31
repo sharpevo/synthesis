@@ -54,6 +54,7 @@ func (s *Statement) Execute() (string, error) {
 
 func AsyncExecute(g StatementGroup) []string {
 	outputCh := make(chan interface{})
+	errorCh := make(chan error)
 	var wg sync.WaitGroup
 	wg.Add(len(g.ItemList))
 	for _, itemInterface := range g.ItemList {
@@ -80,9 +81,17 @@ func AsyncExecute(g StatementGroup) []string {
 	resultList := []string{}
 
 	go func() {
-		for result := range outputCh {
-			resultList = append(resultList, result.(string))
-			wg.Done()
+		for {
+			select {
+			case output, ok := <-outputCh:
+				if ok {
+					resultList = append(resultList, output.(string))
+					wg.Done()
+				}
+			case err := <-errorCh:
+				fmt.Println(err)
+				// TODO: interruption
+			}
 		}
 	}()
 	wg.Wait()
