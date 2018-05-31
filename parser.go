@@ -27,6 +27,11 @@ type StatementGroup struct {
 	ItemList  []interface{}
 }
 
+type Info struct {
+	Line   int
+	Column int
+}
+
 var CommandMap map[string]FunctionType
 
 func Init(commandMap map[string]FunctionType) error {
@@ -53,6 +58,7 @@ func (s *Statement) Execute() (string, error) {
 }
 
 func (g *StatementGroup) ExecuteAsync() (outputList []string) {
+	infoCh := make(chan Info)
 	outputCh := make(chan interface{})
 	errorCh := make(chan error)
 	var wg sync.WaitGroup
@@ -89,6 +95,9 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 			case err := <-errorCh:
 				fmt.Println(err)
 				// TODO: interruption
+			case info := <-infoCh:
+				fmt.Println(info)
+				// TODO: location
 			}
 		}
 	}()
