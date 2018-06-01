@@ -50,7 +50,7 @@ func ParseLine(line string) (*Statement, error) {
 	return statement, nil
 }
 
-func (s *Statement) Execute() (string, error) {
+func (s *Statement) Execute() (interface{}, error) {
 	if _, ok := CommandMap[s.CommandName]; !ok {
 		panic(fmt.Sprintf("Invalid command %q", s.CommandName))
 	}
@@ -138,7 +138,7 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 				continue
 			} else {
 				result, _ := item.Execute()
-				outputList = append(outputList, result)
+				outputList = append(outputList, result.(string))
 			}
 		case StatementGroup, *StatementGroup:
 			item, _ := itemInterface.(*StatementGroup)

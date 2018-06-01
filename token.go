@@ -4,16 +4,16 @@ import (
 //"fmt"
 )
 
-type FunctionType func(...string) (string, error)
+type FunctionType func(...string) (interface{}, error)
 
-func CmdImport(args ...string) (string, error) {
+func CmdImport(args ...string) (interface{}, error) {
 	return "", nil
 }
 
-func CmdAsync(args ...string) (string, error) {
+func CmdAsync(args ...string) (interface{}, error) {
 	return "", nil
 }
 
-func CmdRetry(args ...string) (string, error) {
+func CmdRetry(args ...string) (interface{}, error) {
 	return "", nil
 }

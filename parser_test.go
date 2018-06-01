@@ -24,7 +24,7 @@ var TestCommandMap = map[string]commandparser.FunctionType{
 	"RETRY":  commandparser.CmdRetry,
 }
 
-func CmdTest(args ...string) (string, error) {
+func CmdTest(args ...string) (interface{}, error) {
 	return args[0] + "_test", nil
 }
 
