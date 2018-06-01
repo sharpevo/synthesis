@@ -23,6 +23,7 @@ var TestCommandMap = map[string]commandparser.Commander{
 	"IMPORT": &commandparser.Import,
 	"ASYNC":  &commandparser.Async,
 	"RETRY":  &commandparser.Retry,
+	"MOVEX":  &commandparser.MoveX,
 }
 
 type CommandTest struct {
@@ -183,6 +184,15 @@ PRINT 13`,
 				"54_test",
 				"12_test",
 				"13_test",
+			},
+		},
+		{
+			s: "string",
+			f: `PRINT 10
+MOVEX 5`,
+			r: []string{
+				"10_test",
+				"Movable: 5",
 			},
 		},
 	}

@@ -1,7 +1,7 @@
 package commandparser
 
 import (
-//"fmt"
+	"fmt"
 )
 
 type Commander interface {
@@ -44,8 +44,47 @@ type CommandRetry struct {
 
 var Retry CommandRetry
 
+type CommandMove struct {
+	Command
+}
+
+func (c *CommandMove) Execute(args ...string) (interface{}, error) {
+	if c.isMovable() {
+		result := fmt.Sprintf("Movable: %s", args[0])
+		return result, nil
+	} else {
+		fmt.Println("Can not move")
+		return c.Command.Execute(args...)
+	}
+}
+
+func (c *CommandMove) isMovable() bool {
+	return true
+}
+
+type CommandMoveX struct {
+	CommandMove
+}
+
+var MoveX CommandMoveX
+
+type CommandMoveY struct {
+	CommandMove
+}
+
+var MoveY CommandMoveY
+
+type CommandMoveZ struct {
+	CommandMove
+}
+
+var MoveZ CommandMoveZ
+
 func Init() {
 	Import.SetTitle("IMPORT")
 	Async.SetTitle("ASYNC")
 	Retry.SetTitle("RETRY")
+	MoveX.SetTitle("MOVEX")
+	MoveY.SetTitle("MOVEY")
+	MoveZ.SetTitle("MOVEZ")
 }
