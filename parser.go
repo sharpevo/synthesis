@@ -17,6 +17,8 @@ const (
 	ASYNC
 )
 
+var CommandMap map[string]CommandInterface
+
 type Statement struct {
 	CommandName string
 	Arguments   []string
@@ -32,9 +34,7 @@ type Info struct {
 	Column int
 }
 
-var CommandMap map[string]FunctionType
-
-func Init(commandMap map[string]FunctionType) error {
+func InitParser(commandMap map[string]CommandInterface) error {
 	CommandMap = commandMap
 	return nil
 }
@@ -54,7 +54,8 @@ func (s *Statement) Execute() (interface{}, error) {
 	if _, ok := CommandMap[s.CommandName]; !ok {
 		panic(fmt.Sprintf("Invalid command %q", s.CommandName))
 	}
-	return CommandMap[s.CommandName](s.Arguments...)
+	command := CommandMap[s.CommandName]
+	return command.Execute(s.Arguments...)
 }
 
 func (g *StatementGroup) ExecuteAsync() (outputList []string) {

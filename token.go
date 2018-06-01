@@ -4,16 +4,48 @@ import (
 //"fmt"
 )
 
-type FunctionType func(...string) (interface{}, error)
+type CommandInterface interface {
+	Execute(args ...string) (interface{}, error)
+	// TODO: rb
+}
 
-func CmdImport(args ...string) (interface{}, error) {
+type CommandType struct {
+	title string
+	path  string
+}
+
+func (c CommandType) Title() string {
+	return c.title
+}
+
+func (c *CommandType) SetTitle(title string) {
+	c.title = title
+}
+
+func (c *CommandType) Execute(args ...string) (interface{}, error) {
 	return "", nil
 }
 
-func CmdAsync(args ...string) (interface{}, error) {
-	return "", nil
+type CommandImportType struct {
+	CommandType
 }
 
-func CmdRetry(args ...string) (interface{}, error) {
-	return "", nil
+var CmdImport CommandImportType
+
+type CommandAsyncType struct {
+	CommandType
+}
+
+var CmdAsync CommandAsyncType
+
+type CommandRetryType struct {
+	CommandType
+}
+
+var CmdRetry CommandRetryType
+
+func Init() {
+	CmdImport.SetTitle("IMPORT")
+	CmdAsync.SetTitle("ASYNC")
+	CmdRetry.SetTitle("RETRY")
 }
