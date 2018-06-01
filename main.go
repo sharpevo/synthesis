@@ -9,14 +9,20 @@ import (
 	command "posam/commandparser"
 )
 
-var CommandMap = map[string]command.FunctionType{
-	"PRINT":  CmdPrint,
-	"IMPORT": command.CmdImport,
-	"ASYNC":  command.CmdAsync,
-	"RETRY":  command.CmdRetry,
+var CommandMap = map[string]command.Commander{
+	"PRINT":  &Print,
+	"IMPORT": &command.Import,
+	"ASYNC":  &command.Async,
+	"RETRY":  &command.Retry,
 }
 
-func CmdPrint(args ...string) (string, error) {
+type CommandPrint struct {
+	command.Command
+}
+
+var Print CommandPrint
+
+func (c *CommandPrint) Execute(args ...string) (interface{}, error) {
 	return "Print: " + args[0], nil
 }
 
@@ -48,7 +54,7 @@ PRINT 0-6`)
 
 	button := widgets.NewQPushButton2("RUN", nil)
 	button.ConnectClicked(func(bool) {
-		command.Init(CommandMap)
+		command.InitParser(CommandMap)
 		statementGroup := command.StatementGroup{Execution: command.SYNC}
 		command.ParseReader(
 			strings.NewReader(input.ToPlainText()),
