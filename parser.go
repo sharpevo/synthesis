@@ -17,7 +17,7 @@ const (
 	ASYNC
 )
 
-var CommandMap map[string]CommandInterface
+var CommandMap map[string]Commander
 
 type Statement struct {
 	CommandName string
@@ -34,7 +34,7 @@ type Info struct {
 	Column int
 }
 
-func InitParser(commandMap map[string]CommandInterface) error {
+func InitParser(commandMap map[string]Commander) error {
 	CommandMap = commandMap
 	return nil
 }

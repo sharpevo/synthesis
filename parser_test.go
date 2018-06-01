@@ -12,28 +12,26 @@ import (
 
 func TestMain(m *testing.M) {
 	commandparser.InitParser(TestCommandMap)
-	CmdTest.SetTitle("PRINT")
+	Test.SetTitle("PRINT")
 	ret := m.Run()
 	os.Exit(ret)
 }
 
-//var TestCommandMap = map[string]commandparser.FunctionType{
-//var TestCommandMap = map[string]commandparser.CommandType{
-var TestCommandMap = map[string]commandparser.CommandInterface{
-	"TEST":   &CmdTest,
-	"PRINT":  &CmdTest,
-	"IMPORT": &commandparser.CmdImport,
-	"ASYNC":  &commandparser.CmdAsync,
-	"RETRY":  &commandparser.CmdRetry,
+var TestCommandMap = map[string]commandparser.Commander{
+	"TEST":   &Test,
+	"PRINT":  &Test,
+	"IMPORT": &commandparser.Import,
+	"ASYNC":  &commandparser.Async,
+	"RETRY":  &commandparser.Retry,
 }
 
-type CommandTestType struct {
-	commandparser.CommandType
+type CommandTest struct {
+	commandparser.Command
 }
 
-var CmdTest CommandTestType
+var Test CommandTest
 
-func (c *CommandTestType) Execute(args ...string) (interface{}, error) {
+func (c *CommandTest) Execute(args ...string) (interface{}, error) {
 	return args[0] + "_test", nil
 }
 
