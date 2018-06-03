@@ -52,7 +52,7 @@ func ParseLine(line string) (*Statement, error) {
 
 func (s *Statement) Execute() (interface{}, error) {
 	if _, ok := CommandMap[s.CommandName]; !ok {
-		panic(fmt.Sprintf("Invalid command %q", s.CommandName))
+		return fmt.Sprintf("Invalid command %q", s.CommandName), nil
 	}
 	command := CommandMap[s.CommandName]
 	return command.Execute(s.Arguments...)
