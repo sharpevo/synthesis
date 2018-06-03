@@ -62,6 +62,9 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 	infoCh := make(chan Info)
 	outputCh := make(chan interface{})
 	errorCh := make(chan error)
+	defer close(outputCh)
+	defer close(errorCh)
+	defer close(infoCh)
 	var wg sync.WaitGroup
 	wg.Add(len(g.ItemList))
 	for _, itemInterface := range g.ItemList {
@@ -93,17 +96,22 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 					outputList = append(outputList, output.(string))
 					wg.Done()
 				}
-			case err := <-errorCh:
-				fmt.Println(err)
-				// TODO: interruption
-			case info := <-infoCh:
-				fmt.Println(info)
-				// TODO: location
+			case err, ok := <-errorCh:
+				if ok {
+					// TODO: interruption
+					fmt.Println(ok, err)
+					return
+				}
+			case info, ok := <-infoCh:
+				if ok {
+					// TODO: location
+					fmt.Println(info)
+					return
+				}
 			}
 		}
 	}()
 	wg.Wait()
-	close(outputCh)
 	return
 }
 
