@@ -29,6 +29,11 @@ type StatementGroup struct {
 	ItemList  []interface{}
 }
 
+type Response struct {
+	Error  error
+	Output interface{}
+}
+
 type Info struct {
 	Line   int
 	Column int
@@ -50,12 +55,21 @@ func ParseLine(line string) (*Statement, error) {
 	return statement, nil
 }
 
-func (s *Statement) Execute() (interface{}, error) {
-	if _, ok := CommandMap[s.CommandName]; !ok {
-		return fmt.Sprintf("Invalid command %q", s.CommandName), nil
-	}
-	command := CommandMap[s.CommandName]
-	return command.Execute(s.Arguments...)
+func (s *Statement) Execute() <-chan Response {
+	respc := make(chan Response)
+	go func() {
+		defer close(respc)
+		resp := Response{}
+		if _, ok := CommandMap[s.CommandName]; !ok {
+			resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
+		} else {
+			command := CommandMap[s.CommandName]
+			output, _ := command.Execute(s.Arguments...)
+			resp.Output = output
+		}
+		respc <- resp
+	}()
+	return respc
 }
 
 func (g *StatementGroup) ExecuteAsync() (outputList []string) {
@@ -72,8 +86,11 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 		case Statement, *Statement:
 			item, _ := itemInterface.(*Statement)
 			go func() {
-				result, _ := item.Execute()
-				outputCh <- result
+				resp := <-item.Execute()
+				if resp.Error != nil {
+					fmt.Println(resp.Error)
+				}
+				outputCh <- resp.Output
 			}()
 		case StatementGroup, *StatementGroup:
 			item, _ := itemInterface.(*StatementGroup)
@@ -93,7 +110,7 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 			select {
 			case output, ok := <-outputCh:
 				if ok {
-					outputList = append(outputList, output.(string))
+					outputList = append(outputList, fmt.Sprintf("%v", output))
 					wg.Done()
 				}
 			case err, ok := <-errorCh:
@@ -146,8 +163,11 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 				i -= 1 //trade off the i++
 				continue
 			} else {
-				result, _ := item.Execute()
-				outputList = append(outputList, result.(string))
+				resp := <-item.Execute()
+				if resp.Error != nil {
+					fmt.Println(resp.Error)
+				}
+				outputList = append(outputList, fmt.Sprintf("%v", resp.Output))
 			}
 		case StatementGroup, *StatementGroup:
 			item, _ := itemInterface.(*StatementGroup)

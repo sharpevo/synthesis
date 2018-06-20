@@ -85,7 +85,8 @@ func TestExecute(t *testing.T) {
 
 	for _, test := range tests {
 		statement, _ := commandparser.ParseLine(test.l)
-		result, _ := statement.Execute()
+		resp := <-statement.Execute()
+		result := resp.Output
 		if result != test.r {
 			t.Errorf(
 				"EXPECT: %v\n GET: %v\n\n",
