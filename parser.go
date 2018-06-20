@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	//"time"
 )
 
 type ExecutionType int
@@ -55,24 +56,34 @@ func ParseLine(line string) (*Statement, error) {
 	return statement, nil
 }
 
-func (s *Statement) Execute() <-chan Response {
+func (s *Statement) Execute(terminatec <-chan interface{}) <-chan Response {
 	respc := make(chan Response)
+	resp := Response{}
 	go func() {
 		defer close(respc)
-		resp := Response{}
-		if _, ok := CommandMap[s.CommandName]; !ok {
-			resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
-		} else {
-			command := CommandMap[s.CommandName]
-			output, _ := command.Execute(s.Arguments...)
-			resp.Output = output
+		for {
+			select {
+			case <-terminatec:
+				resp.Error = fmt.Errorf("Terminated %q", s.CommandName)
+				respc <- resp
+			default:
+				//fmt.Println(">>", s.CommandName)
+				if _, ok := CommandMap[s.CommandName]; !ok {
+					resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
+				} else {
+					command := CommandMap[s.CommandName]
+					output, _ := command.Execute(s.Arguments...)
+					resp.Output = output
+				}
+				respc <- resp
+			}
 		}
-		respc <- resp
 	}()
+	//time.Sleep(1 * time.Second)
 	return respc
 }
 
-func (g *StatementGroup) ExecuteAsync() (outputList []string) {
+func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}) (outputList []string) {
 	infoCh := make(chan Info)
 	outputCh := make(chan interface{})
 	errorCh := make(chan error)
@@ -86,7 +97,7 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 		case Statement, *Statement:
 			item, _ := itemInterface.(*Statement)
 			go func() {
-				resp := <-item.Execute()
+				resp := <-item.Execute(terminatec)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				}
@@ -96,7 +107,7 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 			item, _ := itemInterface.(*StatementGroup)
 			wg.Add(len(item.ItemList) - 1)
 			go func() {
-				results, _ := item.Execute(nil)
+				results, _ := item.Execute(terminatec, nil)
 				for _, result := range results {
 					outputCh <- result
 				}
@@ -132,7 +143,7 @@ func (g *StatementGroup) ExecuteAsync() (outputList []string) {
 	return
 }
 
-func (g *StatementGroup) ExecuteSync() (outputList []string) {
+func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}) (outputList []string) {
 
 	for i := 0; i < len(g.ItemList); i++ {
 		itemInterface := g.ItemList[i]
@@ -163,7 +174,7 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 				i -= 1 //trade off the i++
 				continue
 			} else {
-				resp := <-item.Execute()
+				resp := <-item.Execute(terminatec)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				}
@@ -171,7 +182,7 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 			}
 		case StatementGroup, *StatementGroup:
 			item, _ := itemInterface.(*StatementGroup)
-			result, _ := item.Execute(nil)
+			result, _ := item.Execute(terminatec, nil)
 			outputList = append(outputList, result...)
 		default:
 			fmt.Printf("NO MATCH %T!\n", t)
@@ -180,13 +191,13 @@ func (g *StatementGroup) ExecuteSync() (outputList []string) {
 	return
 }
 
-func (g *StatementGroup) Execute(parentWg *sync.WaitGroup) (outputList []string, err error) {
+func (g *StatementGroup) Execute(terminatec <-chan interface{}, parentWg *sync.WaitGroup) (outputList []string, err error) {
 	err = nil
 	switch g.Execution {
 	case SYNC:
-		outputList = append(outputList, g.ExecuteSync()...)
+		outputList = append(outputList, g.ExecuteSync(terminatec)...)
 	case ASYNC:
-		outputList = append(outputList, g.ExecuteAsync()...)
+		outputList = append(outputList, g.ExecuteAsync(terminatec)...)
 	}
 	if parentWg != nil {
 		parentWg.Done()

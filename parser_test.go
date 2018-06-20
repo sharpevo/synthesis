@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	//"time"
 )
 
 func TestMain(m *testing.M) {
@@ -83,9 +84,11 @@ func TestExecute(t *testing.T) {
 		},
 	}
 
+	terminatec := make(chan interface{})
+	defer close(terminatec)
 	for _, test := range tests {
 		statement, _ := commandparser.ParseLine(test.l)
-		resp := <-statement.Execute()
+		resp := <-statement.Execute(terminatec)
 		result := resp.Output
 		if result != test.r {
 			t.Errorf(
@@ -198,6 +201,15 @@ MOVEX 5`,
 		},
 	}
 
+	terminatec := make(chan interface{})
+	defer close(terminatec)
+
+	//timer := time.NewTimer(10 * time.Nanosecond)
+	//go func() {
+	//<-timer.C
+	//close(terminatec)
+	//}()
+
 	for i, test := range tests {
 		var resultList []string
 		switch test.s {
@@ -205,12 +217,12 @@ MOVEX 5`,
 			statementGroup, _ := commandparser.ParseFile(
 				test.f,
 				commandparser.SYNC)
-			resultList, _ = statementGroup.Execute(nil)
+			resultList, _ = statementGroup.Execute(terminatec, nil)
 		case "string":
 			statementGroup := commandparser.StatementGroup{Execution: commandparser.SYNC}
 			reader := strings.NewReader(test.f)
 			commandparser.ParseReader(reader, &statementGroup)
-			resultList, _ = statementGroup.Execute(nil)
+			resultList, _ = statementGroup.Execute(terminatec, nil)
 		}
 		switch i {
 		case 0:
