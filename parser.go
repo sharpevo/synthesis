@@ -80,7 +80,6 @@ func (s *Statement) Execute(terminatec <-chan interface{}, completec chan<- inte
 				resp.Output = output
 				log.Printf("'%s: %s' produces %q\n", s.CommandName, s.Arguments, output)
 				if completec != nil {
-					fmt.Println("Send")
 					completec <- true
 				}
 			}
@@ -205,14 +204,12 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec 
 	return respcc
 }
 
-//func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}) <-chan <-chan Response {
 func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec chan<- interface{}) <-chan <-chan Response {
 
 	log.Println("==== SYNC ====")
 	respcc := make(chan (<-chan Response))
 
 	go func() {
-		//defer close(activatec)
 		defer close(respcc)
 
 		for i := 0; i < len(g.ItemList); i++ {
@@ -248,39 +245,16 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 				} else {
 					respcc <- item.Execute(terminatec, completec)
 					log.Printf("'%s: %s' exit", item.CommandName, item.Arguments)
-					//respc, ok := <-item.Execute(terminatec)
-					//log.Printf("'%s: %s' exit %v\n", item.CommandName, item.Arguments, ok)
-					//respcc <- respc
-					//activatec <- true
-
-					//<-completec
-
-					//select {
-					//case <-terminatec:
-					//log.Println("Terminated")
-					//completec <- true
-					//continue
-					//case <-completec:
-					//}
 				}
-				//<-tryRead(terminatec, completec)
 
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
-				//respcc <- item.Execute(terminatec, nil)
 				respcc <- item.Execute(terminatec, completec)
-				//activatec <- true
 			default:
 				fmt.Printf("NO MATCH %T!\n", t)
 			}
-			//wg.Wait()
-			<-completec
 
-			//select {
-			//case <-terminatec:
-			//break
-			//case <-activatec:
-			//}
+			<-completec
 		}
 
 		if pcompletec != nil {
@@ -291,28 +265,13 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 	return respcc
 }
 
-//func (g *StatementGroup) Execute(terminatec <-chan interface{}, parentWg *sync.WaitGroup) <-chan Response {
 func (g *StatementGroup) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
-
-	select {
-	case <-terminatec:
-		respc := make(chan Response)
-		defer close(respc)
-		resp := Response{}
-		resp.Error = fmt.Errorf("Terminated %q", "Statement Group")
-		respc <- resp
-		return respc
-	default:
-		switch g.Execution {
-		case SYNC:
-			return bridge(terminatec, g.ExecuteSync(terminatec, completec))
-		case ASYNC:
-			return bridge(terminatec, g.ExecuteAsync(terminatec, completec))
-		}
+	switch g.Execution {
+	case SYNC:
+		return bridge(terminatec, g.ExecuteSync(terminatec, completec))
+	case ASYNC:
+		return bridge(terminatec, g.ExecuteAsync(terminatec, completec))
 	}
-	//if parentWg != nil {
-	//parentWg.Done()
-	//}
 	resultc := make(chan Response)
 	close(resultc)
 	return resultc
