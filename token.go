@@ -2,6 +2,8 @@ package commandparser
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 )
 
 type Commander interface {
@@ -79,6 +81,21 @@ type CommandMoveZ struct {
 }
 
 var MoveZ CommandMoveZ
+
+type CommandSleep struct {
+	Command
+}
+
+var Sleep CommandSleep
+
+func (c *CommandSleep) Execute(args ...string) (interface{}, error) {
+	seconds, err := strconv.Atoi(args[0])
+	if err != nil {
+		return nil, err
+	}
+	time.Sleep(time.Duration(seconds) * time.Second)
+	return "", nil
+}
 
 func Init() {
 	Import.SetTitle("IMPORT")
