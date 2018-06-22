@@ -55,11 +55,17 @@ PRINT 0-6`)
 	//result := widgets.NewQTextBrowser(nil)
 	result.SetReadOnly(true)
 
-	terminatec := make(chan interface{})
-	defer close(terminatec)
+	terminatecc := make(chan chan interface{}, 1)
+	defer close(terminatecc)
 
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.ConnectClicked(func(bool) {
+
+		terminatec := make(chan interface{})
+		fmt.Println("run")
+		terminatecc <- terminatec
+		fmt.Println("sent")
+
 		command.InitParser(CommandMap)
 		statementGroup := command.StatementGroup{Execution: command.SYNC}
 		command.ParseReader(
@@ -83,6 +89,7 @@ PRINT 0-6`)
 	termButton := widgets.NewQPushButton2("TERMINATE", nil)
 	termButton.ConnectClicked(func(bool) {
 		go func() {
+			terminatec := <-terminatecc
 			close(terminatec)
 		}()
 	})
