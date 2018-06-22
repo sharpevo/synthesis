@@ -4,12 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
+	//"time"
 )
+
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
+}
 
 type ExecutionType int
 
@@ -56,14 +61,14 @@ func ParseLine(line string) (*Statement, error) {
 	return statement, nil
 }
 
-func (s *Statement) Execute(terminatec <-chan interface{}) <-chan Response {
-	fmt.Println("Run", s.CommandName)
+func (s *Statement) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
 	respc := make(chan Response)
 	resp := Response{}
 	go func() {
 		defer close(respc)
 		select {
 		case <-terminatec:
+			log.Printf("Termiante '%s: %s'\n", s.CommandName, s.Arguments)
 			resp.Error = fmt.Errorf("Terminated %q", s.CommandName)
 			respc <- resp
 		default:
@@ -73,34 +78,33 @@ func (s *Statement) Execute(terminatec <-chan interface{}) <-chan Response {
 				command := CommandMap[s.CommandName]
 				output, _ := command.Execute(s.Arguments...)
 				resp.Output = output
-				fmt.Println("Run Output", s.CommandName, output)
+				log.Printf("'%s: %s' produces %q\n", s.CommandName, s.Arguments, output)
+				if completec != nil {
+					fmt.Println("Send")
+					completec <- true
+				}
 			}
 			respc <- resp
 		}
-		fmt.Println("Run Complete", s.CommandName, resp.Output)
 	}()
-	//time.Sleep(500 * time.Millisecond)
+	log.Printf("'%s: %s' done", s.CommandName, s.Arguments)
+	//time.Sleep(1 * time.Second)
 	return respc
 }
 
 func serialize(terminatec <-chan interface{}, respcs ...<-chan Response) <-chan Response {
-	fmt.Println("Serialize", len(respcs))
 	var wg sync.WaitGroup
 	resultc := make(chan Response)
 
 	swallow := func(respc <-chan Response) {
-		fmt.Println("swallow")
 		for resp := range respc {
 			select {
 			case <-terminatec:
 				return
 			case resultc <- resp:
-				fmt.Printf("swallow assign %q\n", resp.Output)
 			}
 		}
-		//time.Sleep(3 * time.Second)
 		wg.Done()
-		fmt.Println("swallow done")
 	}
 
 	wg.Add(len(respcs))
@@ -110,13 +114,8 @@ func serialize(terminatec <-chan interface{}, respcs ...<-chan Response) <-chan 
 
 	go func() {
 		wg.Wait()
-		fmt.Println("DONE")
-		//panic("done")
-		//time.Sleep(3 * time.Second)
 		close(resultc)
 	}()
-	fmt.Println("Finished")
-	//time.Sleep(1 * time.Second)
 	return resultc
 }
 
@@ -169,14 +168,9 @@ func bridge(terminatec <-chan interface{}, chanc <-chan <-chan Response) <-chan 
 	return valStream
 }
 
-//func write(chanc <-chan <-chan Response) <-chan <-chan Response{
-//go func(){
-//}
-//}
+func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec chan<- interface{}) <-chan <-chan Response {
 
-func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}) <-chan <-chan Response {
-
-	//respcList := []<-chan Response{}
+	log.Println("==== ASYNC ====")
 	respcc := make(chan (<-chan Response))
 
 	go func() {
@@ -189,41 +183,44 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}) <-chan <-ch
 			case Statement, *Statement:
 				item, _ := itemInterface.(*Statement)
 				go func() {
-					respcc <- item.Execute(terminatec)
+					respcc <- item.Execute(terminatec, nil)
 					wg.Done()
-					//respcList = append(respcList, item.Execute(terminatec))
 				}()
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				go func() {
 					respcc <- item.Execute(terminatec, nil)
 					wg.Done()
-					//respcList = append(respcList, item.Execute(terminatec, nil))
 				}()
 			default:
 				fmt.Printf("NO MATCH %T!\n", t)
 			}
 		}
 		wg.Wait()
+		if pcompletec != nil {
+			pcompletec <- true
+		}
 	}()
 
-	//return serialize(terminatec, respcList...)
 	return respcc
 }
 
-//func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}) <-chan Response {
-func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}) <-chan <-chan Response {
-	//respcList := []<-chan Response{}
+//func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}) <-chan <-chan Response {
+func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec chan<- interface{}) <-chan <-chan Response {
 
+	log.Println("==== SYNC ====")
 	respcc := make(chan (<-chan Response))
 
 	go func() {
+		//defer close(activatec)
 		defer close(respcc)
 
 		for i := 0; i < len(g.ItemList); i++ {
+			completec := make(chan interface{})
 			itemInterface := g.ItemList[i]
 			switch t := itemInterface.(type) {
 			case Statement, *Statement:
+
 				item, _ := itemInterface.(*Statement)
 				if item.CommandName == "RETRY" &&
 					// TODO: previous error
@@ -249,89 +246,77 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}) <-chan <-cha
 					i -= 1 //trade off the i++
 					continue
 				} else {
-					respcc <- item.Execute(terminatec)
-					//respcList = append(respcList, item.Execute(terminatec))
-					fmt.Println("ExecuteSync Process", item)
+					respcc <- item.Execute(terminatec, completec)
+					log.Printf("'%s: %s' exit", item.CommandName, item.Arguments)
+					//respc, ok := <-item.Execute(terminatec)
+					//log.Printf("'%s: %s' exit %v\n", item.CommandName, item.Arguments, ok)
+					//respcc <- respc
+					//activatec <- true
+
+					//<-completec
+
+					//select {
+					//case <-terminatec:
+					//log.Println("Terminated")
+					//completec <- true
+					//continue
+					//case <-completec:
+					//}
 				}
+				//<-tryRead(terminatec, completec)
+
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
-				respcc <- item.Execute(terminatec, nil)
-				//respcList = append(respcList, item.Execute(terminatec, nil))
+				//respcc <- item.Execute(terminatec, nil)
+				respcc <- item.Execute(terminatec, completec)
+				//activatec <- true
 			default:
 				fmt.Printf("NO MATCH %T!\n", t)
 			}
+			//wg.Wait()
+			<-completec
+
+			//select {
+			//case <-terminatec:
+			//break
+			//case <-activatec:
+			//}
 		}
 
+		if pcompletec != nil {
+			pcompletec <- true
+		}
 	}()
-	fmt.Println("ExecuteSync completed")
-	time.Sleep(1 * time.Second)
 
-	//return serialize(terminatec, respcList...)
 	return respcc
 }
 
 //func (g *StatementGroup) Execute(terminatec <-chan interface{}, parentWg *sync.WaitGroup) <-chan Response {
-func (g *StatementGroup) Execute(terminatec <-chan interface{}, parentWg *sync.WaitGroup) <-chan Response {
+func (g *StatementGroup) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
 
-	//for {
 	select {
 	case <-terminatec:
-		//respcc := make(chan (<-chan Response))
-		//defer close(respcc)
 		respc := make(chan Response)
 		defer close(respc)
 		resp := Response{}
 		resp.Error = fmt.Errorf("Terminated %q", "Statement Group")
 		respc <- resp
 		return respc
-		//respcc <- respc
-		//return respcc
 	default:
 		switch g.Execution {
 		case SYNC:
-			return bridge(terminatec, g.ExecuteSync(terminatec))
+			return bridge(terminatec, g.ExecuteSync(terminatec, completec))
 		case ASYNC:
-			return bridge(terminatec, g.ExecuteAsync(terminatec))
+			return bridge(terminatec, g.ExecuteAsync(terminatec, completec))
 		}
 	}
+	//if parentWg != nil {
+	//parentWg.Done()
 	//}
 	resultc := make(chan Response)
 	close(resultc)
 	return resultc
-	//resultcc := make(chan (<-chan Response))
-	//close(resultcc)
-	//return resultcc
 }
-
-//func (g *StatementGroup) xExecute(terminatec <-chan interface{}, parentWg *sync.WaitGroup) <-chan Response {
-//respc := make(<-chan Response)
-
-//go func() {
-//defer close(respc)
-//for {
-//select {
-//case <-terminatec:
-//resp := Response{}
-//resp.Error = fmt.Errorf("Terminated %q", "Statement Group")
-//respc <- resp
-//default:
-//switch g.Execution {
-//case SYNC:
-//respc = g.ExecuteSync(terminatec)
-////respc <- <-g.ExecuteSync(terminatec)
-////return g.ExecuteSync(terminatec)
-//case ASYNC:
-//respc = g.ExecuteAsync(terminatec)
-////return g.ExecuteAsync(terminatec)
-////resp := <-g.ExecuteAsync(terminatec)
-////respc <- resp
-//}
-//}
-//}
-//}()
-
-//return respc
-//}
 
 func ParseFile(
 	filePath string,

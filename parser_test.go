@@ -88,7 +88,7 @@ func TestExecute(t *testing.T) {
 	defer close(terminatec)
 	for _, test := range tests {
 		statement, _ := commandparser.ParseLine(test.l)
-		resp := <-statement.Execute(terminatec)
+		resp := <-statement.Execute(terminatec, nil)
 		result := resp.Output
 		if result != test.r {
 			t.Errorf(
@@ -203,9 +203,10 @@ MOVEX 5`,
 
 	terminatec := make(chan interface{})
 	defer close(terminatec)
-	timer := time.NewTimer(3 * time.Second)
+	timer := time.NewTimer(1 * time.Second)
 	go func() {
 		<-timer.C
+		//fmt.Println("T")
 		//close(terminatec)
 	}()
 
@@ -219,7 +220,6 @@ MOVEX 5`,
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
 			for resp := range statementGroup.Execute(terminatec, nil) {
 				//time.Sleep(1 * time.Second)
-				fmt.Println(">>", resp)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				}
@@ -231,7 +231,6 @@ MOVEX 5`,
 			commandparser.ParseReader(reader, &statementGroup)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
 			for resp := range statementGroup.Execute(terminatec, nil) {
-				fmt.Println(">>>", resp.Output)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				}
@@ -248,7 +247,6 @@ MOVEX 5`,
 					resultList)
 			}
 		default:
-			//return
 			expect := append([]string{}, test.r...)
 			get := append([]string{}, resultList...)
 			sort.Strings(test.r)
