@@ -206,7 +206,6 @@ MOVEX 5`,
 	timer := time.NewTimer(1 * time.Second)
 	go func() {
 		<-timer.C
-		//fmt.Println("T")
 		//close(terminatec)
 	}()
 
