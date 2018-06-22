@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,6 +11,7 @@ import (
 
 var CommandMap = map[string]command.Commander{
 	"PRINT":  &Print,
+	"SLEEP":  &command.Sleep,
 	"IMPORT": &command.Import,
 	"ASYNC":  &command.Async,
 	"RETRY":  &command.Retry,
@@ -35,35 +36,73 @@ func main() {
 	window.SetWindowTitle("POSaM Control Software by iGeneTech")
 
 	widget := widgets.NewQWidget(nil, 0)
-	widget.SetLayout(widgets.NewQVBoxLayout())
 	window.SetCentralWidget(widget)
 
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(
 		`PRINT 0-1
-PRINT 0-2
+PRIN2T 0-2
 IMPORT testscripts/script1
 PRINT 0-3
 PRINT 0-4
 RETRY -2 5
+SLEEP 5
 ASYNC testscripts/script2
 PRINT 0-5
 PRINT 0-6`)
 
-	widget.Layout().AddWidget(input)
+	result := widgets.NewQTextEdit(nil)
+	//result := widgets.NewQTextBrowser(nil)
+	result.SetReadOnly(true)
 
-	button := widgets.NewQPushButton2("RUN", nil)
-	button.ConnectClicked(func(bool) {
+	terminatec := make(chan interface{})
+	defer close(terminatec)
+
+	runButton := widgets.NewQPushButton2("RUN", nil)
+	runButton.ConnectClicked(func(bool) {
 		command.InitParser(CommandMap)
 		statementGroup := command.StatementGroup{Execution: command.SYNC}
 		command.ParseReader(
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
 		)
-		resultList, _ := statementGroup.Execute(nil)
-		widgets.QMessageBox_Information(nil, "Result", strings.Join(resultList, "\n"), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+		resultList := []string{}
+
+		go func() {
+			for resp := range statementGroup.Execute(terminatec, nil) {
+				if resp.Error != nil {
+					//fmt.Println(resp.Error)
+					resultList = append(resultList, fmt.Sprintf("%s", resp.Error))
+				}
+				resultList = append(resultList, fmt.Sprintf("%s", resp.Output))
+				result.SetText(strings.Join(resultList, "\n"))
+			}
+		}()
 	})
-	widget.Layout().AddWidget(button)
+
+	termButton := widgets.NewQPushButton2("TERMINATE", nil)
+	termButton.ConnectClicked(func(bool) {
+		go func() {
+			close(terminatec)
+		}()
+	})
+
+	inputGroup := widgets.NewQGroupBox2("Input", nil)
+	inputLayout := widgets.NewQGridLayout2()
+	inputLayout.AddWidget(input, 0, 0, 0)
+	inputLayout.AddWidget(runButton, 1, 0, 0)
+	inputGroup.SetLayout(inputLayout)
+
+	outputGroup := widgets.NewQGroupBox2("Output", nil)
+	outputLayout := widgets.NewQGridLayout2()
+	outputLayout.AddWidget(result, 0, 0, 0)
+	outputLayout.AddWidget(termButton, 1, 0, 0)
+	outputGroup.SetLayout(outputLayout)
+
+	layout := widgets.NewQGridLayout2()
+	layout.AddWidget(inputGroup, 0, 0, 0)
+	layout.AddWidget(outputGroup, 0, 1, 0)
+	widget.SetLayout(layout)
 
 	window.Show()
 	app.Exec()
