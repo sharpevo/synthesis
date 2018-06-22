@@ -1,14 +1,14 @@
 package commandparser_test
 
 import (
-	//"fmt"
+	"fmt"
 	"os"
 	"posam/commandparser"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
-	//"time"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -203,12 +203,11 @@ MOVEX 5`,
 
 	terminatec := make(chan interface{})
 	defer close(terminatec)
-
-	//timer := time.NewTimer(10 * time.Nanosecond)
-	//go func() {
-	//<-timer.C
-	//close(terminatec)
-	//}()
+	timer := time.NewTimer(3 * time.Second)
+	go func() {
+		<-timer.C
+		//close(terminatec)
+	}()
 
 	for i, test := range tests {
 		var resultList []string
@@ -217,12 +216,27 @@ MOVEX 5`,
 			statementGroup, _ := commandparser.ParseFile(
 				test.f,
 				commandparser.SYNC)
-			resultList, _ = statementGroup.Execute(terminatec, nil)
+			//resultList, _ = statementGroup.Execute(terminatec, nil)
+			for resp := range statementGroup.Execute(terminatec, nil) {
+				//time.Sleep(1 * time.Second)
+				fmt.Println(">>", resp)
+				if resp.Error != nil {
+					fmt.Println(resp.Error)
+				}
+				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
+			}
 		case "string":
 			statementGroup := commandparser.StatementGroup{Execution: commandparser.SYNC}
 			reader := strings.NewReader(test.f)
 			commandparser.ParseReader(reader, &statementGroup)
-			resultList, _ = statementGroup.Execute(terminatec, nil)
+			//resultList, _ = statementGroup.Execute(terminatec, nil)
+			for resp := range statementGroup.Execute(terminatec, nil) {
+				fmt.Println(">>>", resp.Output)
+				if resp.Error != nil {
+					fmt.Println(resp.Error)
+				}
+				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
+			}
 		}
 		switch i {
 		case 0:
@@ -234,6 +248,7 @@ MOVEX 5`,
 					resultList)
 			}
 		default:
+			//return
 			expect := append([]string{}, test.r...)
 			get := append([]string{}, resultList...)
 			sort.Strings(test.r)
