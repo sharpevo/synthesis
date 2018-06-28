@@ -86,9 +86,19 @@ func TestExecute(t *testing.T) {
 
 	terminatec := make(chan interface{})
 	defer close(terminatec)
+	suspend := false
+	suspendTimer := time.NewTimer(2 * time.Second)
+	recoverTimer := time.NewTimer(2 * time.Second)
+	go func() {
+		<-suspendTimer.C
+		suspend = true
+		<-recoverTimer.C
+		suspend = false
+	}()
+
 	for _, test := range tests {
 		statement, _ := commandparser.ParseLine(test.l)
-		resp := <-statement.Execute(terminatec, nil)
+		resp := <-statement.Execute(terminatec, &suspend, nil)
 		result := resp.Output
 		if result != test.r {
 			t.Errorf(
@@ -209,6 +219,20 @@ MOVEX 5`,
 		//close(terminatec)
 	}()
 
+	suspend := false
+	suspendTimer := time.NewTimer(2 * time.Second)
+	recoverTimer := time.NewTimer(10 * time.Second)
+	go func() {
+		<-suspendTimer.C
+		//suspend = &suspended
+		suspend = true
+		fmt.Println(">", suspend)
+		<-recoverTimer.C
+		//suspend = &notSuspended
+		suspend = false
+		fmt.Println(">", suspend)
+	}()
+
 	for i, test := range tests {
 		var resultList []string
 		switch test.s {
@@ -217,7 +241,7 @@ MOVEX 5`,
 				test.f,
 				commandparser.SYNC)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
-			for resp := range statementGroup.Execute(terminatec, nil) {
+			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
 				//time.Sleep(1 * time.Second)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
@@ -229,7 +253,7 @@ MOVEX 5`,
 			reader := strings.NewReader(test.f)
 			commandparser.ParseReader(reader, &statementGroup)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
-			for resp := range statementGroup.Execute(terminatec, nil) {
+			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				}
