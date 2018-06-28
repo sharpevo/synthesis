@@ -13,7 +13,8 @@ import (
 )
 
 func init() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
+	//log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
+	log.SetFlags(log.LstdFlags)
 }
 
 type ExecutionType int
@@ -61,32 +62,45 @@ func ParseLine(line string) (*Statement, error) {
 	return statement, nil
 }
 
+func (s *Statement) Run() Response {
+	resp := Response{}
+	if _, ok := CommandMap[s.CommandName]; !ok {
+		resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
+	} else {
+		command := CommandMap[s.CommandName]
+		output, _ := command.Execute(s.Arguments...)
+		resp.Output = output
+		log.Printf("'%s: %s' produces %q\n", s.CommandName, s.Arguments, output)
+	}
+	return resp
+}
+
 func (s *Statement) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
 	respc := make(chan Response)
-	resp := Response{}
 	go func() {
+
 		defer close(respc)
-		select {
-		case <-terminatec:
-			log.Printf("Termiante '%s: %s'\n", s.CommandName, s.Arguments)
-			resp.Error = fmt.Errorf("Terminated %q", s.CommandName)
-			respc <- resp
-		default:
-			if _, ok := CommandMap[s.CommandName]; !ok {
-				resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
-			} else {
-				command := CommandMap[s.CommandName]
-				output, _ := command.Execute(s.Arguments...)
-				resp.Output = output
-				log.Printf("'%s: %s' produces %q\n", s.CommandName, s.Arguments, output)
+		for {
+			select {
+			case <-terminatec:
+				resp := Response{}
+				log.Printf("Termiante '%s: %s'\n\n", s.CommandName, s.Arguments)
+				resp.Error = fmt.Errorf("Terminated %q", s.CommandName)
+				respc <- resp
 				if completec != nil {
 					completec <- true
 				}
+				return
+			case respc <- s.Run():
+				log.Printf("'%s: %s' done\n", s.CommandName, s.Arguments)
+				if completec != nil {
+					completec <- true
+				}
+				return
 			}
-			respc <- resp
 		}
 	}()
-	log.Printf("'%s: %s' done", s.CommandName, s.Arguments)
+	log.Printf("'%s: %s' execute thread exits\n", s.CommandName, s.Arguments)
 	//time.Sleep(1 * time.Second)
 	return respc
 }
@@ -192,7 +206,7 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec 
 					wg.Done()
 				}()
 			default:
-				fmt.Printf("NO MATCH %T!\n", t)
+				log.Printf("NO MATCH %T!\n", t)
 			}
 		}
 		wg.Wait()
@@ -226,7 +240,7 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 					count, _ := strconv.Atoi(item.Arguments[1])
 					if count < 1 {
 						// TODO: panic
-						fmt.Printf(
+						log.Printf(
 							"Failed to retry at line %d in %d attempts\n",
 							lineNum,
 							count)
@@ -244,14 +258,14 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 					continue
 				} else {
 					respcc <- item.Execute(terminatec, completec)
-					log.Printf("'%s: %s' exit", item.CommandName, item.Arguments)
+					//log.Printf("'%s: %s' complet", item.CommandName, item.Arguments)
 				}
 
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				respcc <- item.Execute(terminatec, completec)
 			default:
-				fmt.Printf("NO MATCH %T!\n", t)
+				log.Printf("NO MATCH %T!\n", t)
 			}
 
 			<-completec

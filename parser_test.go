@@ -203,7 +203,7 @@ MOVEX 5`,
 
 	terminatec := make(chan interface{})
 	defer close(terminatec)
-	timer := time.NewTimer(1 * time.Second)
+	timer := time.NewTimer(6 * time.Second)
 	go func() {
 		<-timer.C
 		//close(terminatec)
