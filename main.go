@@ -41,7 +41,7 @@ func main() {
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(
 		`PRINT 0-1
-PRIN2T 0-2
+PRINT 0-2
 IMPORT testscripts/script1
 PRINT 0-3
 PRINT 0-4
@@ -54,6 +54,7 @@ PRINT 0-6`)
 	result := widgets.NewQTextEdit(nil)
 	//result := widgets.NewQTextBrowser(nil)
 	result.SetReadOnly(true)
+	result.SetStyleSheet("QTextEdit { background-color: #e6e6e6}")
 
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
@@ -61,10 +62,14 @@ PRINT 0-6`)
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.ConnectClicked(func(bool) {
 
+		if len(terminatecc) != 0 {
+			return
+		}
+
+		result.SetText("RUNNING")
+
 		terminatec := make(chan interface{})
-		fmt.Println("run")
 		terminatecc <- terminatec
-		fmt.Println("sent")
 
 		command.InitParser(CommandMap)
 		statementGroup := command.StatementGroup{Execution: command.SYNC}
@@ -83,24 +88,33 @@ PRINT 0-6`)
 				resultList = append(resultList, fmt.Sprintf("%s", resp.Output))
 				result.SetText(strings.Join(resultList, "\n"))
 			}
+			result.SetText(strings.Join(resultList, "\n") + "\n\nDONE")
+			if len(terminatecc) == 1 {
+				t := <-terminatecc
+				close(t)
+			}
 		}()
 	})
 
 	termButton := widgets.NewQPushButton2("TERMINATE", nil)
 	termButton.ConnectClicked(func(bool) {
 		go func() {
-			terminatec := <-terminatecc
-			close(terminatec)
+			if len(terminatecc) != 1 {
+				return
+			}
+			//terminatec := <-terminatecc
+			//close(terminatec)
+			close(<-terminatecc)
 		}()
 	})
 
-	inputGroup := widgets.NewQGroupBox2("Input", nil)
+	inputGroup := widgets.NewQGroupBox2("Commands", nil)
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(input, 0, 0, 0)
 	inputLayout.AddWidget(runButton, 1, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
-	outputGroup := widgets.NewQGroupBox2("Output", nil)
+	outputGroup := widgets.NewQGroupBox2("Results", nil)
 	outputLayout := widgets.NewQGridLayout2()
 	outputLayout.AddWidget(result, 0, 0, 0)
 	outputLayout.AddWidget(termButton, 1, 0, 0)
