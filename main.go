@@ -56,6 +56,14 @@ PRINT 0-6`)
 	result.SetReadOnly(true)
 	result.SetStyleSheet("QTextEdit { background-color: #e6e6e6}")
 
+	suspButton := widgets.NewQPushButton2("SUSPEND", nil)
+	resuButton := widgets.NewQPushButton2("RESUME", nil)
+
+	suspButton.SetEnabled(false)
+	resuButton.SetEnabled(false)
+
+	suspend := false
+
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
 
@@ -65,6 +73,7 @@ PRINT 0-6`)
 		if len(terminatecc) != 0 {
 			return
 		}
+		suspButton.SetEnabled(true)
 
 		result.SetText("RUNNING")
 
@@ -80,7 +89,7 @@ PRINT 0-6`)
 		resultList := []string{}
 
 		go func() {
-			for resp := range statementGroup.Execute(terminatec, nil) {
+			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
 				if resp.Error != nil {
 					//fmt.Println(resp.Error)
 					resultList = append(resultList, fmt.Sprintf("%s", resp.Error))
@@ -93,6 +102,9 @@ PRINT 0-6`)
 				t := <-terminatecc
 				close(t)
 			}
+
+			suspButton.SetEnabled(false)
+			resuButton.SetEnabled(false)
 		}()
 	})
 
@@ -105,6 +117,23 @@ PRINT 0-6`)
 			//terminatec := <-terminatecc
 			//close(terminatec)
 			close(<-terminatecc)
+			suspend = false
+		}()
+	})
+
+	suspButton.ConnectClicked(func(bool) {
+		go func() {
+			suspend = true
+			suspButton.SetEnabled(false)
+			resuButton.SetEnabled(true)
+		}()
+	})
+
+	resuButton.ConnectClicked(func(bool) {
+		go func() {
+			suspend = false
+			suspButton.SetEnabled(true)
+			resuButton.SetEnabled(false)
 		}()
 	})
 
@@ -118,6 +147,8 @@ PRINT 0-6`)
 	outputLayout := widgets.NewQGridLayout2()
 	outputLayout.AddWidget(result, 0, 0, 0)
 	outputLayout.AddWidget(termButton, 1, 0, 0)
+	outputLayout.AddWidget(suspButton, 2, 0, 0)
+	outputLayout.AddWidget(resuButton, 3, 0, 0)
 	outputGroup.SetLayout(outputLayout)
 
 	layout := widgets.NewQGridLayout2()
