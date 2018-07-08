@@ -68,8 +68,9 @@ func (s *Statement) Run() Response {
 		resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
 	} else {
 		command := CommandMap[s.CommandName]
-		output, _ := command.Execute(s.Arguments...)
+		output, err := command.Execute(s.Arguments...)
 		resp.Output = output
+		resp.Error = err
 		log.Printf("'%s: %s' produces %q\n", s.CommandName, s.Arguments, output)
 	}
 	return resp
@@ -115,7 +116,7 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 		}
 	}()
 	log.Printf("'%s: %s' execute thread exits\n", s.CommandName, s.Arguments)
-	time.Sleep(1 * time.Second)
+	//time.Sleep(1 * time.Second)
 	return respc
 }
 
