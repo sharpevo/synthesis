@@ -94,7 +94,7 @@ func (c *CommandSleep) Execute(args ...string) (interface{}, error) {
 		return nil, err
 	}
 	time.Sleep(time.Duration(seconds) * time.Second)
-	return "", nil
+	return fmt.Sprintf("sleep %d seconds", seconds), nil
 }
 
 func Init() {
