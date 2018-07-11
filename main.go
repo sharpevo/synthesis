@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/therecipe/qt/widgets"
+	"posam/instruction"
 	"posam/interpreter"
-	cmd "posam/ui/command"
 )
 
 const (
@@ -35,18 +35,18 @@ SLEEP 3
 SENDSERIAL 010200010001E80A 55 018202c161`
 )
 
-var CommandMap = map[string]interpreter.Commander{
-	"PRINT":      &Print,
-	"SLEEP":      &interpreter.Sleep,
-	"IMPORT":     &interpreter.Import,
-	"ASYNC":      &interpreter.Async,
-	"RETRY":      &interpreter.Retry,
-	"LED":        &cmd.Led,
-	"SENDSERIAL": &cmd.SendSerial,
+var CommandMap = map[string]instruction.Instructioner{
+	"PRINT":  &Print,
+	"SLEEP":  &instruction.Sleep,
+	"IMPORT": &instruction.Import,
+	"ASYNC":  &instruction.Async,
+	"RETRY":  &instruction.Retry,
+	//"LED":        &instruction.Led,
+	"SENDSERIAL": &instruction.SendSerial,
 }
 
 type CommandPrint struct {
-	interpreter.Command
+	instruction.Instruction
 }
 
 var Print CommandPrint
