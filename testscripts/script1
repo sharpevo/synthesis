@@ -1,5 +1,5 @@
 PRINT 11
 PRINT 12
-IMPORT /home/yang/go/src/posam/commandparser/testscripts/script2
+IMPORT /home/yang/go/src/posam/interpreter/testscripts/script2
 PRINT 13
 PRINT 14

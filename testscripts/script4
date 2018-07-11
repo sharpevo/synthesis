@@ -2,7 +2,7 @@ PRINT 41
 PRINT 42
 PRINT 43
 PRINT 44
-ASYNC /home/yang/go/src/posam/commandparser/testscripts/script5
+ASYNC /home/yang/go/src/posam/interpreter/testscripts/script5
 PRINT 45
 PRINT 46
 PRINT 47

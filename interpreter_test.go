@@ -1,9 +1,9 @@
-package commandparser_test
+package interpreter_test
 
 import (
 	"fmt"
 	"os"
-	"posam/commandparser"
+	"posam/interpreter"
 	"reflect"
 	"sort"
 	"strings"
@@ -12,23 +12,23 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	commandparser.InitParser(TestCommandMap)
+	interpreter.InitParser(TestCommandMap)
 	Test.SetTitle("PRINT")
 	ret := m.Run()
 	os.Exit(ret)
 }
 
-var TestCommandMap = map[string]commandparser.Commander{
+var TestCommandMap = map[string]interpreter.Commander{
 	"TEST":   &Test,
 	"PRINT":  &Test,
-	"IMPORT": &commandparser.Import,
-	"ASYNC":  &commandparser.Async,
-	"RETRY":  &commandparser.Retry,
-	"MOVEX":  &commandparser.MoveX,
+	"IMPORT": &interpreter.Import,
+	"ASYNC":  &interpreter.Async,
+	"RETRY":  &interpreter.Retry,
+	"MOVEX":  &interpreter.MoveX,
 }
 
 type CommandTest struct {
-	commandparser.Command
+	interpreter.Command
 }
 
 var Test CommandTest
@@ -40,22 +40,22 @@ func (c *CommandTest) Execute(args ...string) (interface{}, error) {
 func TestParseLine(t *testing.T) {
 	var tests = []struct {
 		l string
-		s *commandparser.Statement
+		s *interpreter.Statement
 	}{
 		{
 			l: `IMPORT C:\POSaM\scripts\async.script`,
-			s: &commandparser.Statement{
+			s: &interpreter.Statement{
 				CommandName: "IMPORT",
 				Arguments:   []string{`C:\POSaM\scripts\async.script`},
 			},
 		},
 		{
 			l: `PRINT`,
-			s: &commandparser.Statement{},
+			s: &interpreter.Statement{},
 		},
 		{
 			l: `PRINT A B C`,
-			s: &commandparser.Statement{
+			s: &interpreter.Statement{
 				CommandName: "PRINT",
 				Arguments:   []string{"A", "B", "C"},
 			},
@@ -63,7 +63,7 @@ func TestParseLine(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		statement, _ := commandparser.ParseLine(test.l)
+		statement, _ := interpreter.ParseLine(test.l)
 		if !reflect.DeepEqual(statement, test.s) {
 			t.Errorf(
 				"EXPECT: %v\n GET: %v\n\n",
@@ -97,7 +97,7 @@ func TestExecute(t *testing.T) {
 	}()
 
 	for _, test := range tests {
-		statement, _ := commandparser.ParseLine(test.l)
+		statement, _ := interpreter.ParseLine(test.l)
 		resp := <-statement.Execute(terminatec, &suspend, nil)
 		result := resp.Output
 		if result != test.r {
@@ -118,7 +118,7 @@ func TestParseFile(t *testing.T) {
 	}{
 		{
 			s: "file",
-			f: "/home/yang/go/src/posam/commandparser/testscripts/script1",
+			f: "/home/yang/go/src/posam/interpreter/testscripts/script1",
 			r: []string{
 				"11_test",
 				"12_test",
@@ -130,7 +130,7 @@ func TestParseFile(t *testing.T) {
 		},
 		{
 			s: "file",
-			f: "/home/yang/go/src/posam/commandparser/testscripts/script3",
+			f: "/home/yang/go/src/posam/interpreter/testscripts/script3",
 			r: []string{
 				"31_test",
 				"32_test",
@@ -146,11 +146,11 @@ func TestParseFile(t *testing.T) {
 			s: "string",
 			f: `PRINT 10
 PRINT 11
-IMPORT /home/yang/go/src/posam/commandparser/testscripts/script2
+IMPORT /home/yang/go/src/posam/interpreter/testscripts/script2
 PRINT 12
 PRINT 13
 RETRY -1 3
-ASYNC /home/yang/go/src/posam/commandparser/testscripts/script4
+ASYNC /home/yang/go/src/posam/interpreter/testscripts/script4
 PRINT 14
 PRINT 15`,
 			r: []string{
@@ -182,7 +182,7 @@ PRINT 15`,
 			s: "string",
 			f: `PRINT 10
 PRINT 11
-ASYNC /home/yang/go/src/posam/commandparser/testscripts/scriptWithAsync
+ASYNC /home/yang/go/src/posam/interpreter/testscripts/scriptWithAsync
 PRINT 12
 PRINT 13`,
 			r: []string{
@@ -237,9 +237,9 @@ MOVEX 5`,
 		var resultList []string
 		switch test.s {
 		case "file":
-			statementGroup, _ := commandparser.ParseFile(
+			statementGroup, _ := interpreter.ParseFile(
 				test.f,
-				commandparser.SYNC)
+				interpreter.SYNC)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
 			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
 				//time.Sleep(1 * time.Second)
@@ -249,9 +249,9 @@ MOVEX 5`,
 				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
 			}
 		case "string":
-			statementGroup := commandparser.StatementGroup{Execution: commandparser.SYNC}
+			statementGroup := interpreter.StatementGroup{Execution: interpreter.SYNC}
 			reader := strings.NewReader(test.f)
-			commandparser.ParseReader(reader, &statementGroup)
+			interpreter.ParseReader(reader, &statementGroup)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
 			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
 				if resp.Error != nil {

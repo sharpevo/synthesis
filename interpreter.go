@@ -1,4 +1,4 @@
-package commandparser
+package interpreter
 
 import (
 	"bufio"
