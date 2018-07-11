@@ -28,8 +28,8 @@ const (
 var InstructionMap map[string]instruction.Instructioner
 
 type Statement struct {
-	CommandName string
-	Arguments   []string
+	InstructionName string
+	Arguments       []string
 }
 
 type StatementGroup struct {
@@ -58,21 +58,21 @@ func ParseLine(line string) (*Statement, error) {
 	if len(itemList) < 2 {
 		return statement, fmt.Errorf("Error: %s", "Invalid syntax")
 	}
-	statement.CommandName = itemList[0]
+	statement.InstructionName = itemList[0]
 	statement.Arguments = itemList[1:]
 	return statement, nil
 }
 
 func (s *Statement) Run() Response {
 	resp := Response{}
-	if _, ok := InstructionMap[s.CommandName]; !ok {
-		resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
+	if _, ok := InstructionMap[s.InstructionName]; !ok {
+		resp.Error = fmt.Errorf("Invalid instruction %q", s.InstructionName)
 	} else {
-		command := InstructionMap[s.CommandName]
-		output, err := command.Execute(s.Arguments...)
+		instruction := InstructionMap[s.InstructionName]
+		output, err := instruction.Execute(s.Arguments...)
 		resp.Output = output
 		resp.Error = err
-		log.Printf("'%s: %s' produces %q\n", s.CommandName, s.Arguments, output)
+		log.Printf("'%s: %s' produces %q\n", s.InstructionName, s.Arguments, output)
 	}
 	return resp
 }
@@ -81,11 +81,11 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 
 	//fmt.Println("+", *suspended)
 	if *suspended {
-		log.Printf("'%s: %s' suspended\n", s.CommandName, s.Arguments)
+		log.Printf("'%s: %s' suspended\n", s.InstructionName, s.Arguments)
 		for {
 			//fmt.Println("-", *suspended)
 			if !*suspended {
-				log.Printf("'%s: %s' resumed\n", s.CommandName, s.Arguments)
+				log.Printf("'%s: %s' resumed\n", s.InstructionName, s.Arguments)
 				break
 			}
 			time.Sleep(1 * time.Second)
@@ -100,15 +100,15 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 			select {
 			case <-terminatec:
 				resp := Response{}
-				log.Printf("Termiante '%s: %s'\n\n", s.CommandName, s.Arguments)
-				resp.Error = fmt.Errorf("Terminated %q", s.CommandName)
+				log.Printf("Termiante '%s: %s'\n\n", s.InstructionName, s.Arguments)
+				resp.Error = fmt.Errorf("Terminated %q", s.InstructionName)
 				respc <- resp
 				if completec != nil {
 					completec <- true
 				}
 				return
 			case respc <- s.Run():
-				log.Printf("'%s: %s' done\n", s.CommandName, s.Arguments)
+				log.Printf("'%s: %s' done\n", s.InstructionName, s.Arguments)
 				if completec != nil {
 					completec <- true
 				}
@@ -116,7 +116,7 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 			}
 		}
 	}()
-	log.Printf("'%s: %s' execute thread exits\n", s.CommandName, s.Arguments)
+	log.Printf("'%s: %s' execute thread exits\n", s.InstructionName, s.Arguments)
 	//time.Sleep(1 * time.Second)
 	return respc
 }
@@ -249,7 +249,7 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *b
 			case Statement, *Statement:
 
 				item, _ := itemInterface.(*Statement)
-				if item.CommandName == "RETRY" &&
+				if item.InstructionName == "RETRY" &&
 					// TODO: previous error
 					true {
 					lineNum, _ := strconv.Atoi(item.Arguments[0])
@@ -274,7 +274,7 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *b
 					continue
 				} else {
 					respcc <- item.Execute(terminatec, suspended, completec)
-					//log.Printf("'%s: %s' complet", item.CommandName, item.Arguments)
+					//log.Printf("'%s: %s' complet", item.InstructionName, item.Arguments)
 				}
 
 			case StatementGroup, *StatementGroup:
@@ -329,7 +329,7 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 	for scanner.Scan() {
 		line := scanner.Text()
 		statement, _ := ParseLine(line)
-		switch statement.CommandName {
+		switch statement.InstructionName {
 		case "IMPORT":
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],

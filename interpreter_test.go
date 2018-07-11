@@ -46,8 +46,8 @@ func TestParseLine(t *testing.T) {
 		{
 			l: `IMPORT C:\POSaM\scripts\async.script`,
 			s: &interpreter.Statement{
-				CommandName: "IMPORT",
-				Arguments:   []string{`C:\POSaM\scripts\async.script`},
+				InstructionName: "IMPORT",
+				Arguments:       []string{`C:\POSaM\scripts\async.script`},
 			},
 		},
 		{
@@ -57,8 +57,8 @@ func TestParseLine(t *testing.T) {
 		{
 			l: `PRINT A B C`,
 			s: &interpreter.Statement{
-				CommandName: "PRINT",
-				Arguments:   []string{"A", "B", "C"},
+				InstructionName: "PRINT",
+				Arguments:       []string{"A", "B", "C"},
 			},
 		},
 	}
