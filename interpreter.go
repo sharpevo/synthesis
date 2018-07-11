@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"posam/instruction"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,7 +25,7 @@ const (
 	ASYNC
 )
 
-var CommandMap map[string]Commander
+var InstructionMap map[string]instruction.Instructioner
 
 type Statement struct {
 	CommandName string
@@ -46,8 +47,8 @@ type Info struct {
 	Column int
 }
 
-func InitParser(commandMap map[string]Commander) error {
-	CommandMap = commandMap
+func InitParser(instructionMap map[string]instruction.Instructioner) error {
+	InstructionMap = instructionMap
 	return nil
 }
 
@@ -64,10 +65,10 @@ func ParseLine(line string) (*Statement, error) {
 
 func (s *Statement) Run() Response {
 	resp := Response{}
-	if _, ok := CommandMap[s.CommandName]; !ok {
+	if _, ok := InstructionMap[s.CommandName]; !ok {
 		resp.Error = fmt.Errorf("Invalid command %q", s.CommandName)
 	} else {
-		command := CommandMap[s.CommandName]
+		command := InstructionMap[s.CommandName]
 		output, err := command.Execute(s.Arguments...)
 		resp.Output = output
 		resp.Error = err

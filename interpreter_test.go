@@ -3,6 +3,7 @@ package interpreter_test
 import (
 	"fmt"
 	"os"
+	"posam/instruction"
 	"posam/interpreter"
 	"reflect"
 	"sort"
@@ -12,28 +13,28 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	interpreter.InitParser(TestCommandMap)
+	interpreter.InitParser(TestInstructionMap)
 	Test.SetTitle("PRINT")
 	ret := m.Run()
 	os.Exit(ret)
 }
 
-var TestCommandMap = map[string]interpreter.Commander{
+var TestInstructionMap = map[string]instruction.Instructioner{
 	"TEST":   &Test,
 	"PRINT":  &Test,
-	"IMPORT": &interpreter.Import,
-	"ASYNC":  &interpreter.Async,
-	"RETRY":  &interpreter.Retry,
-	"MOVEX":  &interpreter.MoveX,
+	"IMPORT": &instruction.Import,
+	"ASYNC":  &instruction.Async,
+	"RETRY":  &instruction.Retry,
+	"MOVEX":  &instruction.MoveX,
 }
 
-type CommandTest struct {
-	interpreter.Command
+type InstructionTest struct {
+	instruction.Instruction
 }
 
-var Test CommandTest
+var Test InstructionTest
 
-func (c *CommandTest) Execute(args ...string) (interface{}, error) {
+func (c *InstructionTest) Execute(args ...string) (interface{}, error) {
 	return args[0] + "_test", nil
 }
 
