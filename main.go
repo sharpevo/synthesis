@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/therecipe/qt/widgets"
-	command "posam/commandparser"
+	"posam/interpreter"
 	cmd "posam/ui/command"
 )
 
@@ -35,18 +35,18 @@ SLEEP 3
 SENDSERIAL 010200010001E80A 55 018202c161`
 )
 
-var CommandMap = map[string]command.Commander{
+var CommandMap = map[string]interpreter.Commander{
 	"PRINT":      &Print,
-	"SLEEP":      &command.Sleep,
-	"IMPORT":     &command.Import,
-	"ASYNC":      &command.Async,
-	"RETRY":      &command.Retry,
+	"SLEEP":      &interpreter.Sleep,
+	"IMPORT":     &interpreter.Import,
+	"ASYNC":      &interpreter.Async,
+	"RETRY":      &interpreter.Retry,
 	"LED":        &cmd.Led,
 	"SENDSERIAL": &cmd.SendSerial,
 }
 
 type CommandPrint struct {
-	command.Command
+	interpreter.Command
 }
 
 var Print CommandPrint
@@ -149,9 +149,9 @@ func main() {
 		terminatec := make(chan interface{})
 		terminatecc <- terminatec
 
-		command.InitParser(CommandMap)
-		statementGroup := command.StatementGroup{Execution: command.SYNC}
-		command.ParseReader(
+		interpreter.InitParser(CommandMap)
+		statementGroup := interpreter.StatementGroup{Execution: interpreter.SYNC}
+		interpreter.ParseReader(
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
 		)

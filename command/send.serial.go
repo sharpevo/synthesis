@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
-	"posam/commandparser"
+	"posam/interpreter"
 	"posam/ui/config"
 	"strconv"
 )
 
 type CommandSendSerial struct {
-	commandparser.Command
+	interpreter.Command
 }
 
 var SendSerial CommandSendSerial
