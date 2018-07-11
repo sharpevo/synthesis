@@ -35,7 +35,7 @@ SLEEP 3
 SENDSERIAL 010200010001E80A 55 018202c161`
 )
 
-var CommandMap = map[string]instruction.Instructioner{
+var InstructionMap = map[string]instruction.Instructioner{
 	"PRINT":  &Print,
 	"SLEEP":  &instruction.Sleep,
 	"IMPORT": &instruction.Import,
@@ -45,13 +45,13 @@ var CommandMap = map[string]instruction.Instructioner{
 	"SENDSERIAL": &instruction.SendSerial,
 }
 
-type CommandPrint struct {
+type InstructionPrint struct {
 	instruction.Instruction
 }
 
-var Print CommandPrint
+var Print InstructionPrint
 
-func (c *CommandPrint) Execute(args ...string) (interface{}, error) {
+func (c *InstructionPrint) Execute(args ...string) (interface{}, error) {
 	return "Print: " + args[0], nil
 }
 
@@ -149,7 +149,7 @@ func main() {
 		terminatec := make(chan interface{})
 		terminatecc <- terminatec
 
-		interpreter.InitParser(CommandMap)
+		interpreter.InitParser(InstructionMap)
 		statementGroup := interpreter.StatementGroup{Execution: interpreter.SYNC}
 		interpreter.ParseReader(
 			strings.NewReader(input.ToPlainText()),
@@ -206,7 +206,7 @@ func main() {
 		}()
 	})
 
-	inputGroup := widgets.NewQGroupBox2("Commands", nil)
+	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(input, 0, 0, 0)
 	inputLayout.AddWidget(serialGroup, 1, 0, 0)
