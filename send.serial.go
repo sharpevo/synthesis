@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
-	"posam/ui/config"
+	"posam/gui/config"
 	"strconv"
 )
 
