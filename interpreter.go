@@ -121,33 +121,6 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 	return respc
 }
 
-func serialize(terminatec <-chan interface{}, respcs ...<-chan Response) <-chan Response {
-	var wg sync.WaitGroup
-	resultc := make(chan Response)
-
-	swallow := func(respc <-chan Response) {
-		for resp := range respc {
-			select {
-			case <-terminatec:
-				return
-			case resultc <- resp:
-			}
-		}
-		wg.Done()
-	}
-
-	wg.Add(len(respcs))
-	for _, respc := range respcs {
-		go swallow(respc)
-	}
-
-	go func() {
-		wg.Wait()
-		close(resultc)
-	}()
-	return resultc
-}
-
 func tryRead(terminatec <-chan interface{}, inputc <-chan Response) <-chan Response {
 	outputc := make(chan Response)
 	go func() {
