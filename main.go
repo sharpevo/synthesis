@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/tarm/serial"
 	"log"
 	"os"
 	"os/exec"
-	"posam/ui/config"
+	"posam/dao/alientek"
+	"posam/protocol/serialport"
 	"runtime"
 	"strconv"
 	"strings"
@@ -33,15 +33,18 @@ LED off`
 	CMD_SERIAL = `SENDSERIAL 010300010001D5CA 55 018302c0f1
 SLEEP 3
 SENDSERIAL 010200010001E80A 55 018202c161`
+	CMD_LED_SERIAL = `LED on
+SLEEP 3
+SENDSERIAL 010200010001E80A 55 018202c161`
 )
 
 var InstructionMap = map[string]instruction.Instructioner{
-	"PRINT":  &Print,
-	"SLEEP":  &instruction.Sleep,
-	"IMPORT": &instruction.Import,
-	"ASYNC":  &instruction.Async,
-	"RETRY":  &instruction.Retry,
-	//"LED":        &instruction.Led,
+	"PRINT":      &Print,
+	"SLEEP":      &instruction.Sleep,
+	"IMPORT":     &instruction.Import,
+	"ASYNC":      &instruction.Async,
+	"RETRY":      &instruction.Retry,
+	"LED":        &instruction.Led,
 	"SENDSERIAL": &instruction.SendSerial,
 }
 
@@ -67,7 +70,7 @@ func main() {
 	window.SetCentralWidget(widget)
 
 	input := widgets.NewQTextEdit(nil)
-	input.SetPlainText(CMD_SERIAL)
+	input.SetPlainText(CMD_LED_SERIAL)
 
 	// serial group
 
@@ -81,7 +84,7 @@ func main() {
 
 	serialDeviceInput := widgets.NewQLineEdit(nil)
 	serialDeviceInput.SetPlaceholderText("COM1, /dev/ttyUSB0...")
-	//serialDeviceInput.SetText("/dev/ttyUSB0")
+	serialDeviceInput.SetText("/dev/ttyUSB0")
 	serialBaudInput := widgets.NewQLineEdit(nil)
 	serialBaudInput.SetText("9600")
 	serialCharacterInput := widgets.NewQLineEdit(nil)
@@ -246,17 +249,39 @@ func initSerialDevice(
 	stop string,
 	parity string) (err error) {
 
-	if config.SerialPortInstance != nil {
+	var deviceAddress byte
+	deviceAddress = 0x01
+	if alientek.Instance(string(deviceAddress)) != nil {
 		return
 	}
 
-	config.Config["serialport"] = config.SerialPort{
-		Device:    device,
-		Baud:      baud,
-		Character: character,
-		Stop:      stop,
-		Parity:    parity,
+	baudInt, err := strconv.Atoi(baud)
+	if err != nil {
+		return
 	}
+	characterInt, err := strconv.Atoi(character)
+	if err != nil {
+		return
+	}
+	stopInt, err := strconv.Atoi(stop)
+	if err != nil {
+		return
+	}
+	//parity, err := strconv.Atoi(character)
+	//if err != nil {
+	//return
+	//}
+
+	alientek.AddInstance(&alientek.Dao{
+		DeviceAddress: deviceAddress,
+		SerialPort: &serialport.SerialPort{
+			Name:     device,
+			BaudRate: baudInt,
+			DataBits: characterInt,
+			StopBits: stopInt,
+			Parity:   -1,
+		},
+	})
 
 	switch runtime.GOOS {
 	case "windows":
@@ -312,31 +337,9 @@ func initSerialDevice(
 		return fmt.Errorf(msg)
 	}
 
-	config.SerialPortInstance, err = openSerialPort()
 	if err != nil {
 		return err
 	}
 
-	return
-
-}
-
-func openSerialPort() (serialPort *serial.Port, err error) {
-	log.Println("Opening serial port...")
-	sp := config.Config["serialport"].(config.SerialPort)
-	baud, err := strconv.Atoi(sp.Baud)
-	if err != nil {
-		return
-	}
-
-	c := &serial.Config{
-		Name: sp.Device,
-		Baud: baud,
-	}
-
-	serialPort, err = serial.OpenPort(c)
-	if err != nil {
-		return
-	}
 	return
 }
