@@ -9,6 +9,7 @@ import (
 )
 
 type SerialPorter interface {
+	Instance() *serial.Port
 	Send([]byte) error
 	Receive([]byte) ([]byte, error)
 }
