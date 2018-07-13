@@ -1,6 +1,7 @@
 package serialport
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
@@ -9,7 +10,7 @@ import (
 
 type SerialPorter interface {
 	Send([]byte) error
-	Receive(string) ([]byte, error)
+	Receive([]byte) ([]byte, error)
 }
 
 var instanceMap map[string]*serial.Port
@@ -60,8 +61,8 @@ func (s *SerialPort) Send(data []byte) (err error) {
 	return nil
 }
 
-func (s *SerialPort) Receive(expect string) (resp []byte, err error) {
-	max := len(expect) / 2
+func (s *SerialPort) Receive(expect []byte) (resp []byte, err error) {
+	max := len(expect)
 	buf := make([]byte, max)
 	cnt := 0
 	for {
@@ -70,17 +71,20 @@ func (s *SerialPort) Receive(expect string) (resp []byte, err error) {
 			return resp, err
 		}
 
+		cnt += n
 		resp = append(resp, buf[:n]...)
 		if cnt >= max || n == 0 {
 			break
 		}
 	}
 
-	if expect != toHexString(resp) {
+	log.Printf("%x | %x", expect, resp)
+	if !bytes.Equal(expect, resp) {
+		s.Instance().Flush()
 		return resp, fmt.Errorf(
-			"invalid response cocde %s (%s)",
+			"invalid response code %x (%x)",
 			resp,
-			toHexString(resp),
+			expect,
 		)
 	}
 	return
