@@ -7,9 +7,23 @@ import (
 	"posam/protocol/serialport"
 )
 
+var deviceMap map[string]*Dao
+
 type Dao struct {
 	DeviceAddress byte
 	SerialPort    serialport.SerialPorter
+}
+
+func init() {
+	deviceMap = make(map[string]*Dao)
+}
+
+func AddInstance(dao *Dao) {
+	deviceMap[string(dao.DeviceAddress)] = dao
+}
+
+func Instance(address string) *Dao {
+	return deviceMap[address]
 }
 
 func (d *Dao) TurnOnLed() (resp string, err error) {
