@@ -23,12 +23,3 @@ func (i *Instruction) SetTitle(title string) {
 func (i *Instruction) Execute(args ...string) (interface{}, error) {
 	return "", nil
 }
-
-func Init() {
-	Import.SetTitle("IMPORT")
-	Async.SetTitle("ASYNC")
-	Retry.SetTitle("RETRY")
-	MoveX.SetTitle("MOVEX")
-	MoveY.SetTitle("MOVEY")
-	MoveZ.SetTitle("MOVEZ")
-}
