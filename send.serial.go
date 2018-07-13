@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
-	"posam/gui/config"
-	"strconv"
+	"posam/dao/alientek"
 )
 
 type InstructionSendSerial struct {
@@ -35,26 +34,8 @@ func (c *InstructionSendSerial) Execute(args ...string) (resp interface{}, err e
 }
 
 func initSerialPort() (serialPort *serial.Port, err error) {
-	return config.SerialPortInstance, nil
-}
-
-func xinitSerialPort() (serialPort *serial.Port, err error) {
-	sp := config.Config["serialport"].(config.SerialPort)
-	baud, err := strconv.Atoi(sp.Baud)
-	if err != nil {
-		return
-	}
-
-	c := &serial.Config{
-		Name: sp.Device,
-		Baud: baud,
-	}
-
-	serialPort, err = serial.OpenPort(c)
-	if err != nil {
-		return
-	}
-	return
+	dao := alientek.Instance(string(0x01))
+	return dao.SerialPort.Instance(), nil
 }
 
 func send(
