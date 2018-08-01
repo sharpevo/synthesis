@@ -16,7 +16,7 @@ func (m *MockSerialPort) Send(data []byte) error {
 	return nil
 }
 
-func (m *MockSerialPort) Receive(expect string) (data []byte, err error) {
+func (m *MockSerialPort) Receive(expect []byte) (data []byte, err error) {
 	log.Println("received")
 	return
 }
