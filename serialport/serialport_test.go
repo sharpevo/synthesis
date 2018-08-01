@@ -3,6 +3,7 @@ package serialport_test
 import (
 	"github.com/tarm/serial"
 	"posam/protocol/serialport"
+	"time"
 
 	"testing"
 )
@@ -73,5 +74,36 @@ func TestInstanceOperationOnMap(t *testing.T) {
 			instance1,
 			instance3,
 		)
+	}
+}
+
+func TestInstanceMapConcurrency(t *testing.T) {
+	sp := &serialport.SerialPort{
+		&MockPort{
+			Port: serialport.Port{},
+		},
+		"/dev/ttyUSB0",
+		9603,
+		0x01,
+		8,
+		1,
+		-1,
+	}
+
+	go func() {
+		for {
+			_ = sp.Instance()
+		}
+	}()
+
+	go func() {
+		for {
+			openedPort := &serial.Port{}
+			serialport.AddInstance(sp, openedPort)
+		}
+	}()
+
+	select {
+	case <-time.After(3 * time.Second):
 	}
 }
