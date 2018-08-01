@@ -57,9 +57,12 @@ func (s *SerialPort) Instance() *serial.Port {
 		return instance.(*serial.Port)
 	}
 	p, _ := s.OpenPort(s.Name, s.BaudRate)
-	instance, _ := instanceMap.LoadOrStore(s.Name, p)
-	return instance.(*serial.Port)
+	return s.addInstance(p)
+}
 
+func (s *SerialPort) addInstance(openedPort *serial.Port) *serial.Port {
+	instance, _ := instanceMap.LoadOrStore(s.Name, openedPort)
+	return instance.(*serial.Port)
 }
 
 // data: with address of device
