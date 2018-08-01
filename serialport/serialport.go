@@ -6,6 +6,7 @@ import (
 	"github.com/tarm/serial"
 	"log"
 	"posam/protocol/modbus"
+	"sync"
 )
 
 type Porter interface {
@@ -35,6 +36,7 @@ func (p *Port) OpenPort(name string, baud int) (*serial.Port, error) {
 	return openedPort, nil
 }
 
+var instanceMap sync.Map
 
 type SerialPort struct {
 	Porter
@@ -48,20 +50,15 @@ type SerialPort struct {
 	Parity   int
 }
 
-func init() {
-	instanceMap = make(map[string]*serial.Port)
-}
-
 // TODO: thread safe
 // TODO: return busy error
 func (s *SerialPort) Instance() *serial.Port {
-	if instanceMap[s.Name] != nil {
-		return instanceMap[s.Name]
-	}
+	if instance, ok := instanceMap.Load(s.Name); ok {
+		return instance.(*serial.Port)
 	}
 	p, _ := s.OpenPort(s.Name, s.BaudRate)
-	instanceMap[s.Name] = p
-	return instanceMap[s.Name]
+	instance, _ := instanceMap.LoadOrStore(s.Name, p)
+	return instance.(*serial.Port)
 
 }
 
