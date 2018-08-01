@@ -6,6 +6,7 @@ import (
 	"posam/protocol/serialport"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type MockSerialPort struct {
@@ -61,5 +62,32 @@ func TestInstanceOperation(t *testing.T) {
 		alientek.Instance(string(alientekDao.DeviceAddress)),
 	) {
 		t.Errorf("Failed to get instance from deviceMap")
+	}
+}
+
+func TestInstanceConcurrency(t *testing.T) {
+	go func() {
+		for {
+			alientek.Instance("02")
+		}
+	}()
+	go func() {
+		for {
+			alientek.AddInstance(&alientek.Dao{
+				DeviceAddress: 0x01,
+				SerialPort: &MockSerialPort{
+					serialport.SerialPort{
+						Name:     "/dev/ttyUSB0",
+						BaudRate: 9600,
+						DataBits: 8,
+						StopBits: 1,
+						Parity:   -1,
+					},
+				},
+			})
+		}
+	}()
+	select {
+	case <-time.After(3 * time.Second):
 	}
 }
