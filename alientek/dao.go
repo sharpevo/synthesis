@@ -5,25 +5,26 @@ import (
 	"log"
 	"posam/dao"
 	"posam/protocol/serialport"
+	"sync"
 )
 
-var deviceMap map[string]*Dao
+var deviceMap sync.Map
 
 type Dao struct {
 	DeviceAddress byte
 	SerialPort    serialport.SerialPorter
 }
 
-func init() {
-	deviceMap = make(map[string]*Dao)
-}
-
 func AddInstance(dao *Dao) {
-	deviceMap[string(dao.DeviceAddress)] = dao
+	deviceMap.Store(string(dao.DeviceAddress), dao)
 }
 
 func Instance(address string) *Dao {
-	return deviceMap[address]
+	if device, ok := deviceMap.Load(address); ok {
+		return device.(*Dao)
+	} else {
+		return nil
+	}
 }
 
 func (d *Dao) TurnOnLed() (resp string, err error) {
