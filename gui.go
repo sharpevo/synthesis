@@ -58,6 +58,11 @@ func (c *InstructionPrint) Execute(args ...string) (interface{}, error) {
 	return "Print: " + args[0], nil
 }
 
+type QMessageBoxWithCustomSlot struct {
+	widgets.QMessageBox
+	_ func(message string) `slot:showMessageBoxSlot`
+}
+
 func main() {
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
@@ -68,6 +73,16 @@ func main() {
 
 	widget := widgets.NewQWidget(nil, 0)
 	window.SetCentralWidget(widget)
+
+	msgBox := NewQMessageBoxWithCustomSlot(nil)
+
+	msgBox.ConnectShowMessageBoxSlot(func(message string) {
+		msgBox.SetIcon(widgets.QMessageBox__Warning)
+		msgBox.SetWindowTitle("Error")
+		msgBox.SetText(message)
+		msgBox.SetStandardButtons(widgets.QMessageBox__Ok)
+		msgBox.Exec()
+	})
 
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(CMD_LED_SERIAL)
@@ -163,12 +178,8 @@ func main() {
 		go func() {
 			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
 				if resp.Error != nil {
-					suspendExecution(&suspend, suspButton, resuButton)
-
-					//widgets.QMessageBox_Information(nil, "Error", resp.Error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-					//widgets.QMessageBox_Information(nil, "Error", "sus", widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-
-					resultList = append(resultList, fmt.Sprintf("%s", resp.Error))
+					go suspendExecution(&suspend, suspButton, resuButton)
+					msgBox.ShowMessageBoxSlot(resp.Error.Error())
 				}
 				resultList = append(resultList, fmt.Sprintf("%s", resp.Output))
 				result.SetText(strings.Join(resultList, "\n"))
