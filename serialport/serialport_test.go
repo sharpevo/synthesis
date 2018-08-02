@@ -18,41 +18,38 @@ func (p *MockPort) OpenPort(name string, baud int) (*serial.Port, error) {
 
 func TestInstanceOperationOnMap(t *testing.T) {
 	sp1 := &serialport.SerialPort{
-		&MockPort{
+		Porter: &MockPort{
 			Port: serialport.Port{},
 		},
-		"/dev/ttyUSB0",
-		9601,
-		0x01,
-		8,
-		1,
-		-1,
+		Name:     "/dev/ttyUSB0",
+		BaudRate: 9601,
+		DataBits: 8,
+		StopBits: 1,
+		Parity:   -1,
 	}
 	instance1 := sp1.Instance()
 
 	sp2 := &serialport.SerialPort{
-		&MockPort{
+		Porter: &MockPort{
 			Port: serialport.Port{},
 		},
-		"/dev/ttyUSB1",
-		9602,
-		0x01,
-		8,
-		1,
-		-1,
+		Name:     "/dev/ttyUSB1",
+		BaudRate: 9602,
+		DataBits: 8,
+		StopBits: 1,
+		Parity:   -1,
 	}
 	instance2 := sp2.Instance()
 
 	sp3 := &serialport.SerialPort{
-		&MockPort{
+		Porter: &MockPort{
 			Port: serialport.Port{},
 		},
-		"/dev/ttyUSB0",
-		9603,
-		0x01,
-		8,
-		1,
-		-1,
+		Name:     "/dev/ttyUSB0",
+		BaudRate: 9603,
+		DataBits: 8,
+		StopBits: 1,
+		Parity:   -1,
 	}
 	instance3 := sp3.Instance()
 	t.Logf(
@@ -79,15 +76,14 @@ func TestInstanceOperationOnMap(t *testing.T) {
 
 func TestInstanceMapConcurrency(t *testing.T) {
 	sp := &serialport.SerialPort{
-		&MockPort{
+		Porter: &MockPort{
 			Port: serialport.Port{},
 		},
-		"/dev/ttyUSB0",
-		9603,
-		0x01,
-		8,
-		1,
-		-1,
+		Name:     "/dev/ttyUSB0",
+		BaudRate: 9603,
+		DataBits: 8,
+		StopBits: 1,
+		Parity:   -1,
 	}
 
 	go func() {
