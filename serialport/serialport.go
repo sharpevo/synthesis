@@ -56,6 +56,9 @@ func (s *SerialPort) Instance() *serial.Port {
 	if instance, ok := instanceMap.Load(s.Name); ok {
 		return instance.(*serial.Port)
 	}
+	if s.Porter == nil {
+		s.Porter = &Port{}
+	}
 	p, _ := s.OpenPort(s.Name, s.BaudRate)
 	return s.addInstance(p)
 }
