@@ -176,7 +176,11 @@ func main() {
 		resultList := []string{}
 
 		go func() {
-			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
+			completec := make(chan interface{})
+			go func() {
+				<-completec
+			}()
+			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
 				if resp.Error != nil {
 					go suspendExecution(&suspend, suspButton, resuButton)
 					msgBox.ShowMessageBoxSlot(resp.Error.Error())
@@ -189,6 +193,8 @@ func main() {
 				t := <-terminatecc
 				close(t)
 			}
+
+			msgBox.ShowMessageBoxSlot("Done")
 
 			suspButton.SetEnabled(false)
 			resuButton.SetEnabled(false)
