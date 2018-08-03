@@ -37,8 +37,9 @@ type StatementGroup struct {
 }
 
 type Response struct {
-	Error  error
-	Output interface{}
+	Error     error
+	Output    interface{}
+	Completec chan<- interface{}
 }
 
 type Info struct {
