@@ -185,8 +185,12 @@ func main() {
 			for resp := range statementGroup.Execute(terminatec, completec) {
 				if resp.Error != nil {
 					resumec = resp.Completec
-					suspendExecution(&suspend, suspButton, resuButton)
-					msgBox.ShowMessageBoxSlot(resp.Error.Error())
+					if resp.IgnoreError {
+						resp.Completec <- true
+					} else {
+						msgBox.ShowMessageBoxSlot(resp.Error.Error())
+						suspendExecution(&suspend, suspButton, resuButton)
+					}
 				} else {
 					if suspend {
 						for {
