@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/therecipe/qt/widgets"
 	"posam/instruction"
@@ -182,8 +183,18 @@ func main() {
 			}()
 			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
 				if resp.Error != nil {
-					go suspendExecution(&suspend, suspButton, resuButton)
+					suspendExecution(&suspend, suspButton, resuButton)
 					msgBox.ShowMessageBoxSlot(resp.Error.Error())
+				} else {
+					if suspend {
+						for {
+							if !suspend {
+								break
+							}
+							time.Sleep(1 * time.Second)
+						}
+					}
+					resp.Completec <- true
 				}
 				resultList = append(resultList, fmt.Sprintf("%s", resp.Output))
 				result.SetText(strings.Join(resultList, "\n"))
