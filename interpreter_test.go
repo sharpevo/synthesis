@@ -104,6 +104,14 @@ func TestExecute(t *testing.T) {
 			<-completec
 		}()
 		resp := <-statement.Execute(terminatec, &suspend, completec)
+		if suspend {
+			for {
+				if !suspend {
+					break
+				}
+			}
+		}
+		completec <- true
 		result := resp.Output
 		if result != test.r {
 			t.Errorf(
@@ -254,6 +262,16 @@ MOVEX 5`,
 				time.Sleep(1 * time.Second)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
+				} else {
+					if suspend {
+						for {
+							if !suspend {
+								break
+							}
+							time.Sleep(1 * time.Second)
+						}
+					}
+					resp.Completec <- true
 				}
 				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
 			}
@@ -265,6 +283,16 @@ MOVEX 5`,
 			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
+				} else {
+					if suspend {
+						for {
+							if !suspend {
+								break
+							}
+							time.Sleep(1 * time.Second)
+						}
+					}
+					resp.Completec <- true
 				}
 				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
 			}
