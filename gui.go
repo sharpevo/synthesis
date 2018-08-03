@@ -228,15 +228,15 @@ func main() {
 	})
 
 	suspButton.ConnectClicked(func(bool) {
-		go suspendExecution(&suspend, suspButton, resuButton)
+		suspendExecution(&suspend, suspButton, resuButton)
 	})
 
 	resuButton.ConnectClicked(func(bool) {
 		go func() {
 			suspend = false
-			resumec <- true
 			suspButton.SetEnabled(true)
 			resuButton.SetEnabled(false)
+			resumec <- true
 		}()
 	})
 
