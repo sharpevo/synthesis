@@ -89,7 +89,7 @@ func TestExecute(t *testing.T) {
 	defer close(terminatec)
 	suspend := false
 	suspendTimer := time.NewTimer(2 * time.Second)
-	recoverTimer := time.NewTimer(2 * time.Second)
+	recoverTimer := time.NewTimer(4 * time.Second)
 	go func() {
 		<-suspendTimer.C
 		suspend = true
