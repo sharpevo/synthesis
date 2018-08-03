@@ -99,7 +99,8 @@ func TestExecute(t *testing.T) {
 
 	for _, test := range tests {
 		statement, _ := interpreter.ParseLine(test.l)
-		resp := <-statement.Execute(terminatec, &suspend, nil)
+		completec := make(chan interface{})
+		resp := <-statement.Execute(terminatec, &suspend, completec)
 		result := resp.Output
 		if result != test.r {
 			t.Errorf(
@@ -236,14 +237,15 @@ MOVEX 5`,
 
 	for i, test := range tests {
 		var resultList []string
+		completec := make(chan interface{})
 		switch test.s {
 		case "file":
 			statementGroup, _ := interpreter.ParseFile(
 				test.f,
 				interpreter.SYNC)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
-			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
-				//time.Sleep(1 * time.Second)
+			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
+				time.Sleep(1 * time.Second)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				}
@@ -254,7 +256,7 @@ MOVEX 5`,
 			reader := strings.NewReader(test.f)
 			interpreter.ParseReader(reader, &statementGroup)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
-			for resp := range statementGroup.Execute(terminatec, &suspend, nil) {
+			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				}
