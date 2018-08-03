@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 func init() {
@@ -78,19 +77,6 @@ func (s *Statement) Run() Response {
 }
 
 func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, completec chan<- interface{}) <-chan Response {
-
-	//fmt.Println("+", *suspended)
-	if *suspended {
-		log.Printf("'%s: %s' suspended\n", s.InstructionName, s.Arguments)
-		for {
-			//fmt.Println("-", *suspended)
-			if !*suspended {
-				log.Printf("'%s: %s' resumed\n", s.InstructionName, s.Arguments)
-				break
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}
 
 	respc := make(chan Response)
 	go func() {
