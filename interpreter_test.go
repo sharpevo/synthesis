@@ -103,7 +103,7 @@ func TestExecute(t *testing.T) {
 		go func() {
 			<-completec
 		}()
-		resp := <-statement.Execute(terminatec, &suspend, completec)
+		resp := <-statement.Execute(terminatec, completec)
 		if suspend {
 			for {
 				if !suspend {
@@ -258,7 +258,7 @@ MOVEX 5`,
 				test.f,
 				interpreter.SYNC)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
-			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
+			for resp := range statementGroup.Execute(terminatec, completec) {
 				time.Sleep(1 * time.Second)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
@@ -280,7 +280,7 @@ MOVEX 5`,
 			reader := strings.NewReader(test.f)
 			interpreter.ParseReader(reader, &statementGroup)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
-			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
+			for resp := range statementGroup.Execute(terminatec, completec) {
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
 				} else {

@@ -78,7 +78,7 @@ func (s *Statement) Run(completec chan<- interface{}) Response {
 	return resp
 }
 
-func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, completec chan<- interface{}) <-chan Response {
+func (s *Statement) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
 
 	respc := make(chan Response)
 	go func() {
@@ -152,7 +152,7 @@ func bridge(terminatec <-chan interface{}, chanc <-chan <-chan Response) <-chan 
 	return valStream
 }
 
-func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *bool, pcompletec chan<- interface{}) <-chan <-chan Response {
+func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec chan<- interface{}) <-chan <-chan Response {
 
 	log.Println("==== ASYNC ====")
 	respcc := make(chan (<-chan Response))
@@ -168,12 +168,12 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *
 			case Statement, *Statement:
 				item, _ := itemInterface.(*Statement)
 				go func() {
-					respcc <- item.Execute(terminatec, suspended, completec)
+					respcc <- item.Execute(terminatec, completec)
 				}()
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				go func() {
-					respcc <- item.Execute(terminatec, suspended, completec)
+					respcc <- item.Execute(terminatec, completec)
 				}()
 			default:
 				log.Printf("NO MATCH %T!\n", t)
@@ -192,7 +192,7 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *
 	return respcc
 }
 
-func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *bool, pcompletec chan<- interface{}) <-chan <-chan Response {
+func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec chan<- interface{}) <-chan <-chan Response {
 
 	log.Println("==== SYNC ====")
 	respcc := make(chan (<-chan Response))
@@ -231,13 +231,13 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *b
 					i -= 1 //trade off the i++
 					continue
 				} else {
-					respcc <- item.Execute(terminatec, suspended, completec)
+					respcc <- item.Execute(terminatec, completec)
 					//log.Printf("'%s: %s' complet", item.InstructionName, item.Arguments)
 				}
 
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
-				respcc <- item.Execute(terminatec, suspended, completec)
+				respcc <- item.Execute(terminatec, completec)
 			default:
 				log.Printf("NO MATCH %T!\n", t)
 			}
@@ -251,12 +251,12 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *b
 	return respcc
 }
 
-func (g *StatementGroup) Execute(terminatec <-chan interface{}, suspended *bool, completec chan<- interface{}) <-chan Response {
+func (g *StatementGroup) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
 	switch g.Execution {
 	case SYNC:
-		return bridge(terminatec, g.ExecuteSync(terminatec, suspended, completec))
+		return bridge(terminatec, g.ExecuteSync(terminatec, completec))
 	case ASYNC:
-		return bridge(terminatec, g.ExecuteAsync(terminatec, suspended, completec))
+		return bridge(terminatec, g.ExecuteAsync(terminatec, completec))
 	}
 	resultc := make(chan Response)
 	close(resultc)
