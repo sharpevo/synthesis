@@ -63,7 +63,7 @@ func ParseLine(line string) (*Statement, error) {
 	return statement, nil
 }
 
-func (s *Statement) Run() Response {
+func (s *Statement) Run(completec chan<- interface{}) Response {
 	resp := Response{}
 	if _, ok := InstructionMap[s.InstructionName]; !ok {
 		resp.Error = fmt.Errorf("Invalid instruction %q", s.InstructionName)
@@ -72,6 +72,7 @@ func (s *Statement) Run() Response {
 		output, err := instruction.Execute(s.Arguments...)
 		resp.Output = output
 		resp.Error = err
+		resp.Completec = completec
 		log.Printf("'%s: %s' produces %q\n", s.InstructionName, s.Arguments, output)
 	}
 	return resp
@@ -92,7 +93,7 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 				respc <- resp
 				completec <- true
 				return
-			case respc <- s.Run():
+			case respc <- s.Run(completec):
 				log.Printf("'%s: %s' done\n", s.InstructionName, s.Arguments)
 				completec <- true
 				return
