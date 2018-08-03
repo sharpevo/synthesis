@@ -182,7 +182,7 @@ func main() {
 			go func() {
 				<-completec
 			}()
-			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
+			for resp := range statementGroup.Execute(terminatec, completec) {
 				if resp.Error != nil {
 					resumec = resp.Completec
 					suspendExecution(&suspend, suspButton, resuButton)
