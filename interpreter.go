@@ -91,11 +91,9 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 				log.Printf("Termiante '%s: %s'\n\n", s.InstructionName, s.Arguments)
 				resp.Error = fmt.Errorf("Terminated %q", s.InstructionName)
 				respc <- resp
-				completec <- true
 				return
 			case respc <- s.Run(completec):
 				log.Printf("'%s: %s' done\n", s.InstructionName, s.Arguments)
-				completec <- true
 				return
 			}
 		}
