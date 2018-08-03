@@ -181,23 +181,28 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *
 		defer close(respcc)
 
 		for _, itemInterface := range g.ItemList {
+			completec := make(chan interface{})
 			switch t := itemInterface.(type) {
 			case Statement, *Statement:
 				item, _ := itemInterface.(*Statement)
 				go func() {
-					respcc <- item.Execute(terminatec, suspended, nil)
-					wg.Done()
+					respcc <- item.Execute(terminatec, suspended, completec)
 				}()
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				go func() {
-					respcc <- item.Execute(terminatec, suspended, nil)
-					wg.Done()
+					respcc <- item.Execute(terminatec, suspended, completec)
 				}()
 			default:
 				log.Printf("NO MATCH %T!\n", t)
 			}
+
+			go func(c chan interface{}) {
+				defer wg.Done()
+				<-c
+			}(completec)
 		}
+
 		wg.Wait()
 		if pcompletec != nil {
 			pcompletec <- true
