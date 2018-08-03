@@ -193,10 +193,10 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *
 				log.Printf("NO MATCH %T!\n", t)
 			}
 
-			go func(c chan interface{}) {
+			go func() {
 				defer wg.Done()
-				<-c
-			}(completec)
+				<-completec
+			}()
 		}
 
 		wg.Wait()
