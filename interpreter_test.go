@@ -100,6 +100,9 @@ func TestExecute(t *testing.T) {
 	for _, test := range tests {
 		statement, _ := interpreter.ParseLine(test.l)
 		completec := make(chan interface{})
+		go func() {
+			<-completec
+		}()
 		resp := <-statement.Execute(terminatec, &suspend, completec)
 		result := resp.Output
 		if result != test.r {
@@ -223,7 +226,7 @@ MOVEX 5`,
 
 	suspend := false
 	suspendTimer := time.NewTimer(2 * time.Second)
-	recoverTimer := time.NewTimer(10 * time.Second)
+	recoverTimer := time.NewTimer(4 * time.Second)
 	go func() {
 		<-suspendTimer.C
 		//suspend = &suspended
@@ -238,6 +241,9 @@ MOVEX 5`,
 	for i, test := range tests {
 		var resultList []string
 		completec := make(chan interface{})
+		go func() {
+			<-completec
+		}()
 		switch test.s {
 		case "file":
 			statementGroup, _ := interpreter.ParseFile(
