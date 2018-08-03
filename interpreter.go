@@ -29,6 +29,7 @@ var InstructionMap map[string]instruction.Instructioner
 type Statement struct {
 	InstructionName string
 	Arguments       []string
+	IgnoreError     bool
 }
 
 type StatementGroup struct {
@@ -37,9 +38,10 @@ type StatementGroup struct {
 }
 
 type Response struct {
-	Error     error
-	Output    interface{}
-	Completec chan<- interface{}
+	Error       error
+	Output      interface{}
+	Completec   chan<- interface{}
+	IgnoreError bool
 }
 
 type Info struct {
@@ -73,6 +75,7 @@ func (s *Statement) Run(completec chan<- interface{}) Response {
 		resp.Output = output
 		resp.Error = err
 		resp.Completec = completec
+		resp.IgnoreError = s.IgnoreError
 		log.Printf("'%s: %s' produces %q\n", s.InstructionName, s.Arguments, output)
 	}
 	return resp
@@ -231,6 +234,12 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 					i -= 1 //trade off the i++
 					continue
 				} else {
+					if i < len(g.ItemList)-1 {
+						if s, ok := g.ItemList[i+1].(*Statement); ok &&
+							s.InstructionName == "RETRY" {
+							item.IgnoreError = true
+						}
+					}
 					respcc <- item.Execute(terminatec, completec)
 					//log.Printf("'%s: %s' complet", item.InstructionName, item.Arguments)
 				}

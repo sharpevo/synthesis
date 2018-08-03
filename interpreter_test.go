@@ -247,6 +247,7 @@ MOVEX 5`,
 	}()
 
 	for i, test := range tests {
+		fmt.Printf("#%d\n", i)
 		var resultList []string
 		completec := make(chan interface{})
 		go func() {
@@ -262,6 +263,9 @@ MOVEX 5`,
 				time.Sleep(1 * time.Second)
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
+					if resp.IgnoreError {
+						resp.Completec <- true
+					}
 				} else {
 					if suspend {
 						for {
@@ -283,6 +287,9 @@ MOVEX 5`,
 			for resp := range statementGroup.Execute(terminatec, completec) {
 				if resp.Error != nil {
 					fmt.Println(resp.Error)
+					if resp.IgnoreError {
+						resp.Completec <- true
+					}
 				} else {
 					if suspend {
 						for {
