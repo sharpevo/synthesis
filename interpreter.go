@@ -103,15 +103,11 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 				log.Printf("Termiante '%s: %s'\n\n", s.InstructionName, s.Arguments)
 				resp.Error = fmt.Errorf("Terminated %q", s.InstructionName)
 				respc <- resp
-				if completec != nil {
-					completec <- true
-				}
+				completec <- true
 				return
 			case respc <- s.Run():
 				log.Printf("'%s: %s' done\n", s.InstructionName, s.Arguments)
-				if completec != nil {
-					completec <- true
-				}
+				completec <- true
 				return
 			}
 		}
@@ -204,9 +200,7 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *
 		}
 
 		wg.Wait()
-		if pcompletec != nil {
-			pcompletec <- true
-		}
+		pcompletec <- true
 	}()
 
 	return respcc
@@ -265,9 +259,7 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *b
 			<-completec
 		}
 
-		if pcompletec != nil {
-			pcompletec <- true
-		}
+		pcompletec <- true
 	}()
 
 	return respcc
