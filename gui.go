@@ -139,6 +139,7 @@ func main() {
 	resuButton.SetEnabled(false)
 
 	suspend := false
+	resumec := make(chan<- interface{})
 
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
@@ -183,6 +184,7 @@ func main() {
 			}()
 			for resp := range statementGroup.Execute(terminatec, &suspend, completec) {
 				if resp.Error != nil {
+					resumec = resp.Completec
 					suspendExecution(&suspend, suspButton, resuButton)
 					msgBox.ShowMessageBoxSlot(resp.Error.Error())
 				} else {
@@ -232,6 +234,7 @@ func main() {
 	resuButton.ConnectClicked(func(bool) {
 		go func() {
 			suspend = false
+			resumec <- true
 			suspButton.SetEnabled(true)
 			resuButton.SetEnabled(false)
 		}()
