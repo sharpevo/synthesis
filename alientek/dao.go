@@ -5,10 +5,14 @@ import (
 	"log"
 	"posam/dao"
 	"posam/protocol/serialport"
-	"sync"
+	"posam/util/concurrentmap"
 )
 
-var deviceMap sync.Map
+var deviceMap *concurrentmap.ConcurrentMap
+
+func init() {
+	deviceMap = concurrentmap.NewConcurrentMap()
+}
 
 type Dao struct {
 	DeviceAddress byte
@@ -16,11 +20,11 @@ type Dao struct {
 }
 
 func AddInstance(dao *Dao) {
-	deviceMap.Store(string(dao.DeviceAddress), dao)
+	deviceMap.Set(string(dao.DeviceAddress), dao)
 }
 
 func Instance(address string) *Dao {
-	if device, ok := deviceMap.Load(address); ok {
+	if device, ok := deviceMap.Get(address); ok {
 		return device.(*Dao)
 	} else {
 		return nil
