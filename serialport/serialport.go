@@ -6,7 +6,7 @@ import (
 	"github.com/tarm/serial"
 	"log"
 	"posam/protocol/modbus"
-	"sync"
+	"posam/util/concurrentmap"
 )
 
 type Porter interface {
@@ -36,7 +36,11 @@ func (p *Port) OpenPort(name string, baud int) (*serial.Port, error) {
 	return openedPort, nil
 }
 
-var instanceMap sync.Map
+var instanceMap *concurrentmap.ConcurrentMap
+
+func init() {
+	instanceMap = concurrentmap.NewConcurrentMap()
+}
 
 type SerialPort struct {
 	Porter
@@ -53,7 +57,7 @@ type SerialPort struct {
 // TODO: thread safe
 // TODO: return busy error
 func (s *SerialPort) Instance() *serial.Port {
-	if instance, ok := instanceMap.Load(s.Name); ok {
+	if instance, ok := instanceMap.Get(s.Name); ok {
 		return instance.(*serial.Port)
 	}
 	if s.Porter == nil {
@@ -64,7 +68,7 @@ func (s *SerialPort) Instance() *serial.Port {
 }
 
 func (s *SerialPort) addInstance(openedPort *serial.Port) *serial.Port {
-	instance, _ := instanceMap.LoadOrStore(s.Name, openedPort)
+	instance := instanceMap.Set(s.Name, openedPort)
 	return instance.(*serial.Port)
 }
 
