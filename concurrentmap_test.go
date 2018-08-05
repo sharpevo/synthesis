@@ -23,3 +23,22 @@ func TestConcurrencyReadWrite(t *testing.T) {
 	case <-time.After(3 * time.Second):
 	}
 }
+
+func TestNewConcurrentMap(t *testing.T) {
+	cmap := concurrentmap.NewConcurrentMap()
+	cmap.Set("a", 1)
+	cmap.Set("b", "2")
+	newCmap := concurrentmap.NewConcurrentMap(cmap)
+	newCmap.Set("c", 3.0)
+	t.Logf("%#v", newCmap)
+
+	for item := range cmap.Iter() {
+		if v, _ := newCmap.Get(item.Key); v != item.Value {
+			t.Errorf(
+				"\nEXPECT: %v\n GET: %v\n\n",
+				item.Value,
+				v,
+			)
+		}
+	}
+}
