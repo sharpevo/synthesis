@@ -13,9 +13,18 @@ type Item struct {
 	Key   string
 	Value interface{}
 }
-func NewConcurrentMap() *ConcurrentMap {
+
+func NewConcurrentMap(cmaps ...*ConcurrentMap) *ConcurrentMap {
+	newMap := make(map[string]interface{})
+	if len(cmaps) != 0 {
+		for _, cmap := range cmaps {
+			for item := range cmap.Iter() {
+				newMap[item.Key] = item.Value
+			}
+		}
+	}
 	return &ConcurrentMap{
-		m: make(map[string]interface{}),
+		m: newMap,
 	}
 }
 
