@@ -8,6 +8,7 @@ import (
 	"posam/util/concurrentmap"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -34,6 +35,42 @@ func (c *InstructionSetStack) Execute(args ...string) (interface{}, error) {
 	return nil, nil
 }
 
+type InstructionAdd struct {
+	instruction.Instruction
+}
+
+func (i *InstructionAdd) Execute(args ...string) (interface{}, error) {
+
+	//v1, _ := i.Env.Get(args[0])
+	//v2, _ := i.Env.Get(args[1])
+	v1 := GetFloat64(args[0], i.Env)
+	v2 := GetFloat64(args[1], i.Env)
+	sum := v1 + v2
+	i.Env.Set(args[0], sum)
+	return sum, nil
+}
+
+func GetFloat64(v interface{}, env *concurrentmap.ConcurrentMap) float64 {
+	switch i := v.(type) {
+	case float64:
+		return float64(i)
+	case string:
+		vi, found := env.Get(string(i))
+		if !found {
+			f, err := strconv.ParseFloat(i, 64)
+			if err != nil {
+				return float64(0)
+			}
+			return f
+		} else {
+			fmt.Println("found", vi)
+			return GetFloat64(vi, env)
+		}
+	default:
+		return float64(0)
+	}
+}
+
 func TestMain(m *testing.M) {
 	TestInstructionMap.Set("TEST", InstructionTest{})
 	TestInstructionMap.Set("PRINT", InstructionTest{})
@@ -42,6 +79,7 @@ func TestMain(m *testing.M) {
 	TestInstructionMap.Set("RETRY", instruction.InstructionRetry{})
 	TestInstructionMap.Set("MOVEX", instruction.InstructionMoveX{})
 	TestInstructionMap.Set("SET", InstructionSetStack{})
+	TestInstructionMap.Set("ADD", InstructionAdd{})
 
 	interpreter.InitParser(TestInstructionMap)
 	Test.SetTitle("PRINT")
@@ -356,10 +394,11 @@ func TestStack(t *testing.T) {
 		Stack:     concurrentmap.NewConcurrentMap(),
 	}
 
-	sg.Stack.Set("KeyRoot1", 32.01)
+	sg.Stack.Set("KeyRoot1", 12.34)
 	sg.Stack.Set("KeyRoot2", "string")
 	testString := `PRINT 10
 SET KeyRoot2 abc
+ADD KeyRoot1 43.21
 PRINT 15`
 	reader := strings.NewReader(testString)
 	interpreter.ParseReader(reader, &sg)
@@ -374,10 +413,10 @@ PRINT 15`
 		resp.Completec <- true
 	}
 
-	if v, ok := sg.Stack.Get("KeyRoot1"); ok && v.(float64) != 32.01 {
+	if v, ok := sg.Stack.Get("KeyRoot1"); ok && v.(float64) != 55.55 {
 		t.Errorf(
 			"\nEXPECT: %v\nGET:%v\n",
-			"abc",
+			"12.34",
 			v,
 		)
 	}
