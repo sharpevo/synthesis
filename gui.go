@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"posam/dao/alientek"
 	"posam/protocol/serialport"
+	"posam/util/concurrentmap"
 	"runtime"
 	"strconv"
 	"strings"
@@ -48,15 +49,7 @@ SLEEP 1
 PRINT 4`
 )
 
-var InstructionMap = map[string]instruction.Instructioner{
-	"PRINT":      &Print,
-	"SLEEP":      &instruction.Sleep,
-	"IMPORT":     &instruction.Import,
-	"ASYNC":      &instruction.Async,
-	"RETRY":      &instruction.Retry,
-	"LED":        &instruction.Led,
-	"SENDSERIAL": &instruction.SendSerial,
-}
+var InstructionMap = make(interpreter.InstructionMapt)
 
 type InstructionPrint struct {
 	instruction.Instruction
@@ -74,6 +67,14 @@ type QMessageBoxWithCustomSlot struct {
 }
 
 func main() {
+
+	InstructionMap.Set("PRINT", InstructionPrint{})
+	InstructionMap.Set("SLEEP", instruction.InstructionSleep{})
+	InstructionMap.Set("IMPORT", instruction.InstructionImport{})
+	InstructionMap.Set("ASYNC", instruction.InstructionAsync{})
+	InstructionMap.Set("RETRY", instruction.InstructionRetry{})
+	InstructionMap.Set("LED", instruction.InstructionLed{})
+	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
@@ -179,7 +180,10 @@ func main() {
 		terminatecc <- terminatec
 
 		interpreter.InitParser(InstructionMap)
-		statementGroup := interpreter.StatementGroup{Execution: interpreter.SYNC}
+		statementGroup := interpreter.StatementGroup{
+			Execution: interpreter.SYNC,
+			Stack:     concurrentmap.NewConcurrentMap(),
+		}
 		interpreter.ParseReader(
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
