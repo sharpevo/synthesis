@@ -13,21 +13,7 @@ import (
 	"time"
 )
 
-func TestMain(m *testing.M) {
-	interpreter.InitParser(TestInstructionMap)
-	Test.SetTitle("PRINT")
-	ret := m.Run()
-	os.Exit(ret)
-}
-
-var TestInstructionMap = map[string]instruction.Instructioner{
-	"TEST":   &Test,
-	"PRINT":  &Test,
-	"IMPORT": &instruction.Import,
-	"ASYNC":  &instruction.Async,
-	"RETRY":  &instruction.Retry,
-	"MOVEX":  &instruction.MoveX,
-}
+var TestInstructionMap = make(interpreter.InstructionMapt)
 
 type InstructionTest struct {
 	instruction.Instruction
@@ -37,6 +23,30 @@ var Test InstructionTest
 
 func (c *InstructionTest) Execute(args ...string) (interface{}, error) {
 	return args[0] + "_test", nil
+}
+
+type InstructionSetStack struct {
+	instruction.Instruction
+}
+
+func (c *InstructionSetStack) Execute(args ...string) (interface{}, error) {
+	c.Env.Set(args[0], args[1])
+	return nil, nil
+}
+
+func TestMain(m *testing.M) {
+	TestInstructionMap.Set("TEST", InstructionTest{})
+	TestInstructionMap.Set("PRINT", InstructionTest{})
+	TestInstructionMap.Set("IMPORT", instruction.InstructionImport{})
+	TestInstructionMap.Set("ASYNC", instruction.InstructionAsync{})
+	TestInstructionMap.Set("RETRY", instruction.InstructionRetry{})
+	TestInstructionMap.Set("MOVEX", instruction.InstructionMoveX{})
+	TestInstructionMap.Set("SET", InstructionSetStack{})
+
+	interpreter.InitParser(TestInstructionMap)
+	Test.SetTitle("PRINT")
+	ret := m.Run()
+	os.Exit(ret)
 }
 
 func TestParseLine(t *testing.T) {
@@ -336,6 +346,47 @@ MOVEX 5`,
 					get)
 			}
 		}
+	}
+
+}
+
+func TestStack(t *testing.T) {
+	sg := interpreter.StatementGroup{
+		Execution: interpreter.SYNC,
+		Stack:     concurrentmap.NewConcurrentMap(),
+	}
+
+	sg.Stack.Set("KeyRoot1", 32.01)
+	sg.Stack.Set("KeyRoot2", "string")
+	testString := `PRINT 10
+SET KeyRoot2 abc
+PRINT 15`
+	reader := strings.NewReader(testString)
+	interpreter.ParseReader(reader, &sg)
+	terminatec := make(chan interface{})
+	completec := make(chan interface{})
+	var resultList []string
+	go func() {
+		<-completec
+	}()
+	for resp := range sg.Execute(terminatec, completec) {
+		resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
+		resp.Completec <- true
+	}
+
+	if v, ok := sg.Stack.Get("KeyRoot1"); ok && v.(float64) != 32.01 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET:%v\n",
+			"abc",
+			v,
+		)
+	}
+	if v, ok := sg.Stack.Get("KeyRoot2"); ok && v.(string) != "abc" {
+		t.Errorf(
+			"\nEXPECT: %v\nGET:%v\n",
+			"abc",
+			v,
+		)
 	}
 
 }

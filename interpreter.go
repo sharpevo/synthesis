@@ -6,8 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"posam/instruction"
 	"posam/util/concurrentmap"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -65,8 +65,10 @@ type Info struct {
 	Column int
 }
 
-func InitParser(instructionMap map[string]instruction.Instructioner) error {
-	InstructionMap = instructionMap
+func InitParser(instructionMap InstructionMapt) error {
+	for k, v := range instructionMap {
+		InstructionMap[k] = v
+	}
 	return nil
 }
 
@@ -86,8 +88,23 @@ func (s *Statement) Run(completec chan<- interface{}) Response {
 	if _, ok := InstructionMap[s.InstructionName]; !ok {
 		resp.Error = fmt.Errorf("Invalid instruction %q", s.InstructionName)
 	} else {
-		instruction := InstructionMap[s.InstructionName]
-		output, err := instruction.Execute(s.Arguments...)
+		instructionInstancev, err := InstructionMap.Get(s.InstructionName)
+		reflect.Indirect(instructionInstancev).FieldByName("Env").Set(reflect.ValueOf(s.StatementGroup.Stack))
+
+		arguments := make([]reflect.Value, len(s.Arguments))
+		for i, _ := range s.Arguments {
+			arguments[i] = reflect.ValueOf(s.Arguments[i])
+		}
+
+		outputValueList := instructionInstancev.MethodByName("Execute").Call(arguments)
+		output := outputValueList[0].Interface()
+		erri := outputValueList[1].Interface()
+		if erri != nil {
+			err = erri.(error)
+		} else {
+			err = nil
+		}
+
 		resp.Output = output
 		resp.Error = err
 		resp.Completec = completec
