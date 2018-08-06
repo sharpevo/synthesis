@@ -31,7 +31,7 @@ type InstructionSetStack struct {
 }
 
 func (c *InstructionSetStack) Execute(args ...string) (interface{}, error) {
-	c.Env.Set(args[0], args[1])
+	c.Env.Set(args[0], &args[1])
 	return nil, nil
 }
 
@@ -41,12 +41,11 @@ type InstructionAdd struct {
 
 func (i *InstructionAdd) Execute(args ...string) (interface{}, error) {
 
-	//v1, _ := i.Env.Get(args[0])
-	//v2, _ := i.Env.Get(args[1])
 	v1 := GetFloat64(args[0], i.Env)
 	v2 := GetFloat64(args[1], i.Env)
 	sum := v1 + v2
-	i.Env.Set(args[0], sum)
+	v, _ := i.Env.Get(args[0])
+	*v.(*float64) = sum
 	return sum, nil
 }
 
@@ -63,9 +62,17 @@ func GetFloat64(v interface{}, env *concurrentmap.ConcurrentMap) float64 {
 			}
 			return f
 		} else {
-			fmt.Println("found", vi)
 			return GetFloat64(vi, env)
 		}
+	case *string:
+		p, err := strconv.ParseFloat(*i, 64)
+		if err != nil {
+			return float64(0)
+		} else {
+			return p
+		}
+	case *float64:
+		return float64(*i)
 	default:
 		return float64(0)
 	}
@@ -394,11 +401,16 @@ func TestStack(t *testing.T) {
 		Stack:     concurrentmap.NewConcurrentMap(),
 	}
 
-	sg.Stack.Set("KeyRoot1", 12.34)
-	sg.Stack.Set("KeyRoot2", "string")
+	v1 := 12.34
+	v2 := "string"
+	v3 := 22.11
+	sg.Stack.Set("KeyRoot1", &v1)
+	sg.Stack.Set("KeyRoot2", &v2)
+	sg.Stack.Set("KeyRoot3", &v3)
 	testString := `PRINT 10
 SET KeyRoot2 abc
 ADD KeyRoot1 43.21
+IMPORT /home/yang/go/src/posam/interpreter/testscripts/scriptstack1
 PRINT 15`
 	reader := strings.NewReader(testString)
 	interpreter.ParseReader(reader, &sg)
@@ -413,19 +425,34 @@ PRINT 15`
 		resp.Completec <- true
 	}
 
-	if v, ok := sg.Stack.Get("KeyRoot1"); ok && v.(float64) != 55.55 {
-		t.Errorf(
-			"\nEXPECT: %v\nGET:%v\n",
-			"12.34",
-			v,
-		)
+	if v, ok := sg.Stack.Get("KeyRoot1"); ok {
+		p := v.(*float64)
+		if *p != 55.55 {
+			t.Errorf(
+				"\nEXPECT: %v\nGET:%v\n",
+				"12.34",
+				*p,
+			)
+		}
 	}
-	if v, ok := sg.Stack.Get("KeyRoot2"); ok && v.(string) != "abc" {
-		t.Errorf(
-			"\nEXPECT: %v\nGET:%v\n",
-			"abc",
-			v,
-		)
+	if v, ok := sg.Stack.Get("KeyRoot2"); ok {
+		p := v.(*string)
+		if *p != "abc" {
+			t.Errorf(
+				"\nEXPECT: %v\nGET:%v\n",
+				"abc",
+				v,
+			)
+		}
 	}
-
+	if v, ok := sg.Stack.Get("KeyRoot3"); ok {
+		p := v.(*float64)
+		if *p != 33.33 {
+			t.Errorf(
+				"\nEXPECT: %v\nGET:%v\n",
+				"33.33",
+				*p,
+			)
+		}
+	}
 }
