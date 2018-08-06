@@ -5,6 +5,7 @@ import (
 	"os"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/util/concurrentmap"
 	"reflect"
 	"sort"
 	"strings"
@@ -99,6 +100,11 @@ func TestExecute(t *testing.T) {
 
 	for _, test := range tests {
 		statement, _ := interpreter.ParseLine(test.l)
+		statementGroup := interpreter.StatementGroup{
+			Execution: interpreter.SYNC,
+			Stack:     concurrentmap.NewConcurrentMap(),
+		}
+		statement.StatementGroup = &statementGroup
 		completec := make(chan interface{})
 		go func() {
 			<-completec
@@ -258,6 +264,7 @@ MOVEX 5`,
 			statementGroup, _ := interpreter.ParseFile(
 				test.f,
 				interpreter.SYNC)
+			statementGroup.Stack = concurrentmap.NewConcurrentMap()
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
 			for resp := range statementGroup.Execute(terminatec, completec) {
 				time.Sleep(1 * time.Second)
@@ -280,7 +287,10 @@ MOVEX 5`,
 				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
 			}
 		case "string":
-			statementGroup := interpreter.StatementGroup{Execution: interpreter.SYNC}
+			statementGroup := interpreter.StatementGroup{
+				Execution: interpreter.SYNC,
+				Stack:     concurrentmap.NewConcurrentMap(),
+			}
 			reader := strings.NewReader(test.f)
 			interpreter.ParseReader(reader, &statementGroup)
 			//resultList, _ = statementGroup.Execute(terminatec, nil)

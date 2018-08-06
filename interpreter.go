@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"posam/instruction"
+	"posam/util/concurrentmap"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,9 +25,23 @@ const (
 	ASYNC
 )
 
-var InstructionMap map[string]instruction.Instructioner
+type InstructionMapt map[string]reflect.Type
+
+var InstructionMap = make(InstructionMapt)
+
+func (m InstructionMapt) Set(k string, v interface{}) {
+	m[k] = reflect.TypeOf(v)
+}
+
+func (m InstructionMapt) Get(name string) (reflect.Value, error) {
+	if t, ok := m[name]; ok {
+		return reflect.New(t), nil
+	}
+	return reflect.Value{}, fmt.Errorf("Invalid instruction")
+}
 
 type Statement struct {
+	StatementGroup  *StatementGroup
 	InstructionName string
 	Arguments       []string
 	IgnoreError     bool
@@ -35,6 +50,7 @@ type Statement struct {
 type StatementGroup struct {
 	Execution ExecutionType
 	ItemList  []interface{}
+	Stack     *concurrentmap.ConcurrentMap
 }
 
 type Response struct {
@@ -281,24 +297,31 @@ func ParseFile(
 		panic(err)
 	}
 	defer file.Close()
+	stack := concurrentmap.NewConcurrentMap()
 	statementGroup := StatementGroup{
 		Execution: execution,
+		Stack:     stack,
 	}
 
 	return ParseReader(file, &statementGroup)
 }
 
 func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGroup, error) {
+	if statementGroup.Stack == nil {
+		statementGroup.Stack = concurrentmap.NewConcurrentMap()
+	}
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
 		statement, _ := ParseLine(line)
+		statement.StatementGroup = statementGroup
 		switch statement.InstructionName {
 		case "IMPORT":
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				SYNC)
+			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
@@ -306,6 +329,7 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				ASYNC)
+			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
