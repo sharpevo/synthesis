@@ -12,8 +12,6 @@ type InstructionSendSerial struct {
 	Instruction
 }
 
-var SendSerial InstructionSendSerial
-
 func (c *InstructionSendSerial) Execute(args ...string) (resp interface{}, err error) {
 	if len(args) != 3 {
 		return resp, fmt.Errorf("not enough arguments")

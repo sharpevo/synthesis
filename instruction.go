@@ -1,6 +1,8 @@
 package instruction
 
-import ()
+import (
+	"posam/util/concurrentmap"
+)
 
 type Instructioner interface {
 	Execute(args ...string) (interface{}, error)
@@ -8,6 +10,7 @@ type Instructioner interface {
 }
 
 type Instruction struct {
+	Env   *concurrentmap.ConcurrentMap
 	title string
 	path  string
 }
