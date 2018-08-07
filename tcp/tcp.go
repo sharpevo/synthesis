@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net"
 )
@@ -29,7 +30,7 @@ func (t *TCP) SendString(message string) string {
 	return response
 }
 
-func (t *TCP) SendByte(message []byte) []byte {
+func (t *TCP) SendByte(message []byte, expected []byte) (resp []byte, err error) {
 	conn, err := t.Connect()
 	if err != nil {
 		fmt.Println(err)
@@ -37,5 +38,12 @@ func (t *TCP) SendByte(message []byte) []byte {
 	conn.Write(message)
 	buf := make([]byte, 512)
 	n, err := conn.Read(buf)
-	return buf[:n]
+	resp = buf[:n]
+	if !bytes.Equal(expected, resp) {
+		return resp, fmt.Errorf("response error %x (%x)",
+			resp,
+			expected,
+		)
+	}
+	return resp, nil
 }

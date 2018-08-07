@@ -1,7 +1,6 @@
 package tcp_test
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"posam/protocol/tcp"
@@ -37,9 +36,9 @@ func TestSendString(t *testing.T) {
 func TestSendByte(t *testing.T) {
 	for _, i := range []int{4, 5, 6} {
 		msg := []byte(fmt.Sprintf("Test-%d", i))
-		actual := p.SendByte(msg)
 		expected := msg
-		if !bytes.Equal(expected, actual) {
+		actual, err := p.SendByte(msg, expected)
+		if err != nil {
 			t.Errorf(
 				"\nEXPECT: %q\nGET: %q\n",
 				expected,
