@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestInstructionAddExecute(t *testing.T) {
+func TestInstructionAdditionFloat64Execute(t *testing.T) {
 	var err error
 	i := instruction.InstructionAdditionFloat64{}
 	i.Env = concurrentmap.NewConcurrentMap()
