@@ -21,9 +21,11 @@ func init() {
 type ExecutionType int
 
 type Variable struct {
-	Key   string
 	Value interface{}
-	Type  string
+
+	Name string
+	Type string
+	Base int // 0, 2, 10, 16
 }
 
 const (

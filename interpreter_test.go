@@ -31,19 +31,19 @@ type InstructionSetStack struct {
 }
 
 func (c *InstructionSetStack) Execute(args ...string) (interface{}, error) {
-	key := args[0]
+	name := args[0]
 	value := args[1]
 
-	v, found := c.Env.Get(key)
+	v, found := c.Env.Get(name)
 	if found {
 		v.(*interpreter.Variable).Value = value
 	} else {
 		v := interpreter.Variable{
-			Key:   key,
+			Name:  name,
 			Value: value,
 			Type:  "blah...",
 		}
-		c.Env.Set(key, &v)
+		c.Env.Set(name, &v)
 	}
 	//c.Env.Set(args[0], &args[1])
 	return nil, nil
@@ -446,17 +446,17 @@ func TestStack(t *testing.T) {
 	}
 
 	v1 := interpreter.Variable{
-		Key:   "KeyRoot1",
+		Name:  "KeyRoot1",
 		Value: 12.34,
 		Type:  "float64",
 	}
 	v2 := interpreter.Variable{
-		Key:   "KeyRoot2",
+		Name:  "KeyRoot2",
 		Value: "stringtext",
 		Type:  "string",
 	}
 	v3 := interpreter.Variable{
-		Key:   "KeyRoot3",
+		Name:  "KeyRoot3",
 		Value: 22.11,
 		Type:  "float64",
 	}
