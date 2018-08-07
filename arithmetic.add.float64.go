@@ -6,11 +6,11 @@ import (
 	"posam/interpreter"
 )
 
-type InstructionAddFloat64 struct {
+type InstructionAdditionFloat64 struct {
 	InstructionArithmetic
 }
 
-func (i *InstructionAddFloat64) Execute(args ...string) (resp interface{}, err error) {
+func (i *InstructionAdditionFloat64) Execute(args ...string) (resp interface{}, err error) {
 
 	v, found := i.Env.Get(args[0])
 	if !found {

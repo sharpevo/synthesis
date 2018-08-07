@@ -10,7 +10,7 @@ import (
 
 func TestInstructionAddExecute(t *testing.T) {
 	var err error
-	i := instruction.InstructionAddFloat64{}
+	i := instruction.InstructionAdditionFloat64{}
 	i.Env = concurrentmap.NewConcurrentMap()
 	i.Env.Set("var1", &interpreter.Variable{Value: "12.34"})
 	i.Env.Set("var2", &interpreter.Variable{Value: "43.21"})
