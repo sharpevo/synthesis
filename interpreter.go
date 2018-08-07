@@ -6,11 +6,11 @@ import (
 	"io"
 	"log"
 	"os"
-	"posam/instruction"
+	"posam/util/concurrentmap"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 func init() {
@@ -20,26 +20,52 @@ func init() {
 
 type ExecutionType int
 
+type Variable struct {
+	Value interface{}
+
+	Name string
+	Type string
+	Base int // 0, 2, 10, 16
+}
+
 const (
 	SYNC ExecutionType = iota
 	ASYNC
 )
 
-var InstructionMap map[string]instruction.Instructioner
+type InstructionMapt map[string]reflect.Type
+
+var InstructionMap = make(InstructionMapt)
+
+func (m InstructionMapt) Set(k string, v interface{}) {
+	m[k] = reflect.TypeOf(v)
+}
+
+func (m InstructionMapt) Get(name string) (reflect.Value, error) {
+	if t, ok := m[name]; ok {
+		return reflect.New(t), nil
+	}
+	return reflect.Value{}, fmt.Errorf("Invalid instruction")
+}
 
 type Statement struct {
+	StatementGroup  *StatementGroup
 	InstructionName string
 	Arguments       []string
+	IgnoreError     bool
 }
 
 type StatementGroup struct {
 	Execution ExecutionType
 	ItemList  []interface{}
+	Stack     *concurrentmap.ConcurrentMap
 }
 
 type Response struct {
-	Error  error
-	Output interface{}
+	Error       error
+	Output      interface{}
+	Completec   chan<- interface{}
+	IgnoreError bool
 }
 
 type Info struct {
@@ -47,8 +73,10 @@ type Info struct {
 	Column int
 }
 
-func InitParser(instructionMap map[string]instruction.Instructioner) error {
-	InstructionMap = instructionMap
+func InitParser(instructionMap InstructionMapt) error {
+	for k, v := range instructionMap {
+		InstructionMap[k] = v
+	}
 	return nil
 }
 
@@ -63,34 +91,38 @@ func ParseLine(line string) (*Statement, error) {
 	return statement, nil
 }
 
-func (s *Statement) Run() Response {
+func (s *Statement) Run(completec chan<- interface{}) Response {
 	resp := Response{}
 	if _, ok := InstructionMap[s.InstructionName]; !ok {
 		resp.Error = fmt.Errorf("Invalid instruction %q", s.InstructionName)
 	} else {
-		instruction := InstructionMap[s.InstructionName]
-		output, err := instruction.Execute(s.Arguments...)
+		instructionInstancev, err := InstructionMap.Get(s.InstructionName)
+		reflect.Indirect(instructionInstancev).FieldByName("Env").Set(reflect.ValueOf(s.StatementGroup.Stack))
+
+		arguments := make([]reflect.Value, len(s.Arguments))
+		for i, _ := range s.Arguments {
+			arguments[i] = reflect.ValueOf(s.Arguments[i])
+		}
+
+		outputValueList := instructionInstancev.MethodByName("Execute").Call(arguments)
+		output := outputValueList[0].Interface()
+		erri := outputValueList[1].Interface()
+		if erri != nil {
+			err = erri.(error)
+		} else {
+			err = nil
+		}
+
 		resp.Output = output
 		resp.Error = err
+		resp.Completec = completec
+		resp.IgnoreError = s.IgnoreError
 		log.Printf("'%s: %s' produces %q\n", s.InstructionName, s.Arguments, output)
 	}
 	return resp
 }
 
-func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, completec chan<- interface{}) <-chan Response {
-
-	//fmt.Println("+", *suspended)
-	if *suspended {
-		log.Printf("'%s: %s' suspended\n", s.InstructionName, s.Arguments)
-		for {
-			//fmt.Println("-", *suspended)
-			if !*suspended {
-				log.Printf("'%s: %s' resumed\n", s.InstructionName, s.Arguments)
-				break
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}
+func (s *Statement) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
 
 	respc := make(chan Response)
 	go func() {
@@ -103,15 +135,9 @@ func (s *Statement) Execute(terminatec <-chan interface{}, suspended *bool, comp
 				log.Printf("Termiante '%s: %s'\n\n", s.InstructionName, s.Arguments)
 				resp.Error = fmt.Errorf("Terminated %q", s.InstructionName)
 				respc <- resp
-				if completec != nil {
-					completec <- true
-				}
 				return
-			case respc <- s.Run():
+			case respc <- s.Run(completec):
 				log.Printf("'%s: %s' done\n", s.InstructionName, s.Arguments)
-				if completec != nil {
-					completec <- true
-				}
 				return
 			}
 		}
@@ -170,7 +196,7 @@ func bridge(terminatec <-chan interface{}, chanc <-chan <-chan Response) <-chan 
 	return valStream
 }
 
-func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *bool, pcompletec chan<- interface{}) <-chan <-chan Response {
+func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec chan<- interface{}) <-chan <-chan Response {
 
 	log.Println("==== ASYNC ====")
 	respcc := make(chan (<-chan Response))
@@ -181,33 +207,36 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, suspended *
 		defer close(respcc)
 
 		for _, itemInterface := range g.ItemList {
+			completec := make(chan interface{})
 			switch t := itemInterface.(type) {
 			case Statement, *Statement:
 				item, _ := itemInterface.(*Statement)
 				go func() {
-					respcc <- item.Execute(terminatec, suspended, nil)
-					wg.Done()
+					respcc <- item.Execute(terminatec, completec)
 				}()
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				go func() {
-					respcc <- item.Execute(terminatec, suspended, nil)
-					wg.Done()
+					respcc <- item.Execute(terminatec, completec)
 				}()
 			default:
 				log.Printf("NO MATCH %T!\n", t)
 			}
+
+			go func() {
+				defer wg.Done()
+				<-completec
+			}()
 		}
+
 		wg.Wait()
-		if pcompletec != nil {
-			pcompletec <- true
-		}
+		pcompletec <- true
 	}()
 
 	return respcc
 }
 
-func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *bool, pcompletec chan<- interface{}) <-chan <-chan Response {
+func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec chan<- interface{}) <-chan <-chan Response {
 
 	log.Println("==== SYNC ====")
 	respcc := make(chan (<-chan Response))
@@ -246,13 +275,19 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *b
 					i -= 1 //trade off the i++
 					continue
 				} else {
-					respcc <- item.Execute(terminatec, suspended, completec)
+					if i < len(g.ItemList)-1 {
+						if s, ok := g.ItemList[i+1].(*Statement); ok &&
+							s.InstructionName == "RETRY" {
+							item.IgnoreError = true
+						}
+					}
+					respcc <- item.Execute(terminatec, completec)
 					//log.Printf("'%s: %s' complet", item.InstructionName, item.Arguments)
 				}
 
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
-				respcc <- item.Execute(terminatec, suspended, completec)
+				respcc <- item.Execute(terminatec, completec)
 			default:
 				log.Printf("NO MATCH %T!\n", t)
 			}
@@ -260,20 +295,18 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, suspended *b
 			<-completec
 		}
 
-		if pcompletec != nil {
-			pcompletec <- true
-		}
+		pcompletec <- true
 	}()
 
 	return respcc
 }
 
-func (g *StatementGroup) Execute(terminatec <-chan interface{}, suspended *bool, completec chan<- interface{}) <-chan Response {
+func (g *StatementGroup) Execute(terminatec <-chan interface{}, completec chan<- interface{}) <-chan Response {
 	switch g.Execution {
 	case SYNC:
-		return bridge(terminatec, g.ExecuteSync(terminatec, suspended, completec))
+		return bridge(terminatec, g.ExecuteSync(terminatec, completec))
 	case ASYNC:
-		return bridge(terminatec, g.ExecuteAsync(terminatec, suspended, completec))
+		return bridge(terminatec, g.ExecuteAsync(terminatec, completec))
 	}
 	resultc := make(chan Response)
 	close(resultc)
@@ -289,24 +322,31 @@ func ParseFile(
 		panic(err)
 	}
 	defer file.Close()
+	stack := concurrentmap.NewConcurrentMap()
 	statementGroup := StatementGroup{
 		Execution: execution,
+		Stack:     stack,
 	}
 
 	return ParseReader(file, &statementGroup)
 }
 
 func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGroup, error) {
+	if statementGroup.Stack == nil {
+		statementGroup.Stack = concurrentmap.NewConcurrentMap()
+	}
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
 		statement, _ := ParseLine(line)
+		statement.StatementGroup = statementGroup
 		switch statement.InstructionName {
 		case "IMPORT":
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				SYNC)
+			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
@@ -314,6 +354,7 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				ASYNC)
+			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
