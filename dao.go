@@ -49,7 +49,9 @@ func (u *Unit) SetComResp(comResp CompletedResponse) {
 }
 
 func (r *Request) Bytes() (output []byte) {
-	output = append(output, r.Address)
+	if r.Address != 0 {
+		output = append(output, r.Address)
+	}
 	output = append(output, r.Function)
 	output = append(output, r.Arguments...)
 	output = append(output, r.CRC...)
