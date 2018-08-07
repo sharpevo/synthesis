@@ -6,7 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"posam/instruction"
+	"posam/util/concurrentmap"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,14 +20,36 @@ func init() {
 
 type ExecutionType int
 
+type Variable struct {
+	Value interface{}
+
+	Name string
+	Type string
+	Base int // 0, 2, 10, 16
+}
+
 const (
 	SYNC ExecutionType = iota
 	ASYNC
 )
 
-var InstructionMap map[string]instruction.Instructioner
+type InstructionMapt map[string]reflect.Type
+
+var InstructionMap = make(InstructionMapt)
+
+func (m InstructionMapt) Set(k string, v interface{}) {
+	m[k] = reflect.TypeOf(v)
+}
+
+func (m InstructionMapt) Get(name string) (reflect.Value, error) {
+	if t, ok := m[name]; ok {
+		return reflect.New(t), nil
+	}
+	return reflect.Value{}, fmt.Errorf("Invalid instruction")
+}
 
 type Statement struct {
+	StatementGroup  *StatementGroup
 	InstructionName string
 	Arguments       []string
 	IgnoreError     bool
@@ -35,6 +58,7 @@ type Statement struct {
 type StatementGroup struct {
 	Execution ExecutionType
 	ItemList  []interface{}
+	Stack     *concurrentmap.ConcurrentMap
 }
 
 type Response struct {
@@ -49,8 +73,10 @@ type Info struct {
 	Column int
 }
 
-func InitParser(instructionMap map[string]instruction.Instructioner) error {
-	InstructionMap = instructionMap
+func InitParser(instructionMap InstructionMapt) error {
+	for k, v := range instructionMap {
+		InstructionMap[k] = v
+	}
 	return nil
 }
 
@@ -70,8 +96,23 @@ func (s *Statement) Run(completec chan<- interface{}) Response {
 	if _, ok := InstructionMap[s.InstructionName]; !ok {
 		resp.Error = fmt.Errorf("Invalid instruction %q", s.InstructionName)
 	} else {
-		instruction := InstructionMap[s.InstructionName]
-		output, err := instruction.Execute(s.Arguments...)
+		instructionInstancev, err := InstructionMap.Get(s.InstructionName)
+		reflect.Indirect(instructionInstancev).FieldByName("Env").Set(reflect.ValueOf(s.StatementGroup.Stack))
+
+		arguments := make([]reflect.Value, len(s.Arguments))
+		for i, _ := range s.Arguments {
+			arguments[i] = reflect.ValueOf(s.Arguments[i])
+		}
+
+		outputValueList := instructionInstancev.MethodByName("Execute").Call(arguments)
+		output := outputValueList[0].Interface()
+		erri := outputValueList[1].Interface()
+		if erri != nil {
+			err = erri.(error)
+		} else {
+			err = nil
+		}
+
 		resp.Output = output
 		resp.Error = err
 		resp.Completec = completec
@@ -281,24 +322,31 @@ func ParseFile(
 		panic(err)
 	}
 	defer file.Close()
+	stack := concurrentmap.NewConcurrentMap()
 	statementGroup := StatementGroup{
 		Execution: execution,
+		Stack:     stack,
 	}
 
 	return ParseReader(file, &statementGroup)
 }
 
 func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGroup, error) {
+	if statementGroup.Stack == nil {
+		statementGroup.Stack = concurrentmap.NewConcurrentMap()
+	}
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
 		statement, _ := ParseLine(line)
+		statement.StatementGroup = statementGroup
 		switch statement.InstructionName {
 		case "IMPORT":
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				SYNC)
+			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
@@ -306,6 +354,7 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				ASYNC)
+			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
