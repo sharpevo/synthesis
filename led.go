@@ -9,8 +9,6 @@ type InstructionLed struct {
 	Instruction
 }
 
-var Led InstructionLed
-
 func (i *InstructionLed) Execute(args ...string) (resp interface{}, err error) {
 	if len(args) != 1 {
 		return resp, fmt.Errorf("not enough arguments")
