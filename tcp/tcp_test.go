@@ -21,12 +21,16 @@ func TestMain(m *testing.M) {
 }
 
 func TestSend(t *testing.T) {
+
+	readyc := make(chan interface{})
+
 	for _, i := range []int{4, 5, 6} {
 
 		message := []byte(fmt.Sprintf("Test-%d", i))
 		expected := append(message, []byte("-processed")...)
 
 		go func() {
+			<-readyc // send messages after the server is launched
 
 			actual, err := client.Send(message, expected)
 			t.Logf("Send message: %s", string(message))
@@ -47,6 +51,7 @@ func TestSend(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _ = range [3]int{} {
+		readyc <- true
 		conn, err := l.Accept()
 		if err != nil {
 			t.Fatal(err)
