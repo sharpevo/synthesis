@@ -14,10 +14,14 @@ type TCPClienter interface {
 type TCPClient struct {
 	ServerNetwork string
 	ServerAddress string
+	ServerTimeout time.Duration
 }
 
 func (t *TCPClient) connect() (conn net.Conn, err error) {
 	conn, err = net.Dial(t.ServerNetwork, t.ServerAddress)
+	if t.ServerTimeout == 0 {
+		t.ServerTimeout = 10 * time.Second
+	}
 	if err != nil {
 		return conn, err
 	}
@@ -26,7 +30,7 @@ func (t *TCPClient) connect() (conn net.Conn, err error) {
 
 func (t *TCPClient) Send(message []byte, expected []byte) (resp []byte, err error) {
 	conn, err := t.connect()
-	conn.SetDeadline(time.Now().Add(10 * time.Second))
+	conn.SetDeadline(time.Now().Add(t.ServerTimeout))
 	defer conn.Close()
 	if err != nil {
 		fmt.Println(err)
