@@ -11,6 +11,7 @@ import (
 var ServerNetwork = "tcp"
 var ServerAddress = "localhost:6507"
 var client = tcp.TCPClient{
+	Connectioner:  &tcp.Connection{},
 	ServerNetwork: ServerNetwork,
 	ServerAddress: ServerAddress,
 }
