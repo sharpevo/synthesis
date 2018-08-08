@@ -56,3 +56,27 @@ func (d *Dao) QueryPrinterStatus() (resp string, err error) {
 	}
 	return resp, nil
 }
+
+func (d *Dao) PrintData(
+	bitsPerPixel []byte,
+	width []byte,
+	lineBufferSize []byte,
+	lineBuffer []byte,
+) (resp string, err error) {
+	req := PrintDataUnit.Request()
+	reqBytes := req.Bytes()
+	reqBytes = append(reqBytes, bitsPerPixel...)
+	reqBytes = append(reqBytes, width...)
+	reqBytes = append(reqBytes, lineBufferSize...)
+	reqBytes = append(reqBytes, lineBuffer...)
+	respBytes, err := d.TCPClient.Send(
+		reqBytes,
+		PrintDataUnit.ComResp(),
+	)
+	resp = string(respBytes)
+	if err != nil {
+		log.Println("ERR:", err)
+		return resp, err
+	}
+	return resp, nil
+}
