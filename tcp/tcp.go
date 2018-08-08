@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"time"
 )
 
 type TCPClient struct {
@@ -32,6 +33,7 @@ func (t *TCPClient) SendString(message string) string {
 
 func (t *TCPClient) SendByte(message []byte, expected []byte) (resp []byte, err error) {
 	conn, err := t.connect()
+	conn.SetDeadline(time.Now().Add(10 * time.Second))
 	defer conn.Close()
 	if err != nil {
 		fmt.Println(err)
