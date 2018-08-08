@@ -1,7 +1,6 @@
 package tcp
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"net"
@@ -19,16 +18,6 @@ func (t *TCPClient) connect() (conn net.Conn, err error) {
 		return conn, err
 	}
 	return conn, nil
-}
-
-func (t *TCPClient) SendString(message string) string {
-	conn, err := t.connect()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Fprintf(conn, message)
-	response, err := bufio.NewReader(conn).ReadString('\n')
-	return response
 }
 
 func (t *TCPClient) Send(message []byte, expected []byte) (resp []byte, err error) {
