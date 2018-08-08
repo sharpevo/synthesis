@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+type TCPClienter interface {
+	Send([]byte, []byte) ([]byte, error)
+}
+
 type TCPClient struct {
 	ServerNetwork string
 	ServerAddress string
