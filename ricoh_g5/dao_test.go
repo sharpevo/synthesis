@@ -91,16 +91,17 @@ func TestQueryFunction(t *testing.T) {
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
 					t.Logf("error occured as expected %s", err)
+					continue
 				} else {
 					// panic if change errString to "foo"
 					panic(err)
 				}
 			}
 
-			if !bytes.Equal(test.response, []byte(actual)) {
+			if !bytes.Equal(test.expected, []byte(actual)) {
 				t.Errorf(
 					"\nEXPECT: '%x'\nGET: '%x'\n",
-					test.response,
+					test.expected,
 					[]byte(actual),
 				)
 			}
