@@ -32,6 +32,7 @@ func (t *TCPClient) SendString(message string) string {
 
 func (t *TCPClient) SendByte(message []byte, expected []byte) (resp []byte, err error) {
 	conn, err := t.connect()
+	defer conn.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
