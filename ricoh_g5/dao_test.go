@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"os"
 	"posam/dao"
 	"posam/dao/ricoh_g5"
 	"posam/protocol/tcp"
@@ -22,6 +23,21 @@ func (m *MockTCPClient) Send(message, expected []byte) (resp []byte, err error) 
 
 var ServerNetwork = "tcp"
 var ServerAddress = "localhost:6507"
+
+func TestMain(m *testing.M) {
+
+	ricohDao := &ricoh_g5.Dao{
+		DeviceAddress: ServerAddress,
+		TCPClient: &tcp.TCPClient{
+			Connectioner:  &tcp.Connection{},
+			ServerNetwork: ServerNetwork,
+			ServerAddress: ServerAddress,
+		},
+	}
+	ricoh_g5.AddInstance(ricohDao)
+	ret := m.Run()
+	os.Exit(ret)
+}
 
 func TestQueryFunction(t *testing.T) {
 	testList := []struct {
@@ -64,15 +80,8 @@ func TestQueryFunction(t *testing.T) {
 
 	readyc := make(chan interface{})
 	completec := make(chan interface{})
-	ricohDao := &ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient: &tcp.TCPClient{
-			Connectioner:  &tcp.Connection{},
-			ServerNetwork: ServerNetwork,
-			ServerAddress: ServerAddress,
 		},
 	}
-	ricoh_g5.AddInstance(ricohDao)
 
 	go func() {
 		for i, test := range testList {
