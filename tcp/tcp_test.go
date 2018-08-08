@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+type MockConnectioner struct {
+	tcp.Connectioner
+}
+
+func (m *MockConnectioner) Connect(network string, address string, timeout time.Duration) (conn net.Conn, err error) {
+	return
+}
+
 var ServerNetwork = "tcp"
 var ServerAddress = "localhost:6507"
 var client = tcp.TCPClient{
