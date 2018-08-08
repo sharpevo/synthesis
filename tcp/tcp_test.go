@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-var p tcp.TCP
+var p tcp.TCPClient
 
 func TestMain(m *testing.M) {
-	p = tcp.TCP{
-		Network: "tcp",
-		Address: "localhost:3333",
+	p = tcp.TCPClient{
+		ServerNetwork: "tcp",
+		ServerAddress: "localhost:3333",
 	}
 	ret := m.Run()
 	os.Exit(ret)
