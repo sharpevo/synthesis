@@ -7,21 +7,21 @@ import (
 	"net"
 )
 
-type TCP struct {
-	Network string
-	Address string
+type TCPClient struct {
+	ServerNetwork string
+	ServerAddress string
 }
 
-func (t *TCP) Connect() (conn net.Conn, err error) {
-	conn, err = net.Dial(t.Network, t.Address)
+func (t *TCPClient) connect() (conn net.Conn, err error) {
+	conn, err = net.Dial(t.ServerNetwork, t.ServerAddress)
 	if err != nil {
 		return conn, err
 	}
 	return conn, nil
 }
 
-func (t *TCP) SendString(message string) string {
-	conn, err := t.Connect()
+func (t *TCPClient) SendString(message string) string {
+	conn, err := t.connect()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -30,8 +30,8 @@ func (t *TCP) SendString(message string) string {
 	return response
 }
 
-func (t *TCP) SendByte(message []byte, expected []byte) (resp []byte, err error) {
-	conn, err := t.Connect()
+func (t *TCPClient) SendByte(message []byte, expected []byte) (resp []byte, err error) {
+	conn, err := t.connect()
 	if err != nil {
 		fmt.Println(err)
 	}
