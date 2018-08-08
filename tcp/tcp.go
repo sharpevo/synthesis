@@ -31,7 +31,7 @@ func (t *TCPClient) SendString(message string) string {
 	return response
 }
 
-func (t *TCPClient) SendByte(message []byte, expected []byte) (resp []byte, err error) {
+func (t *TCPClient) Send(message []byte, expected []byte) (resp []byte, err error) {
 	conn, err := t.connect()
 	conn.SetDeadline(time.Now().Add(10 * time.Second))
 	defer conn.Close()
