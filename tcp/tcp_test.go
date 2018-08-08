@@ -33,11 +33,11 @@ func TestSendString(t *testing.T) {
 	}
 }
 
-func TestSendByte(t *testing.T) {
+func TestSend(t *testing.T) {
 	for _, i := range []int{4, 5, 6} {
 		msg := []byte(fmt.Sprintf("Test-%d", i))
 		expected := msg
-		actual, err := p.SendByte(msg, expected)
+		actual, err := p.Send(msg, expected)
 		if err != nil {
 			t.Errorf(
 				"\nEXPECT: %q\nGET: %q\n",
