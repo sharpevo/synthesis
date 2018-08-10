@@ -154,3 +154,59 @@ func TestNewFloat32Argument(t *testing.T) {
 		}
 	}
 }
+
+func TestNewArgument(t *testing.T) {
+	testList := []struct {
+		errString string
+		expected  interface{}
+		input     interface{}
+		order     binary.ByteOrder
+		length    int
+	}{
+		{
+			errString: "invalid type of argument",
+			input:     11.22,
+			order:     binary.LittleEndian,
+			length:    5,
+		},
+		{
+			expected: []byte{0x00, 0x01, 0x02, 0x03, 0x04},
+			input:    "0001020304",
+			order:    binary.LittleEndian,
+			length:   5,
+		},
+		{
+			errString: "encoding/hex",
+			expected:  []byte{0x01, 0x02},
+			input:     "test",
+			order:     binary.LittleEndian,
+			length:    5,
+		},
+	}
+
+	for i, test := range testList {
+		t.Logf("#%d", i)
+		argument, err := dao.NewArgument(test.input, test.order, test.length)
+		if test.errString != "" && err != nil {
+			//if !strings.Contains(err.Error(), test.errString) {
+			//t.Errorf("unexpected error: %q", err.Error())
+			//}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			actual, err := argument.ByteSequence()
+			if test.errString != "" && err != nil {
+				if !strings.Contains(err.Error(), test.errString) {
+					t.Errorf("unexpected error: %q", err.Error())
+				}
+			} else if !bytes.Equal(actual, test.expected.([]byte)) {
+				t.Errorf(
+					"\nEXPECT: '%#v'\nGET: '%#v'\n",
+					test.expected,
+					actual,
+				)
+			}
+		}
+	}
+}

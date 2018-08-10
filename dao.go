@@ -74,18 +74,44 @@ type Argument struct {
 }
 
 func (a *Argument) ByteSequence() (output []byte, err error) {
-	var buf = new(bytes.Buffer)
-	err = binary.Write(buf, a.ByteOrder, a.Value)
-	if err != nil {
-		return output, err
-	}
-	output = buf.Bytes()
-	if len(output) != a.ByteLength {
-		return output, fmt.Errorf(
-			"%v is translated with unexpected length",
-			a.Value)
+	switch v := a.Value.(type) {
+	case string:
+		output, err := hex.DecodeString(v)
+		if err != nil {
+			return output, err
+		}
+		return output, nil
+	default:
+		var buf = new(bytes.Buffer)
+		err = binary.Write(buf, a.ByteOrder, a.Value)
+		if err != nil {
+			return output, err
+		}
+		output = buf.Bytes()
+		if len(output) != a.ByteLength {
+			return output, fmt.Errorf(
+				"%v is translated with unexpected length",
+				a.Value)
+		}
 	}
 	return output, nil
+}
+
+func NewArgument(
+	input interface{},
+	order binary.ByteOrder,
+	length int,
+) (argument Argument, err error) {
+	argument.ByteOrder = order
+	argument.ByteLength = length
+	switch v := input.(type) {
+	case string:
+		argument.Value = v
+		return
+	default:
+		return argument, fmt.Errorf("invalid type of argument: %s", v)
+	}
+
 }
 
 func NewInt32Argument(
