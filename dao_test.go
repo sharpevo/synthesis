@@ -55,3 +55,102 @@ func TestByteSequnce(t *testing.T) {
 	}
 
 }
+
+func TestNewInt32Argument(t *testing.T) {
+	testList := []struct {
+		errString string
+		expected  interface{}
+		input     interface{}
+		order     binary.ByteOrder
+	}{
+		{
+			errString: "invalid type of argument",
+			input:     11.22,
+			order:     binary.LittleEndian,
+		},
+		{
+			expected: []byte{0x0b, 0x00, 0x00, 0x00},
+			input:    int32(11),
+			order:    binary.LittleEndian,
+		},
+		{
+			errString: "strconv.ParseInt",
+			input:     "test",
+			order:     binary.LittleEndian,
+		},
+	}
+
+	for i, test := range testList {
+		t.Logf("#%d", i)
+		argument, err := dao.NewInt32Argument(test.input, test.order)
+		if test.errString != "" {
+			if !strings.Contains(err.Error(), test.errString) {
+				t.Errorf("unexpected error: %q", err.Error())
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			actual, err := argument.ByteSequence()
+			if err != nil || !bytes.Equal(actual, test.expected.([]byte)) {
+				t.Errorf(
+					"\nEXPECT: '%#v'\nGET: '%#v'\n",
+					test.expected,
+					actual,
+				)
+			}
+		}
+	}
+}
+
+func TestNewFloat32Argument(t *testing.T) {
+	testList := []struct {
+		errString string
+		expected  interface{}
+		input     interface{}
+		order     binary.ByteOrder
+	}{
+		{
+			errString: "invalid type of argument",
+			input:     11.22,
+			order:     binary.LittleEndian,
+		},
+		{
+			expected: []byte{0x00, 0x00, 0x30, 0x41},
+			input:    float32(11),
+			order:    binary.LittleEndian,
+		},
+		{
+			expected: []byte{0x1f, 0x85, 0x33, 0x41},
+			input:    float32(11.22),
+			order:    binary.LittleEndian,
+		},
+		{
+			errString: "syntax error scanning number",
+			input:     "test",
+			order:     binary.LittleEndian,
+		},
+	}
+
+	for i, test := range testList {
+		t.Logf("#%d", i)
+		argument, err := dao.NewFloat32Argument(test.input, test.order)
+		if test.errString != "" {
+			if !strings.Contains(err.Error(), test.errString) {
+				t.Errorf("unexpected error: %q", err.Error())
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			actual, err := argument.ByteSequence()
+			if err != nil || !bytes.Equal(actual, test.expected.([]byte)) {
+				t.Errorf(
+					"\nEXPECT: '%#v'\nGET: '%#v'\n",
+					test.expected,
+					actual,
+				)
+			}
+		}
+	}
+}
