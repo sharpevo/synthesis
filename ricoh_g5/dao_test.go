@@ -223,57 +223,125 @@ func TestPrintData(t *testing.T) {
 	<-completec // allow failure in goroutine then complete the test case
 }
 
-func TestNewArgument(t *testing.T) {
+func TestSendWaveform(t *testing.T) {
 	testList := []struct {
-		errString string
-		expected  interface{}
-		input     interface{}
+		headBoardIndex      string
+		rowIndexOfHeadBoard string
+		voltagePercentage   string
+		segmentCount        string
+		segment             string
+		expected            []byte
+		expectedRequest     []byte
+		expectedResponse    []byte
+		errString           string
 	}{
 		{
-			errString: "invalid type of argument",
-			input:     11.22,
+			headBoardIndex:      "0", // 0 for the first head baord
+			rowIndexOfHeadBoard: "1", // 0 for the first row of head board
+			voltagePercentage:   "10.24",
+			segmentCount:        "5",
+			segment:             "0302010000",
+			expectedRequest: []byte{
+				0x00, 0x00, 0x00, 0x00,
+				0x01, 0x00, 0x00, 0x00,
+				0x0a, 0xd7, 0x23, 0x41,
+				0x05, 0x00, 0x00, 0x00,
+				0x03, 0x02, 0x01, 0x00, 0x00,
+			},
+			expectedResponse: ricoh_g5.WaveformUnit.ComResp(),
 		},
 		{
-			expected: int32(11),
-			input:    int32(11),
-		},
-		{
-			expected: uint32(11),
-			input:    uint32(11),
-		},
-		{
-			expected: float32(11.22),
-			input:    float32(11.22),
-		},
-		{
-			expected: float32(11.22),
-			input:    "11.22",
-		},
-		{
-			expected: float32(11.0),
-			input:    "11",
-		},
-		{
-			errString: "syntax error scanning string",
-			input:     "test",
+			headBoardIndex:      "1", // 0 for the first head baord
+			rowIndexOfHeadBoard: "2", // 0 for the first row of head board
+			voltagePercentage:   "11.22",
+			segmentCount:        "3",
+			segment:             "0302010000",
+			expectedRequest: []byte{
+				0x01, 0x00, 0x00, 0x00,
+				0x02, 0x00, 0x00, 0x00,
+				0x1f, 0x85, 0x33, 0x41,
+				0x03, 0x00, 0x00, 0x00,
+				0x01, 0x02, 0x03, 0x00, 0x00,
+			},
+			expectedResponse: ricoh_g5.WaveformUnit.ComResp(),
+			errString:        "translated with unexpected length",
 		},
 	}
 
-	for i, test := range testList {
-		t.Logf("#%d", i)
-		actual, err := ricoh_g5.NewArgument(test.input)
-		if test.errString != "" {
-		} else {
+	readyc := make(chan interface{})
+	completec := make(chan interface{})
+
+	go func() {
+		for i, test := range testList {
+			<-readyc
+			t.Logf(">>%d", i)
+			actual, err := ricoh_g5.Instance(ServerAddress).SendWaveform(
+				test.headBoardIndex,
+				test.rowIndexOfHeadBoard,
+				test.voltagePercentage,
+				test.segmentCount,
+				test.segment,
+			)
 			if err != nil {
-				t.Fatal(err)
+				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
+					t.Logf("error occured as expected %s", err)
+
+					// no things to be sent if error occurred
+					// send a message to server to unblock l.Accept()
+					ricoh_g5.Instance(ServerAddress).QueryErrorCode()
+
+					continue
+				} else {
+					// panic if change errString to "foo"
+					panic(err)
+				}
 			}
-			if actual.Value != test.expected {
+
+			if !bytes.Equal(test.expectedResponse, []byte(actual)) {
 				t.Errorf(
-					"\nEXPECT: '%#v'\nGET: '%#v'\n",
+					"\nEXPECT: '%x'\nGET: '%x'\n",
 					test.expected,
-					actual.Value,
+					[]byte(actual),
 				)
 			}
 		}
+		completec <- true
+	}()
+
+	l, err := net.Listen(ServerNetwork, ServerAddress)
+	defer l.Close()
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	req := ricoh_g5.WaveformUnit.Request()
+	for _, test := range testList {
+		readyc <- true
+		conn, err := l.Accept()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		msg := buf[:n]
+
+		expected := append(req.Bytes(), test.expectedRequest...)
+		if test.errString == "" && !bytes.Equal(msg, expected) {
+			t.Errorf(
+				"\nEXPECT: '%x'\nGET:    '%x'\n",
+				expected,
+				msg,
+			)
+		}
+		t.Logf("Receive mesage: %x", msg)
+		t.Logf("Write mesage: %x", test.expectedResponse)
+		conn.Write(test.expectedResponse)
+		conn.Close()
+	}
+
+	<-completec // allow failure in goroutine then complete the test case
 }
