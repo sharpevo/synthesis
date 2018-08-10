@@ -91,8 +91,11 @@ func (a *Argument) ByteSequence() (output []byte, err error) {
 	if len(output) != a.ByteLength {
 		fmt.Println("Error:", a.Value, output, a.ByteLength)
 		return output, fmt.Errorf(
-			"%v is translated with unexpected length",
-			a.Value)
+			"%v is translated with unexpected length %d (%d)",
+			a.Value,
+			len(output),
+			a.ByteLength,
+		)
 	}
 	return output, nil
 }
