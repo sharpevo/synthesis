@@ -20,7 +20,6 @@ func TestByteSequnce(t *testing.T) {
 				ByteOrder:  binary.LittleEndian,
 				ByteLength: 4,
 			},
-			expected:  []byte("test"),
 			errString: "unexpected length",
 		},
 		{
@@ -30,6 +29,22 @@ func TestByteSequnce(t *testing.T) {
 				ByteLength: 4,
 			},
 			expected: []byte{0x1f, 0x85, 0x33, 0x41},
+		},
+		{
+			argument: dao.Argument{
+				Value:      int32(11),
+				ByteOrder:  binary.LittleEndian,
+				ByteLength: 4,
+			},
+			expected: []byte{0x0b, 0x00, 0x00, 0x00},
+		},
+		{
+			argument: dao.Argument{
+				Value:      float32(11),
+				ByteOrder:  binary.LittleEndian,
+				ByteLength: 4,
+			},
+			expected: []byte{0x00, 0x00, 0x30, 0x41},
 		},
 	}
 
