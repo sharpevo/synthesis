@@ -109,7 +109,7 @@ func NewArgument(
 		argument.Value = v
 		return
 	default:
-		return argument, fmt.Errorf("invalid type of argument: %s", v)
+		return argument, fmt.Errorf("invalid variant argument: %v", v)
 	}
 
 }
@@ -131,7 +131,7 @@ func NewInt32Argument(
 		argument.Value = v
 		return
 	default:
-		return argument, fmt.Errorf("invalid type of argument: %s", v)
+		return argument, fmt.Errorf("invalid int32 argument: %v", v)
 	}
 }
 
@@ -156,6 +156,6 @@ func NewFloat32Argument(
 		argument.Value = v
 		return
 	default:
-		return argument, fmt.Errorf("invalid type of argument: %s", v)
+		return argument, fmt.Errorf("invalid float32 argument: %v", v)
 	}
 }
