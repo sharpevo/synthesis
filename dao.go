@@ -130,6 +130,9 @@ func NewInt32Argument(
 	case int32:
 		argument.Value = v
 		return
+	case int64:
+		argument.Value = int32(v)
+		return
 	default:
 		return argument, fmt.Errorf("invalid int32 argument: %v", v)
 	}
