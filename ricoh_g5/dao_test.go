@@ -222,3 +222,58 @@ func TestPrintData(t *testing.T) {
 
 	<-completec // allow failure in goroutine then complete the test case
 }
+
+func TestNewArgument(t *testing.T) {
+	testList := []struct {
+		errString string
+		expected  interface{}
+		input     interface{}
+	}{
+		{
+			errString: "invalid type of argument",
+			input:     11.22,
+		},
+		{
+			expected: int32(11),
+			input:    int32(11),
+		},
+		{
+			expected: uint32(11),
+			input:    uint32(11),
+		},
+		{
+			expected: float32(11.22),
+			input:    float32(11.22),
+		},
+		{
+			expected: float32(11.22),
+			input:    "11.22",
+		},
+		{
+			expected: float32(11.0),
+			input:    "11",
+		},
+		{
+			errString: "syntax error scanning string",
+			input:     "test",
+		},
+	}
+
+	for i, test := range testList {
+		t.Logf("#%d", i)
+		actual, err := ricoh_g5.NewArgument(test.input)
+		if test.errString != "" {
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if actual.Value != test.expected {
+				t.Errorf(
+					"\nEXPECT: '%#v'\nGET: '%#v'\n",
+					test.expected,
+					actual.Value,
+				)
+			}
+		}
+	}
+}

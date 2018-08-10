@@ -1,7 +1,11 @@
 package ricoh_g5
 
 import (
+	"encoding/binary"
+	"fmt"
 	"log"
+	"math/big"
+	"posam/dao"
 	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 )
@@ -79,4 +83,27 @@ func (d *Dao) PrintData(
 		return resp, err
 	}
 	return resp, nil
+}
+
+func NewArgument(input interface{}) (argument dao.Argument, err error) {
+	argument.ByteOrder = binary.LittleEndian
+	argument.ByteLength = 4
+	switch v := input.(type) {
+	case string:
+		bigF, _, err := big.ParseFloat(v, 10, 24, big.ToNearestEven)
+		if err != nil {
+			return argument, err
+		}
+		f, acc := bigF.Float32()
+		if acc != big.Exact {
+			return argument, fmt.Errorf("failed to parse '%v' exactly", input)
+		}
+		argument.Value = f
+		return argument, err
+	case int32, uint32, float32:
+		argument.Value = v
+		return
+	default:
+		return argument, fmt.Errorf("invalid type of argument: %s", v)
+	}
 }
