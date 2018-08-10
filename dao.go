@@ -76,11 +76,10 @@ type Argument struct {
 func (a *Argument) ByteSequence() (output []byte, err error) {
 	switch v := a.Value.(type) {
 	case string:
-		output, err := hex.DecodeString(v)
+		output, err = hex.DecodeString(v)
 		if err != nil {
 			return output, err
 		}
-		return output, nil
 	default:
 		var buf = new(bytes.Buffer)
 		err = binary.Write(buf, a.ByteOrder, a.Value)
@@ -88,11 +87,12 @@ func (a *Argument) ByteSequence() (output []byte, err error) {
 			return output, err
 		}
 		output = buf.Bytes()
-		if len(output) != a.ByteLength {
-			return output, fmt.Errorf(
-				"%v is translated with unexpected length",
-				a.Value)
-		}
+	}
+	if len(output) != a.ByteLength {
+		fmt.Println("Error:", a.Value, output, a.ByteLength)
+		return output, fmt.Errorf(
+			"%v is translated with unexpected length",
+			a.Value)
 	}
 	return output, nil
 }
