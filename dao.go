@@ -1,5 +1,11 @@
 package dao
 
+import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
+)
+
 type Frame struct {
 	Address   byte
 	Function  byte
@@ -56,4 +62,25 @@ func (r *Request) Bytes() (output []byte) {
 	output = append(output, r.Arguments...)
 	output = append(output, r.CRC...)
 	return
+}
+
+type Argument struct {
+	Value      interface{}
+	ByteOrder  binary.ByteOrder
+	ByteLength int
+}
+
+func (a *Argument) ByteSequence() (output []byte, err error) {
+	var buf = new(bytes.Buffer)
+	err = binary.Write(buf, a.ByteOrder, a.Value)
+	if err != nil {
+		return output, err
+	}
+	output = buf.Bytes()
+	if len(output) != a.ByteLength {
+		return output, fmt.Errorf(
+			"%v is translated with unexpected length",
+			a.Value)
+	}
+	return output, nil
 }
