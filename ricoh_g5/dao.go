@@ -60,17 +60,40 @@ func (d *Dao) QueryPrinterStatus() (resp string, err error) {
 }
 
 func (d *Dao) PrintData(
-	bitsPerPixel []byte,
-	width []byte,
-	lineBufferSize []byte,
-	lineBuffer []byte,
+	bitsPerPixel string,
+	width string,
+	lineBufferSize string,
+	lineBuffer string,
 ) (resp string, err error) {
+
+	bitsPerPixelBytes, err := Int32ByteSequence(bitsPerPixel)
+	if err != nil {
+		return resp, err
+	}
+	widthBytes, err := Int32ByteSequence(width)
+	if err != nil {
+		return resp, err
+	}
+	lineBufferSizeArgument, err := dao.NewInt32Argument(lineBufferSize, binary.LittleEndian)
+	if err != nil {
+		return resp, err
+	}
+	lineBufferSizeBytes, err := lineBufferSizeArgument.ByteSequence()
+	if err != nil {
+		return resp, err
+	}
+	length := lineBufferSizeArgument.Value.(int32)
+	lineBufferBytes, err := VariantByteSequence(lineBuffer, int(length))
+	if err != nil {
+		return resp, err
+	}
+
 	req := PrintDataUnit.Request()
 	reqBytes := req.Bytes()
-	reqBytes = append(reqBytes, bitsPerPixel...)
-	reqBytes = append(reqBytes, width...)
-	reqBytes = append(reqBytes, lineBufferSize...)
-	reqBytes = append(reqBytes, lineBuffer...)
+	reqBytes = append(reqBytes, bitsPerPixelBytes...)
+	reqBytes = append(reqBytes, widthBytes...)
+	reqBytes = append(reqBytes, lineBufferSizeBytes...)
+	reqBytes = append(reqBytes, lineBufferBytes...)
 	respBytes, err := d.TCPClient.Send(
 		reqBytes,
 		PrintDataUnit.ComResp(),
