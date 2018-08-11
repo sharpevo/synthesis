@@ -210,7 +210,6 @@ func main() {
 		)
 		if err != nil {
 			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-			return
 		}
 
 		err = initPrinter(
