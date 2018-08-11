@@ -39,13 +39,12 @@ func Instance(address string) *Dao {
 	return nil
 }
 
-func (d *Dao) QueryErrorCode() (resp string, err error) {
+func (d *Dao) QueryErrorCode() (resp interface{}, err error) {
 	req := ErrorCodeUnit.Request()
-	respBytes, err := d.TCPClient.Send(
+	resp, err = d.TCPClient.Send(
 		req.Bytes(),
 		ErrorCodeUnit.ComResp(),
 	)
-	resp = string(respBytes)
 	if err != nil {
 		log.Println(err)
 		return resp, err
@@ -53,13 +52,12 @@ func (d *Dao) QueryErrorCode() (resp string, err error) {
 	return resp, nil
 }
 
-func (d *Dao) QueryPrinterStatus() (resp string, err error) {
+func (d *Dao) QueryPrinterStatus() (resp interface{}, err error) {
 	req := PrinterStatusUnit.Request()
-	respBytes, err := d.TCPClient.Send(
+	resp, err = d.TCPClient.Send(
 		req.Bytes(),
 		PrinterStatusUnit.ComResp(),
 	)
-	resp = string(respBytes)
 	if err != nil {
 		log.Println("ERR:", err)
 		return resp, err
@@ -72,7 +70,7 @@ func (d *Dao) PrintData(
 	width string,
 	lineBufferSize string,
 	lineBuffer string,
-) (resp string, err error) {
+) (resp interface{}, err error) {
 
 	bitsPerPixelBytes, err := Int32ByteSequence(bitsPerPixel)
 	if err != nil {
@@ -102,11 +100,10 @@ func (d *Dao) PrintData(
 	reqBytes = append(reqBytes, widthBytes...)
 	reqBytes = append(reqBytes, lineBufferSizeBytes...)
 	reqBytes = append(reqBytes, lineBufferBytes...)
-	respBytes, err := d.TCPClient.Send(
+	resp, err = d.TCPClient.Send(
 		reqBytes,
 		PrintDataUnit.ComResp(),
 	)
-	resp = string(respBytes)
 	if err != nil {
 		log.Println("ERR:", err)
 		return resp, err
@@ -120,7 +117,7 @@ func (d *Dao) SendWaveform(
 	voltagePercentage string,
 	segmentCount string,
 	segment string,
-) (resp string, err error) {
+) (resp interface{}, err error) {
 	headBoardIndexBytes, err := Int32ByteSequence(headBoardIndex)
 	if err != nil {
 		return resp, err
@@ -155,11 +152,10 @@ func (d *Dao) SendWaveform(
 	reqBytes = append(reqBytes, segmentCountBytes...)
 	reqBytes = append(reqBytes, segmentBytes...)
 
-	respBytes, err := d.TCPClient.Send(
+	resp, err = d.TCPClient.Send(
 		reqBytes,
 		WaveformUnit.ComResp(),
 	)
-	resp = string(respBytes)
 	if err != nil {
 		log.Println("ERR:", err)
 		return resp, err

@@ -41,20 +41,20 @@ func TestMain(m *testing.M) {
 
 func TestQueryFunction(t *testing.T) {
 	testList := []struct {
-		function  func() (string, error)
+		function  func() (interface{}, error)
 		expected  dao.CompletedResponse
 		response  dao.CompletedResponse
 		errString string
 	}{
 		{
-			function: func() (string, error) {
+			function: func() (interface{}, error) {
 				return ricoh_g5.Instance(ServerAddress).QueryErrorCode()
 			},
 			expected: ricoh_g5.ErrorCodeUnit.ComResp(),
 			response: ricoh_g5.ErrorCodeUnit.ComResp(),
 		},
 		{
-			function: func() (string, error) {
+			function: func() (interface{}, error) {
 				return ricoh_g5.Instance(ServerAddress).QueryErrorCode()
 			},
 			expected:  ricoh_g5.ErrorCodeUnit.ComResp(),
@@ -62,14 +62,14 @@ func TestQueryFunction(t *testing.T) {
 			errString: "response error",
 		},
 		{
-			function: func() (string, error) {
+			function: func() (interface{}, error) {
 				return ricoh_g5.Instance(ServerAddress).QueryPrinterStatus()
 			},
 			expected: ricoh_g5.PrinterStatusUnit.ComResp(),
 			response: ricoh_g5.PrinterStatusUnit.ComResp(),
 		},
 		{
-			function: func() (string, error) {
+			function: func() (interface{}, error) {
 				return ricoh_g5.Instance(ServerAddress).QueryPrinterStatus()
 			},
 			expected:  ricoh_g5.PrinterStatusUnit.ComResp(),
@@ -95,11 +95,11 @@ func TestQueryFunction(t *testing.T) {
 				}
 			}
 
-			if !bytes.Equal(test.expected, []byte(actual)) {
+			if !bytes.Equal(test.expected, actual.([]byte)) {
 				t.Errorf(
 					"\nEXPECT: '%x'\nGET: '%x'\n",
 					test.expected,
-					[]byte(actual),
+					actual,
 				)
 			}
 		}
@@ -225,11 +225,11 @@ func TestPrintData(t *testing.T) {
 				}
 			}
 
-			if !bytes.Equal(test.expected, []byte(actual)) {
+			if !bytes.Equal(test.expected, actual.([]byte)) {
 				t.Errorf(
 					"\nEXPECT: '%x'\nGET: '%x'\n",
 					test.expected,
-					[]byte(actual),
+					actual,
 				)
 			}
 		}
@@ -347,11 +347,11 @@ func TestSendWaveform(t *testing.T) {
 				}
 			}
 
-			if !bytes.Equal(test.expectedResponse, []byte(actual)) {
+			if !bytes.Equal(test.expectedResponse, actual.([]byte)) {
 				t.Errorf(
 					"\nEXPECT: '%x'\nGET: '%x'\n",
 					test.expected,
-					[]byte(actual),
+					actual,
 				)
 			}
 		}
