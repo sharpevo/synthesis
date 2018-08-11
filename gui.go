@@ -49,6 +49,8 @@ RETRY -2 3
 PRINT 3
 SLEEP 1
 PRINT 4`
+	CMD_PRINTER = `ERRORCODE var1
+GETVAR var1`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
@@ -103,7 +105,7 @@ func main() {
 	})
 
 	input := widgets.NewQTextEdit(nil)
-	input.SetPlainText(CMD_LED_SERIAL)
+	input.SetPlainText(CMD_PRINTER)
 
 	// tcp group
 
