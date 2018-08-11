@@ -103,6 +103,34 @@ func main() {
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(CMD_LED_SERIAL)
 
+	// tcp group
+
+	printerGroup := widgets.NewQGroupBox2("Printer", nil)
+
+	printerNetworkLabel := widgets.NewQLabel2("Network", nil, 0)
+	printerAddressLabel := widgets.NewQLabel2("Address", nil, 0)
+	printerTimeoutLabel := widgets.NewQLabel2("Timeout", nil, 0)
+
+	printerNetworkInput := widgets.NewQLineEdit(nil)
+	printerNetworkInput.SetPlaceholderText("tcp, tcp4, tcp6")
+	printerNetworkInput.SetText("tcp")
+	printerAddressInput := widgets.NewQLineEdit(nil)
+	printerAddressInput.SetPlaceholderText("localhost:3000")
+	printerAddressInput.SetText("localhost:21005")
+	printerTimeoutInput := widgets.NewQLineEdit(nil)
+	printerTimeoutInput.SetPlaceholderText("10")
+	printerTimeoutInput.SetText("10")
+
+	printerLayout := widgets.NewQGridLayout2()
+	printerLayout.AddWidget(printerNetworkLabel, 0, 0, 0)
+	printerLayout.AddWidget(printerNetworkInput, 0, 1, 0)
+	printerLayout.AddWidget(printerAddressLabel, 1, 0, 0)
+	printerLayout.AddWidget(printerAddressInput, 1, 1, 0)
+	printerLayout.AddWidget(printerTimeoutLabel, 2, 0, 0)
+	printerLayout.AddWidget(printerTimeoutInput, 2, 1, 0)
+
+	printerGroup.SetLayout(printerLayout)
+
 	// serial group
 
 	serialGroup := widgets.NewQGroupBox2("Serial port", nil)
@@ -265,8 +293,9 @@ func main() {
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(input, 0, 0, 0)
-	inputLayout.AddWidget(serialGroup, 1, 0, 0)
-	inputLayout.AddWidget(runButton, 2, 0, 0)
+	inputLayout.AddWidget(printerGroup, 1, 0, 0)
+	inputLayout.AddWidget(serialGroup, 2, 0, 0)
+	inputLayout.AddWidget(runButton, 3, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
 	outputGroup := widgets.NewQGroupBox2("Results", nil)
