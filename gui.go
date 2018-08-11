@@ -191,6 +191,8 @@ func main() {
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
 
+	stack := concurrentmap.NewConcurrentMap()
+
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.ConnectClicked(func(bool) {
 
@@ -228,7 +230,7 @@ func main() {
 		interpreter.InitParser(InstructionMap)
 		statementGroup := interpreter.StatementGroup{
 			Execution: interpreter.SYNC,
-			Stack:     concurrentmap.NewConcurrentMap(),
+			Stack:     stack,
 		}
 		interpreter.ParseReader(
 			strings.NewReader(input.ToPlainText()),
