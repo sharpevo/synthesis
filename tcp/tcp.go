@@ -16,13 +16,13 @@ type Connection struct {
 
 func (c *Connection) Connect(network string, address string, timeout time.Duration) (conn net.Conn, err error) {
 	conn, err = net.Dial(network, address)
+	if err != nil {
+		return conn, err
+	}
 	if timeout == 0 {
 		timeout = 10 * time.Second
 	}
 	conn.SetDeadline(time.Now().Add(timeout))
-	if err != nil {
-		return conn, err
-	}
 	return conn, nil
 }
 
@@ -43,10 +43,10 @@ func (t *TCPClient) Send(message []byte, expected []byte) (resp []byte, err erro
 		t.ServerAddress,
 		t.ServerTimeout,
 	)
-	defer conn.Close()
 	if err != nil {
-		fmt.Println(err)
+		return resp, err
 	}
+	defer conn.Close()
 	conn.Write(message)
 	buf := make([]byte, 512)
 	n, err := conn.Read(buf)
