@@ -262,7 +262,7 @@ func main() {
 					}
 					resp.Completec <- true
 				}
-				resultList = append(resultList, fmt.Sprintf("%s", resp.Output))
+				resultList = append(resultList, fmt.Sprintf("%#v", resp.Output))
 				result.SetText(strings.Join(resultList, "\n"))
 			}
 			result.SetText(strings.Join(resultList, "\n") + "\n\nDONE")
