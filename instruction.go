@@ -1,6 +1,7 @@
 package instruction
 
 import (
+	"posam/interpreter"
 	"posam/util/concurrentmap"
 )
 
@@ -25,4 +26,17 @@ func (i *Instruction) SetTitle(title string) {
 
 func (i *Instruction) Execute(args ...string) (interface{}, error) {
 	return "", nil
+}
+
+func (i *Instruction) ParseVariable(name string) (*interpreter.Variable, error) {
+	v, found := i.Env.Get(name)
+	if !found {
+		newVariable := &interpreter.Variable{}
+		newVariablei := i.Env.Set(name, newVariable)
+		variable := newVariablei.(*interpreter.Variable)
+		return variable, nil
+	} else {
+		variable := v.(*interpreter.Variable)
+		return variable, nil
+	}
 }
