@@ -75,6 +75,11 @@ func main() {
 	InstructionMap.Set("RETRY", instruction.InstructionRetry{})
 	InstructionMap.Set("LED", instruction.InstructionLed{})
 	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
+	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
+	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
+	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
+	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
+	InstructionMap.Set("WAVEFORM", instruction.InstructionPrinterHeadWaveform{})
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
