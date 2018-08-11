@@ -24,11 +24,19 @@ func AddInstance(dao *Dao) {
 }
 
 func Instance(address string) *Dao {
-	if device, ok := deviceMap.Get(address); ok {
-		return device.(*Dao)
+	if address == "" {
+		for device := range deviceMap.Iter() {
+			return device.Value.(*Dao)
+		}
 	} else {
-		return nil
+		if device, ok := deviceMap.Get(address); ok {
+			return device.(*Dao)
+		} else {
+			return nil
+		}
 	}
+	log.Println("nil device instance")
+	return nil
 }
 
 func (d *Dao) QueryErrorCode() (resp string, err error) {
@@ -39,7 +47,7 @@ func (d *Dao) QueryErrorCode() (resp string, err error) {
 	)
 	resp = string(respBytes)
 	if err != nil {
-		log.Println("ERR:", err)
+		log.Println(err)
 		return resp, err
 	}
 	return resp, nil
