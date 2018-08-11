@@ -6,7 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"posam/dao/alientek"
+	"posam/dao/ricoh_g5"
 	"posam/protocol/serialport"
+	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 	"runtime"
 	"strconv"
@@ -205,6 +207,15 @@ func main() {
 		if err != nil {
 			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 			return
+		}
+
+		err = initPrinter(
+			printerNetworkInput.Text(),
+			printerAddressInput.Text(),
+			printerTimeoutInput.Text(),
+		)
+		if err != nil {
+			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 		}
 
 		result.SetText("RUNNING")
@@ -424,4 +435,31 @@ func initSerialDevice(
 	}
 
 	return
+}
+
+func initPrinter(network string, address string, timeout string) (err error) {
+	if ricoh_g5.Instance("") != nil {
+		return
+	}
+	timeoutInt, err := strconv.Atoi(timeout)
+	if err != nil {
+		return err
+	}
+	ricoh_g5.AddInstance(&ricoh_g5.Dao{
+		DeviceAddress: address,
+		TCPClient: &tcp.TCPClient{
+			Connectioner:  &tcp.Connection{},
+			ServerNetwork: network,
+			ServerAddress: address,
+			ServerTimeout: time.Duration(timeoutInt),
+		},
+	},
+	)
+
+	i := instruction.InstructionPrinterHeadPrinterStatus{}
+	_, err = i.Execute()
+	if err != nil {
+		return err
+	}
+	return nil
 }
