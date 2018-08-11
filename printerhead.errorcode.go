@@ -18,7 +18,7 @@ func (i *InstructionPrinterHeadErrorCode) Execute(args ...string) (resp interfac
 	resp, err = ricoh_g5.Instance("").QueryErrorCode()
 	variable.Value = resp
 	if err != nil {
-		return variable.Value, err
+		return resp, err
 	}
 	return
 }
