@@ -8,16 +8,14 @@ import (
 	"time"
 )
 
-type Connectioner interface {
+type Connectivitier interface {
 	Connect(string, string, time.Duration) (*net.TCPConn, error)
 }
 
-type Connection struct {
+type Connectivity struct {
 }
 
-func (c *Connection) Connect(network string, address string, timeout time.Duration) (conn *net.TCPConn, err error) {
-	//conn, err := net.Dial(network, address)
-
+func (c *Connectivity) Connect(network string, address string, timeout time.Duration) (conn *net.TCPConn, err error) {
 	tcpAddr, err := net.ResolveTCPAddr(network, address)
 	if err != nil {
 		return conn, err
@@ -36,30 +34,29 @@ func (c *Connection) Connect(network string, address string, timeout time.Durati
 
 type TCPClienter interface {
 	Send([]byte, []byte) ([]byte, error)
-	Instance() *net.TCPConn
+	Connection() *net.TCPConn
 }
 
 type TCPClient struct {
-	Connectioner
-	ServerNetwork string
-	ServerAddress string
-	ServerTimeout time.Duration
+	Connectivitier
+	ServerNetwork     string
+	ServerAddress     string
+	ServerTimeout     time.Duration
 }
 
-var instanceMap *concurrentmap.ConcurrentMap
+var connectionMap *concurrentmap.ConcurrentMap
 
 func init() {
-	instanceMap = concurrentmap.NewConcurrentMap()
+	connectionMap = concurrentmap.NewConcurrentMap()
 }
 
-func (t *TCPClient) Instance() *net.TCPConn {
-	fmt.Println("INSTANCE")
-	if instance, ok := instanceMap.Get(t.ServerAddress); ok {
-		fmt.Println("INSTANCE FOUND")
-		return instance.(*net.TCPConn)
+func (t *TCPClient) Connection() *net.TCPConn {
+	if connection, ok := connectionMap.Get(t.ServerAddress); ok {
+		log.Println("INSTANCE FOUND")
+		return connection.(*net.TCPConn)
 	}
-	if t.Connectioner == nil {
-		t.Connectioner = &Connection{}
+	if t.Connectivitier == nil {
+		t.Connectivitier = &Connectivity{}
 	}
 	conn, err := t.Connect(t.ServerNetwork, t.ServerAddress, t.ServerTimeout)
 	if err != nil {
@@ -68,10 +65,10 @@ func (t *TCPClient) Instance() *net.TCPConn {
 	return t.addInstance(conn)
 }
 
-func (t *TCPClient) addInstance(conn *net.TCPConn) *net.TCPConn {
-	fmt.Println("INSTANCE ADDED")
-	instance := instanceMap.Set(t.ServerAddress, conn)
-	return instance.(*net.TCPConn)
+func (t *TCPClient) addConnection(conn *net.TCPConn) *net.TCPConn {
+	log.Println("INSTANCE ADDED")
+	connection := connectionMap.Set(t.ServerAddress, conn)
+	return connection.(*net.TCPConn)
 }
 
 func (t *TCPClient) Send(message []byte, expected []byte) (resp []byte, err error) {
