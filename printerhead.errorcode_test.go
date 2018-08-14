@@ -25,7 +25,7 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 			ServerNetwork:     ServerNetwork,
 			ServerAddress:     ServerAddress,
 			ServerTimeout:     1 * time.Second,
-			ConcurrentEnabled: true,
+			ServerConcurrency: true,
 		},
 	})
 
@@ -141,28 +141,30 @@ func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 			ServerNetwork:     ServerNetwork,
 			ServerAddress:     ServerAddress,
 			ServerTimeout:     1 * time.Second,
-			ConcurrentEnabled: false,
+			ServerConcurrency: false,
 		},
 	})
 
 	testList := []struct {
+		instruction     instruction.Instructioner
 		args            []string
 		response        []byte
 		expectedRequest []byte
 		errString       string
 	}{
 		{
-			args: []string{"var1"},
+			instruction: &instruction.InstructionPrinterHeadErrorCode{},
+			args:        []string{"var1"},
 		},
 		{
-			args:      []string{"var1"},
-			errString: "response error",
+			instruction: &instruction.InstructionPrinterHeadPrinterStatus{},
+			args:        []string{"var1"},
+			errString:   "response error",
 		},
 	}
-	//i := instruction.InstructionPrinterHeadErrorCode{}
-	i := instruction.InstructionPrinterHeadPrinterStatus{}
-	i.Env = concurrentmap.NewConcurrentMap()
 	for k, test := range testList {
+		i := test.instruction
+		i.SetEnv(concurrentmap.NewConcurrentMap())
 		resp, err := i.Execute(test.args...)
 		t.Logf("#%d, %v, %v", k, resp, err)
 		if err != nil {
@@ -176,7 +178,7 @@ func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 				panic(err)
 			}
 		}
-		v, _ := i.Env.Get(test.args[0])
+		v, _ := i.GetEnv().Get(test.args[0])
 		actual := v.(*interpreter.Variable).Value
 		// save to the stack
 		if !bytes.Equal(actual.([]byte), resp.([]byte)) {
