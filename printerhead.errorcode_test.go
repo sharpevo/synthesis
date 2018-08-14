@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net"
-	"os"
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
@@ -12,26 +11,25 @@ import (
 	"posam/util/concurrentmap"
 	"strings"
 	"testing"
+	"time"
 )
 
-var ServerNetwork = "tcp"
-var ServerAddress = "localhost:21005"
-
-func TestMain(m *testing.M) {
+func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
+	t.SkipNow()
+	ServerNetwork := "tcp"
+	ServerAddress := "localhost:21005"
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
 		TCPClient: &tcp.TCPClient{
-			Connectioner:  &tcp.Connection{},
-			ServerNetwork: ServerNetwork,
-			ServerAddress: ServerAddress,
+			Connectivitier: &tcp.Connectivity{},
+			ServerNetwork:  ServerNetwork,
+			ServerAddress:  ServerAddress,
+			ServerTimeout:  1 * time.Second,
+			//KeepAlive:      true,
+			KeepAlive: false,
 		},
-	},
-	)
-	ret := m.Run()
-	os.Exit(ret)
-}
+	})
 
-func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 	testList := []struct {
 		args            []string
 		response        []byte
@@ -133,7 +131,21 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 
 }
 
-func xTestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
+func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
+	ServerNetwork := "tcp"
+	ServerAddress := "192.168.100.215:21005"
+
+	ricoh_g5.AddInstance(&ricoh_g5.Dao{
+		DeviceAddress: ServerAddress,
+		TCPClient: &tcp.TCPClient{
+			Connectivitier: &tcp.Connectivity{},
+			ServerNetwork:  ServerNetwork,
+			ServerAddress:  ServerAddress,
+			ServerTimeout:  1 * time.Second,
+			KeepAlive:      true,
+		},
+	})
+
 	testList := []struct {
 		args            []string
 		response        []byte
@@ -142,34 +154,23 @@ func xTestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 	}{
 		{
 			args: []string{"var1"},
-			response: []byte{
-				0x01, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00,
-			},
 		},
 		{
-			args: []string{"var1"},
-			response: []byte{
-				0x02, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00,
-			},
+			args:      []string{"var1"},
 			errString: "response error",
 		},
 	}
-	i := instruction.InstructionPrinterHeadErrorCode{}
+	//i := instruction.InstructionPrinterHeadErrorCode{}
+	i := instruction.InstructionPrinterHeadPrinterStatus{}
 	i.Env = concurrentmap.NewConcurrentMap()
 	for k, test := range testList {
 		resp, err := i.Execute(test.args...)
 		t.Logf("#%d, %v, %v", k, resp, err)
 		if err != nil {
+			fmt.Println("err", err)
 			if test.errString != "" && strings.Contains(err.Error(), test.errString) {
 				t.Logf("error occured as expected %s", err)
 
-				// no things to be sent if error occurred
-				// send a message to server to unblock l.Accept()
-				//ricoh_g5.Instance(ServerAddress).QueryErrorCode()
-
-				fmt.Println("err")
 				continue
 			} else {
 				// panic if change errString to "foo"
@@ -187,6 +188,4 @@ func xTestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 			)
 		}
 	}
-	//ricoh_g5.Instance("").TCPClient.Instance().Close()
-
 }
