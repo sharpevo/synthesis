@@ -3,6 +3,7 @@ package tcp
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net"
 	"posam/util/concurrentmap"
 	"time"
@@ -25,10 +26,11 @@ func (c *Connectivity) Connect(network string, address string, timeout time.Dura
 	if err != nil {
 		return conn, err
 	}
+
 	if timeout == 0 {
 		timeout = 10 * time.Second
 	}
-	//conn.SetDeadline(time.Now().Add(timeout))
+	conn.SetDeadline(time.Now().Add(timeout))
 	return conn, nil
 }
 
