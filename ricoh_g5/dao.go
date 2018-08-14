@@ -11,7 +11,7 @@ import (
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
-	deviceMap = concurrentmap.NewConcurrentMap()
+	ResetInstance()
 }
 
 type Dao struct {
@@ -21,6 +21,10 @@ type Dao struct {
 
 func AddInstance(dao *Dao) {
 	deviceMap.Set(dao.DeviceAddress, dao)
+}
+
+func ResetInstance() {
+	deviceMap = concurrentmap.NewConcurrentMap()
 }
 
 func Instance(address string) *Dao {
