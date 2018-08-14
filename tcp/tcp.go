@@ -42,6 +42,7 @@ type TCPClient struct {
 	ServerNetwork     string
 	ServerAddress     string
 	ServerTimeout     time.Duration
+	ServerConcurrency bool
 }
 
 var connectionMap *concurrentmap.ConcurrentMap
@@ -60,9 +61,16 @@ func (t *TCPClient) Connection() *net.TCPConn {
 	}
 	conn, err := t.Connect(t.ServerNetwork, t.ServerAddress, t.ServerTimeout)
 	if err != nil {
+		log.Println(err)
 		return conn
 	}
-	return t.addInstance(conn)
+	log.Printf("INSTANCE CREATED: %#v\n", conn)
+	if !t.ServerConcurrency {
+		return t.addConnection(conn)
+	} else {
+		return conn
+	}
+	return t.addConnection(conn)
 }
 
 func (t *TCPClient) addConnection(conn *net.TCPConn) *net.TCPConn {
@@ -72,18 +80,19 @@ func (t *TCPClient) addConnection(conn *net.TCPConn) *net.TCPConn {
 }
 
 func (t *TCPClient) Send(message []byte, expected []byte) (resp []byte, err error) {
-	conn, err := t.Connect(
-		t.ServerNetwork,
-		t.ServerAddress,
-		t.ServerTimeout,
-	)
+	conn := t.Connection()
+	if t.ServerConcurrency {
+		defer conn.Close()
+		defer log.Println("connection closed")
+	}
+
+	conn.Write(message)
+	buf := make([]byte, 1536)
+	n, err := conn.Read(buf)
 	if err != nil {
+		log.Println(err)
 		return resp, err
 	}
-	defer conn.Close()
-	conn.Write(message)
-	buf := make([]byte, 512)
-	n, err := conn.Read(buf)
 	resp = buf[:n]
 	if !bytes.Equal(expected, resp) {
 		return resp, fmt.Errorf("response error %v (%x)",
