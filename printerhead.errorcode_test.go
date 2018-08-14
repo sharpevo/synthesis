@@ -21,12 +21,11 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
 		TCPClient: &tcp.TCPClient{
-			Connectivitier: &tcp.Connectivity{},
-			ServerNetwork:  ServerNetwork,
-			ServerAddress:  ServerAddress,
-			ServerTimeout:  1 * time.Second,
-			//KeepAlive:      true,
-			KeepAlive: false,
+			Connectivitier:    &tcp.Connectivity{},
+			ServerNetwork:     ServerNetwork,
+			ServerAddress:     ServerAddress,
+			ServerTimeout:     1 * time.Second,
+			ConcurrentEnabled: true,
 		},
 	})
 
@@ -138,11 +137,11 @@ func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
 		TCPClient: &tcp.TCPClient{
-			Connectivitier: &tcp.Connectivity{},
-			ServerNetwork:  ServerNetwork,
-			ServerAddress:  ServerAddress,
-			ServerTimeout:  1 * time.Second,
-			KeepAlive:      true,
+			Connectivitier:    &tcp.Connectivity{},
+			ServerNetwork:     ServerNetwork,
+			ServerAddress:     ServerAddress,
+			ServerTimeout:     1 * time.Second,
+			ConcurrentEnabled: false,
 		},
 	})
 
