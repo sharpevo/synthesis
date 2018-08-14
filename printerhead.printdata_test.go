@@ -76,6 +76,12 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 	i := instruction.InstructionPrinterHeadPrintData{}
 	i.Env = concurrentmap.NewConcurrentMap()
 
+	l, err := net.Listen(ServerNetwork, ServerAddress)
+	defer l.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	go func() {
 		for _, test := range testList {
 			<-readyc
@@ -86,8 +92,7 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 
 					// no things to be sent if error occurred
 					// send a message to server to unblock l.Accept()
-					ricoh_g5.Instance(ServerAddress).QueryErrorCode()
-
+					l.Close()
 					continue
 				} else {
 					// panic if change errString to "foo"
@@ -109,17 +114,16 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 		completec <- true
 	}()
 
-	l, err := net.Listen(ServerNetwork, ServerAddress)
-	defer l.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
 	req := ricoh_g5.PrintDataUnit.Request()
 	for _, test := range testList {
 		readyc <- true
 		conn, err := l.Accept()
 		if err != nil {
-			t.Fatal(err)
+			if !strings.Contains(err.Error(), "use of closed network connection") {
+				t.Fatal(err)
+			} else {
+				continue
+			}
 		}
 
 		buf := make([]byte, 32)
