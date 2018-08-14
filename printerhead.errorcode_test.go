@@ -15,9 +15,9 @@ import (
 )
 
 func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
-	t.SkipNow()
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:21005"
+	ricoh_g5.ResetInstance()
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
 		TCPClient: &tcp.TCPClient{
@@ -131,9 +131,10 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 }
 
 func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
+	t.SkipNow()
 	ServerNetwork := "tcp"
 	ServerAddress := "192.168.100.215:21005"
-
+	ricoh_g5.ResetInstance()
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
 		TCPClient: &tcp.TCPClient{

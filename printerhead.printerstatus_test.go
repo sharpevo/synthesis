@@ -15,6 +15,7 @@ import (
 func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6507"
+	ricoh_g5.ResetInstance()
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
 		TCPClient: &tcp.TCPClient{
