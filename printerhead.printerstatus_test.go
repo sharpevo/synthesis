@@ -3,7 +3,6 @@ package instruction_test
 import (
 	"bytes"
 	"net"
-	"os"
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
@@ -13,24 +12,18 @@ import (
 	"testing"
 )
 
-var ServerNetwork = "tcp"
-var ServerAddress = "localhost:6507"
-
-func TestMain(m *testing.M) {
+func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
+	ServerNetwork := "tcp"
+	ServerAddress := "localhost:6507"
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
 		TCPClient: &tcp.TCPClient{
-			Connectioner:  &tcp.Connection{},
-			ServerNetwork: ServerNetwork,
-			ServerAddress: ServerAddress,
+			Connectivitier:    &tcp.Connectivity{},
+			ServerNetwork:     ServerNetwork,
+			ServerAddress:     ServerAddress,
+			ServerConcurrency: true,
 		},
-	},
-	)
-	ret := m.Run()
-	os.Exit(ret)
-}
-
-func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
+	})
 	testList := []struct {
 		args            []string
 		response        []byte
