@@ -12,7 +12,7 @@ import (
 )
 
 type Connectivitier interface {
-	Connect(string, string, time.Duration) (*net.TCPConn, error)
+	connect() error
 }
 
 type Connectivity struct {
@@ -44,7 +44,6 @@ func (c *Connectivity) send() {
 
 	for {
 		req := c.RequestQueue.Pop().(TCPRequest)
-
 		respc := req.Respc
 		resp := TCPResponse{}
 
@@ -60,7 +59,6 @@ func (c *Connectivity) send() {
 		}
 
 		log.Println("sending request...", req.Message)
-
 		c.Conn.SetDeadline(time.Now().Add(c.Timeout))
 		n, err := c.Conn.Write(req.Message)
 		if err != nil {
@@ -115,23 +113,4 @@ func (c *Connectivity) connect() error {
 	}
 	c.Conn = conn
 	return nil
-}
-
-func (c *Connectivity) Connect(network string, address string, timeout time.Duration) (conn *net.TCPConn, err error) {
-	tcpAddr, err := net.ResolveTCPAddr(network, address)
-	if err != nil {
-		return conn, err
-	}
-
-	conn, err = net.DialTCP(network, nil, tcpAddr)
-	if err != nil {
-		return conn, err
-	}
-
-	if timeout == 0 {
-		timeout = 10 * time.Second
-	}
-	conn.SetDeadline(time.Now().Add(timeout))
-	c.Conn = conn
-	return conn, nil
 }
