@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net"
-	"os"
 	"posam/dao"
 	"posam/dao/ricoh_g5"
 	"posam/protocol/tcp"
@@ -24,22 +23,15 @@ func (m *MockTCPClient) Send(message, expected []byte) (resp []byte, err error) 
 var ServerNetwork = "tcp"
 var ServerAddress = "localhost:6507"
 
-func TestMain(m *testing.M) {
+func TestQueryFunction(t *testing.T) {
 
+	ricoh_g5.ResetInstance()
 	ricohDao := &ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
-		TCPClient: &tcp.TCPClient{
-			Connectioner:  &tcp.Connection{},
-			ServerNetwork: ServerNetwork,
-			ServerAddress: ServerAddress,
-		},
+		TCPClient:     tcp.NewTCPClient(ServerNetwork, ServerAddress, 5, false),
 	}
 	ricoh_g5.AddInstance(ricohDao)
-	ret := m.Run()
-	os.Exit(ret)
-}
 
-func TestQueryFunction(t *testing.T) {
 	testList := []struct {
 		function  func() (interface{}, error)
 		expected  dao.CompletedResponse
@@ -78,11 +70,10 @@ func TestQueryFunction(t *testing.T) {
 		},
 	}
 
-	readyc := make(chan interface{})
 	completec := make(chan interface{})
 	go func() {
 		for i, test := range testList {
-			<-readyc
+			//<-readyc
 			t.Logf(">>%d", i)
 			actual, err := test.function()
 			if err != nil {
@@ -111,13 +102,15 @@ func TestQueryFunction(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, test := range testList {
-		readyc <- true
-		conn, err := l.Accept()
-		if err != nil {
-			t.Fatal(err)
-		}
 
+	conn, err := l.Accept()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for k, test := range testList {
+		//readyc <- true
+		fmt.Println("#", k)
 		buf := make([]byte, 32)
 		n, err := conn.Read(buf)
 		if err != nil {
@@ -127,13 +120,21 @@ func TestQueryFunction(t *testing.T) {
 		t.Logf("Receive mesage: %x", msg)
 		t.Logf("Write mesage: %x", test.response)
 		conn.Write(test.response)
-		conn.Close()
 	}
+	conn.Close()
 
 	<-completec // allow failure in goroutine then complete the test case
 }
 
 func TestPrintData(t *testing.T) {
+
+	ricoh_g5.ResetInstance()
+	ricohDao := &ricoh_g5.Dao{
+		DeviceAddress: ServerAddress,
+		TCPClient:     tcp.NewTCPClient(ServerNetwork, ServerAddress, 5, false),
+	}
+	ricoh_g5.AddInstance(ricohDao)
+
 	testList := []struct {
 		bitsPerPixel    string
 		width           string
@@ -201,12 +202,10 @@ func TestPrintData(t *testing.T) {
 		},
 	}
 
-	readyc := make(chan interface{})
 	completec := make(chan interface{})
 
 	go func() {
 		for i, test := range testList {
-			<-readyc
 			t.Logf(">>%d", i)
 			actual, err := ricoh_g5.Instance(ServerAddress).PrintData(
 				test.bitsPerPixel,
@@ -242,13 +241,13 @@ func TestPrintData(t *testing.T) {
 		t.Fatal(err)
 	}
 	req := ricoh_g5.PrintDataUnit.Request()
-	for _, test := range testList {
-		readyc <- true
-		conn, err := l.Accept()
-		if err != nil {
-			t.Fatal(err)
-		}
 
+	conn, err := l.Accept()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range testList {
 		buf := make([]byte, 256)
 		n, err := conn.Read(buf)
 		if err != nil {
@@ -267,13 +266,21 @@ func TestPrintData(t *testing.T) {
 		t.Logf("Receive mesage: %x", msg)
 		t.Logf("Write mesage: %x", test.response)
 		conn.Write(test.response)
-		conn.Close()
 	}
+	conn.Close()
 
 	<-completec // allow failure in goroutine then complete the test case
 }
 
 func TestSendWaveform(t *testing.T) {
+
+	ricoh_g5.ResetInstance()
+	ricohDao := &ricoh_g5.Dao{
+		DeviceAddress: ServerAddress,
+		TCPClient:     tcp.NewTCPClient(ServerNetwork, ServerAddress, 5, false),
+	}
+	ricoh_g5.AddInstance(ricohDao)
+
 	testList := []struct {
 		headBoardIndex      string
 		rowIndexOfHeadBoard string
@@ -318,12 +325,11 @@ func TestSendWaveform(t *testing.T) {
 		},
 	}
 
-	readyc := make(chan interface{})
 	completec := make(chan interface{})
 
 	go func() {
 		for i, test := range testList {
-			<-readyc
+			//<-readyc
 			t.Logf(">>%d", i)
 			actual, err := ricoh_g5.Instance(ServerAddress).SendWaveform(
 				test.headBoardIndex,
@@ -365,13 +371,13 @@ func TestSendWaveform(t *testing.T) {
 	}
 
 	req := ricoh_g5.WaveformUnit.Request()
-	for _, test := range testList {
-		readyc <- true
-		conn, err := l.Accept()
-		if err != nil {
-			t.Fatal(err)
-		}
 
+	conn, err := l.Accept()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range testList {
 		buf := make([]byte, 1024)
 		n, err := conn.Read(buf)
 		if err != nil {
@@ -390,8 +396,8 @@ func TestSendWaveform(t *testing.T) {
 		t.Logf("Receive mesage: %x", msg)
 		t.Logf("Write mesage: %x", test.expectedResponse)
 		conn.Write(test.expectedResponse)
-		conn.Close()
 	}
+	conn.Close()
 
 	<-completec // allow failure in goroutine then complete the test case
 }
