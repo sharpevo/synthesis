@@ -60,8 +60,16 @@ func (c *Connectivity) send() {
 
 		log.Println("sending request...", req.Message)
 
-		c.Conn.Write(req.Message)
+		c.Conn.SetDeadline(time.Now().Add(c.Timeout))
+		n, err := c.Conn.Write(req.Message)
+		if err != nil {
+			log.Println(err)
+			resp.Error = err
+			respc <- resp
+			continue
+		}
 		buf := make([]byte, 1536)
+		c.Conn.SetDeadline(time.Now().Add(c.Timeout))
 		n, err := c.Conn.Read(buf)
 		if err != nil {
 			log.Println(err)
@@ -96,7 +104,6 @@ func (c *Connectivity) connect() error {
 	if c.Timeout == 0 {
 		c.Timeout = 10 * time.Second
 	}
-	conn.SetDeadline(time.Now().Add(c.Timeout))
 	c.Conn = conn
 	return nil
 }
