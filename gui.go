@@ -450,14 +450,8 @@ func initPrinter(network string, address string, timeout string) (err error) {
 	}
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: address,
-		TCPClient: &tcp.TCPClient{
-			Connectioner:  &tcp.Connection{},
-			ServerNetwork: network,
-			ServerAddress: address,
-			ServerTimeout: time.Duration(timeoutInt),
-		},
-	},
-	)
+		TCPClient:     tcp.NewTCPClient(network, address, secondInt, false),
+	})
 
 	i := instruction.InstructionPrinterHeadPrinterStatus{}
 	_, err = i.Execute()
