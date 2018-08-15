@@ -440,11 +440,11 @@ func initSerialDevice(
 	return
 }
 
-func initPrinter(network string, address string, timeout string) (err error) {
+func initPrinter(network string, address string, secondString string) (err error) {
 	if ricoh_g5.Instance("") != nil {
 		return
 	}
-	timeoutInt, err := strconv.Atoi(timeout)
+	secondInt, err := strconv.Atoi(secondString)
 	if err != nil {
 		return err
 	}
