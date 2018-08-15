@@ -1,6 +1,7 @@
 package tcp_test
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"posam/protocol/tcp"
@@ -22,6 +23,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestSendSerial(t *testing.T) {
+	t.SkipNow()
 
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6507"
@@ -112,6 +114,7 @@ func TestSendSerial(t *testing.T) {
 }
 
 func TestSendConcurrent(t *testing.T) {
+	t.SkipNow()
 
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6508"
@@ -199,4 +202,72 @@ func TestSendConcurrent(t *testing.T) {
 		}
 	}()
 	<-completec
+}
+
+func TestConnectivityQueue(t *testing.T) {
+
+	ServerNetwork := "tcp"
+	ServerAddress := "localhost:6508"
+	//client := tcp.TCPClient{
+	//Connectivitier:    &tcp.Connectivity{},
+	//ServerNetwork:     ServerNetwork,
+	//ServerAddress:     ServerAddress,
+	//ServerTimeout:     10 * time.Second,
+	//ServerConcurrency: false,
+	//}
+	client := tcp.NewTCPClient(ServerNetwork, ServerAddress, 10, false)
+
+	for index := range [10]int{} {
+		s := fmt.Sprintf("%d", index)
+		go func() {
+			client.Send([]byte(s), []byte(s))
+		}()
+	}
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		client.Send([]byte("0"), []byte("0"))
+	}()
+
+	fmt.Println("wait for pushing...")
+	time.Sleep(1 * time.Second)
+
+	l, err := net.Listen(ServerNetwork, ServerAddress)
+	defer l.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	index := 0
+	for {
+
+		if index == 11 {
+			break
+		}
+		conn, err := l.Accept()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for {
+			if index == 11 {
+				break
+			}
+			buf := make([]byte, 100)
+			n, err := conn.Read(buf)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(">> ", index)
+			msg := buf[:n]
+			fmt.Printf("Receive mesage: %v\n", msg)
+			s := fmt.Sprintf("%d", index)
+			fmt.Printf("Write mesage: %s\n", s)
+			conn.Write([]byte(s))
+			index++
+		}
+		conn.Close()
+	}
+	fmt.Println("completed")
 }
