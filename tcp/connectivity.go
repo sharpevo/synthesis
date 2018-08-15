@@ -70,7 +70,7 @@ func (c *Connectivity) send() {
 		}
 		buf := make([]byte, 1536)
 		c.Conn.SetDeadline(time.Now().Add(c.Timeout))
-		n, err := c.Conn.Read(buf)
+		n, err = c.Conn.Read(buf)
 		if err != nil {
 			log.Println(err)
 			resp.Error = err

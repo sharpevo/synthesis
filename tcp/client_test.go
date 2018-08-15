@@ -23,18 +23,19 @@ func TestMain(m *testing.M) {
 }
 
 func TestSendSerial(t *testing.T) {
-	t.SkipNow()
+	//t.SkipNow()
 
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6507"
-	client := tcp.TCPClient{
-		Connectivitier:    &tcp.Connectivity{},
-		ServerNetwork:     ServerNetwork,
-		ServerAddress:     ServerAddress,
-		ServerTimeout:     1 * time.Second,
-		ServerConcurrency: false,
-	}
+	//client := tcp.TCPClient{
+	//Connectivitier:    &tcp.Connectivity{},
+	//ServerNetwork:     ServerNetwork,
+	//ServerAddress:     ServerAddress,
+	//ServerTimeout:     1 * time.Second,
+	//ServerConcurrency: false,
+	//}
 
+	client := tcp.NewTCPClient(ServerNetwork, ServerAddress, 10, false)
 	testList := []struct {
 		timeout     time.Duration
 		message     []byte
@@ -118,13 +119,14 @@ func TestSendConcurrent(t *testing.T) {
 
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6508"
-	client := tcp.TCPClient{
-		Connectivitier:    &tcp.Connectivity{},
-		ServerNetwork:     ServerNetwork,
-		ServerAddress:     ServerAddress,
-		ServerTimeout:     1 * time.Second,
-		ServerConcurrency: true,
-	}
+	client := tcp.NewTCPClient(ServerNetwork, ServerAddress, 10, false)
+	//client := tcp.TCPClient{
+	//Connectivitier:    &tcp.Connectivity{},
+	//ServerNetwork:     ServerNetwork,
+	//ServerAddress:     ServerAddress,
+	//ServerTimeout:     1 * time.Second,
+	//ServerConcurrency: true,
+	//}
 
 	testList := []struct {
 		timeout     time.Duration
