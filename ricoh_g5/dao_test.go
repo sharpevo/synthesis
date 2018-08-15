@@ -286,7 +286,7 @@ func TestSendWaveform(t *testing.T) {
 		rowIndexOfHeadBoard string
 		voltagePercentage   string
 		segmentCount        string
-		segment             string
+		segment             []string
 		expected            []byte
 		expectedRequest     []byte
 		expectedResponse    []byte
@@ -297,7 +297,7 @@ func TestSendWaveform(t *testing.T) {
 			rowIndexOfHeadBoard: "1", // 0 for the first row of head board
 			voltagePercentage:   "10.24",
 			segmentCount:        "5",
-			segment:             "0302010000",
+			segment:             []string{"0302010000"},
 			expectedRequest: []byte{
 				0x00, 0x00, 0x00, 0x00,
 				0x01, 0x00, 0x00, 0x00,
@@ -312,7 +312,7 @@ func TestSendWaveform(t *testing.T) {
 			rowIndexOfHeadBoard: "2", // 0 for the first row of head board
 			voltagePercentage:   "11.22",
 			segmentCount:        "3",
-			segment:             "0302010000",
+			segment:             []string{"0302010000"},
 			expectedRequest: []byte{
 				0x01, 0x00, 0x00, 0x00,
 				0x02, 0x00, 0x00, 0x00,

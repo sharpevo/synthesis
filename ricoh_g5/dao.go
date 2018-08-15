@@ -120,7 +120,7 @@ func (d *Dao) SendWaveform(
 	rowIndexOfHeadBoard string,
 	voltagePercentage string,
 	segmentCount string,
-	segment string,
+	segmentArgumentList []string,
 ) (resp interface{}, err error) {
 	headBoardIndexBytes, err := Int32ByteSequence(headBoardIndex)
 	if err != nil {
