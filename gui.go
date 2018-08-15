@@ -120,7 +120,7 @@ func main() {
 	printerNetworkInput.SetText("tcp")
 	printerAddressInput := widgets.NewQLineEdit(nil)
 	printerAddressInput.SetPlaceholderText("localhost:3000")
-	printerAddressInput.SetText("localhost:21005")
+	printerAddressInput.SetText("192.168.100.215:21005")
 	printerTimeoutInput := widgets.NewQLineEdit(nil)
 	printerTimeoutInput.SetPlaceholderText("10")
 	printerTimeoutInput.SetText("10")
