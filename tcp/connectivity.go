@@ -3,6 +3,7 @@ package tcp
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"posam/util/blockingqueue"
@@ -64,6 +65,10 @@ func (c *Connectivity) send() {
 		n, err := c.Conn.Write(req.Message)
 		if err != nil {
 			log.Println(err)
+			if err == io.EOF {
+				log.Println("Reconnecting...")
+				c.Conn = nil
+			}
 			resp.Error = err
 			respc <- resp
 			continue
@@ -73,6 +78,10 @@ func (c *Connectivity) send() {
 		n, err = c.Conn.Read(buf)
 		if err != nil {
 			log.Println(err)
+			if err == io.EOF {
+				log.Println("Reconnecting...")
+				c.Conn = nil
+			}
 			resp.Error = err
 			respc <- resp
 			continue
