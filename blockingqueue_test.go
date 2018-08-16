@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"posam/util/blockingqueue"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -47,8 +48,22 @@ func TestBlocking(t *testing.T) {
 		fmt.Println(item)
 	}
 
-	for _, test := range testList {
-		actual := q.Pop()
+	go func() {
+		time.Sleep(4 * time.Second)
+		q.Reset()
+	}()
+
+	for i := range [10]int{} {
+		actual, err := q.Pop()
+		if err != nil {
+			if strings.Contains(err.Error(), "terminated") {
+				fmt.Println("error occured as expected")
+				return
+			} else {
+				panic(err)
+			}
+		}
+		test := testList[i]
 		if !reflect.DeepEqual(test.v, actual) {
 			t.Errorf(
 				"\nEXPECT: %q\nGET: %q\n",
