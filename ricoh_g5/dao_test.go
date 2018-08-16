@@ -291,19 +291,43 @@ func TestSendWaveform(t *testing.T) {
 		expectedRequest     []byte
 		expectedResponse    []byte
 		errString           string
+		ignoreResponse      bool
 	}{
 		{
 			headBoardIndex:      "0", // 0 for the first head baord
 			rowIndexOfHeadBoard: "1", // 0 for the first row of head board
 			voltagePercentage:   "10.24",
-			segmentCount:        "5",
-			segment:             []string{"0302010000"},
+			segmentCount:        "1",
+			segment: []string{
+				"1.1", "2.2", "2.2", // fall
+				"4.4", "5.5", "5.5", // hold
+				"7.7", "8.8", "6.6", // rising
+				"10.10", "11.11", "11.11", // wait
+				"1", // bit
+			},
 			expectedRequest: []byte{
-				0x00, 0x00, 0x00, 0x00,
-				0x01, 0x00, 0x00, 0x00,
-				0x0a, 0xd7, 0x23, 0x41,
-				0x05, 0x00, 0x00, 0x00,
-				0x03, 0x02, 0x01, 0x00, 0x00,
+				0x0, 0x0, 0x0, 0x0,
+				0x1, 0x0, 0x0, 0x0,
+				0xa, 0xd7, 0x23, 0x41,
+				0x1, 0x0, 0x0, 0x0,
+
+				0xcd, 0xcc, 0x8c, 0x3f,
+				0xcd, 0xcc, 0xc, 0x40,
+				0xcd, 0xcc, 0xc, 0x40,
+
+				0xcd, 0xcc, 0x8c, 0x40,
+				0x0, 0x0, 0xb0, 0x40,
+				0x0, 0x0, 0xb0, 0x40,
+
+				0x66, 0x66, 0xf6, 0x40,
+				0xcd, 0xcc, 0xc, 0x41,
+				0x33, 0x33, 0xd3, 0x40,
+
+				0x9a, 0x99, 0x21, 0x41,
+				0x8f, 0xc2, 0x31, 0x41,
+				0x8f, 0xc2, 0x31, 0x41,
+
+				0x1, 0x0, 0x0, 0x0,
 			},
 			expectedResponse: ricoh_g5.WaveformUnit.ComResp(),
 		},
@@ -312,16 +336,40 @@ func TestSendWaveform(t *testing.T) {
 			rowIndexOfHeadBoard: "2", // 0 for the first row of head board
 			voltagePercentage:   "11.22",
 			segmentCount:        "3",
-			segment:             []string{"0302010000"},
+			segment: []string{
+				"1.1", "2.2", "3.3", // fall
+				"4.4", "5.5", "6.6", // hold
+				"7.7", "8.8", "9.9", // rising
+				"10.10", "11.11", "12.12", // wait
+				"1", // bit
+			},
 			expectedRequest: []byte{
 				0x01, 0x00, 0x00, 0x00,
 				0x02, 0x00, 0x00, 0x00,
 				0x1f, 0x85, 0x33, 0x41,
 				0x03, 0x00, 0x00, 0x00,
-				0x01, 0x02, 0x03, 0x00, 0x00,
+
+				0xcd, 0xcc, 0x8c, 0x3f,
+				0xcd, 0xcc, 0xc, 0x40,
+				0x33, 0x33, 0x53, 0x40,
+
+				0xcd, 0xcc, 0x8c, 0x40,
+				0x0, 0x0, 0xb0, 0x40,
+				0x33, 0x33, 0xd3, 0x40,
+
+				0x66, 0x66, 0xf6, 0x40,
+				0xcd, 0xcc, 0xc, 0x41,
+				0x66, 0x66, 0x1e, 0x41,
+
+				0x9a, 0x99, 0x21, 0x41,
+				0x8f, 0xc2, 0x31, 0x41,
+				0x85, 0xeb, 0x41, 0x41,
+
+				0x1, 0x0, 0x0, 0x0,
 			},
 			expectedResponse: ricoh_g5.WaveformUnit.ComResp(),
 			errString:        "translated with unexpected length",
+			ignoreResponse:   true,
 		},
 	}
 
@@ -330,7 +378,7 @@ func TestSendWaveform(t *testing.T) {
 	go func() {
 		for i, test := range testList {
 			//<-readyc
-			t.Logf(">>%d", i)
+			fmt.Printf(">>%d\n", i)
 			actual, err := ricoh_g5.Instance(ServerAddress).SendWaveform(
 				test.headBoardIndex,
 				test.rowIndexOfHeadBoard,
@@ -340,11 +388,11 @@ func TestSendWaveform(t *testing.T) {
 			)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
-					t.Logf("error occured as expected %s", err)
+					fmt.Printf("error occured as expected %s", err)
 
 					// no things to be sent if error occurred
 					// send a message to server to unblock l.Accept()
-					ricoh_g5.Instance(ServerAddress).QueryErrorCode()
+					//ricoh_g5.Instance(ServerAddress).QueryErrorCode()
 
 					continue
 				} else {
@@ -378,6 +426,10 @@ func TestSendWaveform(t *testing.T) {
 	}
 
 	for _, test := range testList {
+		if test.ignoreResponse {
+			fmt.Println("response ignored")
+			continue
+		}
 		buf := make([]byte, 1024)
 		n, err := conn.Read(buf)
 		if err != nil {
@@ -388,7 +440,7 @@ func TestSendWaveform(t *testing.T) {
 		expected := append(req.Bytes(), test.expectedRequest...)
 		if test.errString == "" && !bytes.Equal(msg, expected) {
 			t.Errorf(
-				"\nEXPECT: '%x'\nGET:    '%x'\n",
+				"\nEXPECT: '%#v'\nGET:    '%#v'\n",
 				expected,
 				msg,
 			)
@@ -400,4 +452,121 @@ func TestSendWaveform(t *testing.T) {
 	conn.Close()
 
 	<-completec // allow failure in goroutine then complete the test case
+}
+
+func TestSegmentifyAndSegmentBytes(t *testing.T) {
+	testList := []struct {
+		argumentList []string
+		expected     []byte
+		errString    string
+	}{
+		{
+			argumentList: []string{
+				"1.1", "2.2", "3.3", // fall
+				"4.4", "3.3", "3.3", // hold
+				"7.7", "3.3", "5.5", // rising
+				"10.10", "5.5", "5.5", // wait
+				"1", // bit
+
+				//"2.1", "3.2", "4.3", // fall
+				//"2.4", "3.5", "4.6", // hold
+				//"2.7", "3.8", "4.9", // rising
+				//"20.10", "31.11", "42.12", // wait
+				//"2", // bit
+			},
+			expected: []byte{
+				0xcd, 0xcc, 0x8c, 0x3f, // 1.1
+				0xcd, 0xcc, 0xc, 0x40, // 2.2
+				0x33, 0x33, 0x53, 0x40, // 3.3
+
+				0xcd, 0xcc, 0x8c, 0x40,
+				0x33, 0x33, 0x53, 0x40,
+				0x33, 0x33, 0x53, 0x40,
+
+				0x66, 0x66, 0xf6, 0x40,
+				0x33, 0x33, 0x53, 0x40,
+				0x0, 0x0, 0xb0, 0x40,
+
+				0x9a, 0x99, 0x21, 0x41,
+				0x0, 0x0, 0xb0, 0x40,
+				0x0, 0x0, 0xb0, 0x40,
+
+				0x1, 0x0, 0x0, 0x0,
+
+				//0xcd, 0xcc, 0x8c, 0x3f,
+				//0xcd, 0xcc, 0xc, 0x40,
+				//0x33, 0x33, 0x53, 0x40,
+
+				//0xcd, 0xcc, 0x8c, 0x40,
+				//0x0, 0x0, 0xb0, 0x40,
+				//0x33, 0x33, 0xd3, 0x40,
+
+				//0x66, 0x66, 0xf6, 0x40,
+				//0xcd, 0xcc, 0xc, 0x41,
+				//0x66, 0x66, 0x1e, 0x41,
+
+				//0x9a, 0x99, 0x21, 0x41,
+				//0x8f, 0xc2, 0x31, 0x41,
+				//0x85, 0xeb, 0x41, 0x41,
+
+				//0x1, 0x0, 0x0, 0x0,
+
+				//0x66, 0x66, 0x6, 0x40,
+				//0xcd, 0xcc, 0x4c, 0x40,
+				//0x9a, 0x99, 0x89, 0x40,
+
+				//0x9a, 0x99, 0x19, 0x40,
+				//0x0, 0x0, 0x60, 0x40,
+				//0x33, 0x33, 0x93, 0x40,
+
+				//0xcd, 0xcc, 0x2c, 0x40,
+				//0x33, 0x33, 0x73, 0x40,
+				//0xcd, 0xcc, 0x9c, 0x40,
+
+				//0xcd, 0xcc, 0xa0, 0x41,
+				//0x48, 0xe1, 0xf8, 0x41,
+				//0xe1, 0x7a, 0x28, 0x42,
+
+				//0x2, 0x0, 0x0, 0x0,
+			},
+		},
+		{
+			argumentList: []string{
+				"1.1", "2.2", "3.3", // fall
+				"4.4", "5.5", "6.6", // hold
+				"7.7", "8.8", "9.9", // rising
+				"10.10", "11.11", "12.12", // wait
+				"1", // bit
+
+				"2.1", "3.2", "4.3", // fall
+				"2.4", "3.5", "4.6", // hold
+				"2.7", "3.8", "4.9", // rising
+				"20.10", "31.11", "42.12", // wait
+			},
+			expected:  []byte{},
+			errString: "invalid segment",
+		},
+	}
+
+	for _, test := range testList {
+		segmentList, err := ricoh_g5.Segmentify(test.argumentList, 13)
+		if err != nil {
+			if strings.Contains(err.Error(), test.errString) {
+				fmt.Println("error occurred as expected", err)
+			} else {
+				t.Errorf(err.Error())
+			}
+		}
+		segmentBytes, err := ricoh_g5.SegmentBytes(segmentList, 2)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if !bytes.Equal(segmentBytes, test.expected) {
+			t.Errorf(
+				"\nEXPECT: '%#v'\nGET:    '%#v'\n",
+				test.expected,
+				segmentBytes,
+			)
+		}
+	}
 }
