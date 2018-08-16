@@ -215,12 +215,11 @@ func VariantByteSequence(input interface{}, length int) (output []byte, err erro
 	return
 }
 
-func Segmentify(segmentArgumentList []string, length int) ([][]string, error) {
-	segment := []string{}
-	segmentList := [][]string{}
+func Segmentify(segmentArgumentList []string, length int) (segmentList [][]string, err error) {
 	if len(segmentArgumentList)%length != 0 {
 		return segmentList, fmt.Errorf("invalid segment")
 	}
+	segment := []string{}
 	for len(segmentArgumentList) >= length {
 		segment, segmentArgumentList = segmentArgumentList[:length], segmentArgumentList[length:]
 		segmentList = append(segmentList, segment)
@@ -230,7 +229,6 @@ func Segmentify(segmentArgumentList []string, length int) ([][]string, error) {
 
 func SegmentBytes(segmentList [][]string, length int32) (segmentsBytes []byte, err error) {
 	for _, itemList := range segmentList {
-		segmentBytes := []byte{}
 		for k, item := range itemList {
 			itemBytes := []byte{}
 			switch k {
@@ -245,9 +243,8 @@ func SegmentBytes(segmentList [][]string, length int32) (segmentsBytes []byte, e
 					return segmentsBytes, err
 				}
 			}
-			segmentBytes = append(segmentBytes, itemBytes...)
+			segmentsBytes = append(segmentsBytes, itemBytes...)
 		}
-		segmentsBytes = append(segmentsBytes, segmentBytes...)
 	}
 	return segmentsBytes, nil
 }
