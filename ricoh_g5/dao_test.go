@@ -12,7 +12,7 @@ import (
 )
 
 type MockTCPClient struct {
-	tcp.TCPClient
+	tcp.Client
 }
 
 func (m *MockTCPClient) Send(message, expected []byte) (resp []byte, err error) {
@@ -26,9 +26,10 @@ var ServerAddress = "localhost:6507"
 func TestQueryFunction(t *testing.T) {
 
 	ricoh_g5.ResetInstance()
+	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 5)
 	ricohDao := &ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
-		TCPClient:     tcp.NewTCPClient(ServerNetwork, ServerAddress, 5, false),
+		TCPClient:     client,
 	}
 	ricoh_g5.AddInstance(ricohDao)
 
@@ -129,9 +130,10 @@ func TestQueryFunction(t *testing.T) {
 func TestPrintData(t *testing.T) {
 
 	ricoh_g5.ResetInstance()
+	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 5)
 	ricohDao := &ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
-		TCPClient:     tcp.NewTCPClient(ServerNetwork, ServerAddress, 5, false),
+		TCPClient:     client,
 	}
 	ricoh_g5.AddInstance(ricohDao)
 
@@ -216,7 +218,7 @@ func TestPrintData(t *testing.T) {
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
 					t.Logf("error occured as expected %s", err)
-					ricoh_g5.Instance(ServerAddress).QueryErrorCode()
+					//ricoh_g5.Instance(ServerAddress).QueryErrorCode()
 					continue
 				} else {
 					// panic if change errString to "foo"
@@ -275,9 +277,10 @@ func TestPrintData(t *testing.T) {
 func TestSendWaveform(t *testing.T) {
 
 	ricoh_g5.ResetInstance()
+	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 5)
 	ricohDao := &ricoh_g5.Dao{
 		DeviceAddress: ServerAddress,
-		TCPClient:     tcp.NewTCPClient(ServerNetwork, ServerAddress, 5, false),
+		TCPClient:     client,
 	}
 	ricoh_g5.AddInstance(ricohDao)
 

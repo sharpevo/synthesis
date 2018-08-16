@@ -17,7 +17,7 @@ func init() {
 
 type Dao struct {
 	DeviceAddress string
-	TCPClient     tcp.TCPClienter
+	TCPClient     tcp.Clienter
 }
 
 func AddInstance(dao *Dao) {
