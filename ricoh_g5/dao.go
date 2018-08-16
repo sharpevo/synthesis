@@ -26,6 +26,7 @@ func AddInstance(dao *Dao) {
 
 func ResetInstance() {
 	deviceMap = concurrentmap.NewConcurrentMap()
+	tcp.ResetInstance()
 }
 
 func Instance(address string) *Dao {
