@@ -120,7 +120,7 @@ func main() {
 	printerNetworkInput.SetText("tcp")
 	printerAddressInput := widgets.NewQLineEdit(nil)
 	printerAddressInput.SetPlaceholderText("localhost:3000")
-	printerAddressInput.SetText("localhost:21005")
+	printerAddressInput.SetText("192.168.100.215:21005")
 	printerTimeoutInput := widgets.NewQLineEdit(nil)
 	printerTimeoutInput.SetPlaceholderText("10")
 	printerTimeoutInput.SetText("10")
@@ -440,29 +440,24 @@ func initSerialDevice(
 	return
 }
 
-func initPrinter(network string, address string, timeout string) (err error) {
+func initPrinter(network string, address string, secondString string) (err error) {
 	if ricoh_g5.Instance("") != nil {
 		return
 	}
-	timeoutInt, err := strconv.Atoi(timeout)
+	secondInt, err := strconv.Atoi(secondString)
 	if err != nil {
 		return err
 	}
 	ricoh_g5.AddInstance(&ricoh_g5.Dao{
 		DeviceAddress: address,
-		TCPClient: &tcp.TCPClient{
-			Connectioner:  &tcp.Connection{},
-			ServerNetwork: network,
-			ServerAddress: address,
-			ServerTimeout: time.Duration(timeoutInt),
-		},
-	},
-	)
+		TCPClient:     tcp.NewTCPClient(network, address, secondInt, false),
+	})
 
 	i := instruction.InstructionPrinterHeadPrinterStatus{}
 	_, err = i.Execute()
 	if err != nil {
-		return err
+		log.Println(err)
+		return fmt.Errorf("printer is not ready")
 	}
 	return nil
 }
