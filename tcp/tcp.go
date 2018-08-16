@@ -42,8 +42,18 @@ func addInstance(client *Client) (*Client, bool) {
 	}
 }
 
+func ResetInstance() {
+	for item := range clientMap.Iter() {
+		client := item.Value.(*Client)
+		log.Println("terminating client: ", client.Address)
+		client.RequestQueue.Reset()
+	}
+	clientMap = concurrentmap.NewConcurrentMap()
+}
+
 type Clienter interface {
 	connect() error
+	Send([]byte, []byte) ([]byte, error)
 }
 
 type Client struct {
@@ -104,8 +114,12 @@ func (c *Client) launch() {
 	//time.Sleep(3 * time.Second)
 	log.Println("client launched")
 	for {
-		req := c.RequestQueue.Pop().(*Request)
-
+		reqi, err := c.RequestQueue.Pop()
+		if err != nil {
+			log.Printf("client %q terminated\n", c.Address)
+			return
+		}
+		req := reqi.(*Request)
 		if c.Conn == nil {
 			log.Println("connecting to the server...")
 			err := c.connect()
