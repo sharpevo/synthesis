@@ -2,6 +2,7 @@ package ricoh_g5
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log"
 	"posam/dao"
 	"posam/protocol/tcp"
@@ -120,7 +121,7 @@ func (d *Dao) SendWaveform(
 	rowIndexOfHeadBoard string,
 	voltagePercentage string,
 	segmentCount string,
-	segment string,
+	segmentArgumentList []string,
 ) (resp interface{}, err error) {
 	headBoardIndexBytes, err := Int32ByteSequence(headBoardIndex)
 	if err != nil {
@@ -143,9 +144,20 @@ func (d *Dao) SendWaveform(
 		return resp, err
 	}
 	length := segmentCountArgument.Value.(int32)
-	segmentBytes, err := VariantByteSequence(segment, int(length))
+
+	segmentList, err := Segmentify(segmentArgumentList, 13)
 	if err != nil {
 		return resp, err
+	}
+
+	segmentBytes, err := SegmentBytes(segmentList, length)
+
+	actual := len(segmentBytes)
+	expect := int(52 * length)
+	if actual != expect {
+		return resp, fmt.Errorf("%v is translated with unexpected length %d (%d)",
+			segmentArgumentList, actual, expect,
+		)
 	}
 
 	req := WaveformUnit.Request()
@@ -201,4 +213,38 @@ func VariantByteSequence(input interface{}, length int) (output []byte, err erro
 		return output, err
 	}
 	return
+}
+
+func Segmentify(segmentArgumentList []string, length int) (segmentList [][]string, err error) {
+	if len(segmentArgumentList)%length != 0 {
+		return segmentList, fmt.Errorf("invalid segment")
+	}
+	segment := []string{}
+	for len(segmentArgumentList) >= length {
+		segment, segmentArgumentList = segmentArgumentList[:length], segmentArgumentList[length:]
+		segmentList = append(segmentList, segment)
+	}
+	return segmentList, nil
+}
+
+func SegmentBytes(segmentList [][]string, length int32) (segmentsBytes []byte, err error) {
+	for _, itemList := range segmentList {
+		for k, item := range itemList {
+			itemBytes := []byte{}
+			switch k {
+			case 12:
+				itemBytes, err = Int32ByteSequence(item)
+				if err != nil {
+					return segmentsBytes, err
+				}
+			default:
+				itemBytes, err = Float32ByteSequence(item)
+				if err != nil {
+					return segmentsBytes, err
+				}
+			}
+			segmentsBytes = append(segmentsBytes, itemBytes...)
+		}
+	}
+	return segmentsBytes, nil
 }
