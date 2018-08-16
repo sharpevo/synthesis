@@ -1,11 +1,14 @@
 package instruction
 
 import (
+	"posam/interpreter"
 	"posam/util/concurrentmap"
 )
 
 type Instructioner interface {
 	Execute(args ...string) (interface{}, error)
+	SetEnv(*concurrentmap.ConcurrentMap)
+	GetEnv() *concurrentmap.ConcurrentMap
 	// TODO: rb
 }
 
@@ -25,4 +28,33 @@ func (i *Instruction) SetTitle(title string) {
 
 func (i *Instruction) Execute(args ...string) (interface{}, error) {
 	return "", nil
+}
+
+// TODO: Env with tons of reflect relavent jobs
+func (i *Instruction) GetEnv() *concurrentmap.ConcurrentMap {
+	if i.Env == nil {
+		i.initEnv()
+	}
+	return i.Env
+}
+
+func (i *Instruction) SetEnv(env *concurrentmap.ConcurrentMap) {
+	i.Env = env
+}
+
+func (i *Instruction) initEnv() {
+	i.Env = concurrentmap.NewConcurrentMap()
+}
+
+func (i *Instruction) ParseVariable(name string) (*interpreter.Variable, error) {
+	v, found := i.Env.Get(name)
+	if !found {
+		newVariable := &interpreter.Variable{}
+		newVariablei := i.Env.Set(name, newVariable)
+		variable := newVariablei.(*interpreter.Variable)
+		return variable, nil
+	} else {
+		variable := v.(*interpreter.Variable)
+		return variable, nil
+	}
 }

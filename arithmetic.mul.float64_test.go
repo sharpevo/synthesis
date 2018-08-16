@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestInstructionAdditionFloat64Execute(t *testing.T) {
+func TestInstructionMultiplicationFloat64Execute(t *testing.T) {
 	i := instruction.InstructionMultiplicationFloat64{}
 	i.Env = concurrentmap.NewConcurrentMap()
 	i.Env.Set("var1", &interpreter.Variable{Value: "11.11"})
