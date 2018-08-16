@@ -71,10 +71,11 @@ func TestQueryFunction(t *testing.T) {
 		},
 	}
 
+	readyc := make(chan interface{})
 	completec := make(chan interface{})
 	go func() {
+		<-readyc
 		for i, test := range testList {
-			//<-readyc
 			t.Logf(">>%d", i)
 			actual, err := test.function()
 			if err != nil {
@@ -99,11 +100,11 @@ func TestQueryFunction(t *testing.T) {
 	}()
 
 	l, err := net.Listen(ServerNetwork, ServerAddress)
-	defer l.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	readyc <- true
 	conn, err := l.Accept()
 	if err != nil {
 		t.Fatal(err)
@@ -125,6 +126,7 @@ func TestQueryFunction(t *testing.T) {
 	conn.Close()
 
 	<-completec // allow failure in goroutine then complete the test case
+	l.Close()
 }
 
 func TestPrintData(t *testing.T) {
@@ -146,6 +148,7 @@ func TestPrintData(t *testing.T) {
 		expected        []byte
 		response        []byte
 		errString       string
+		ignoreResponse  bool
 	}{
 		{
 			bitsPerPixel:   "2",
@@ -198,17 +201,20 @@ func TestPrintData(t *testing.T) {
 
 				0x01, 0x02, 0x03, 0x04,
 			},
-			expected:  []byte{0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-			response:  []byte("failed"),
-			errString: "is translated with unexpected length 4 (160)",
+			expected:       []byte{0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			response:       []byte("failed"),
+			errString:      "is translated with unexpected length 4 (160)",
+			ignoreResponse: true,
 		},
 	}
 
+	readyc := make(chan interface{})
 	completec := make(chan interface{})
 
 	go func() {
+		<-readyc
 		for i, test := range testList {
-			t.Logf(">>%d", i)
+			fmt.Printf(">>%d\n", i)
 			actual, err := ricoh_g5.Instance(ServerAddress).PrintData(
 				test.bitsPerPixel,
 				test.width,
@@ -244,12 +250,17 @@ func TestPrintData(t *testing.T) {
 	}
 	req := ricoh_g5.PrintDataUnit.Request()
 
+	readyc <- true
 	conn, err := l.Accept()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, test := range testList {
+		if test.ignoreResponse {
+			fmt.Println("response ignored")
+			continue
+		}
 		buf := make([]byte, 256)
 		n, err := conn.Read(buf)
 		if err != nil {
@@ -376,9 +387,11 @@ func TestSendWaveform(t *testing.T) {
 		},
 	}
 
+	readyc := make(chan interface{})
 	completec := make(chan interface{})
 
 	go func() {
+		<-readyc
 		for i, test := range testList {
 			//<-readyc
 			fmt.Printf(">>%d\n", i)
@@ -423,6 +436,7 @@ func TestSendWaveform(t *testing.T) {
 
 	req := ricoh_g5.WaveformUnit.Request()
 
+	readyc <- true
 	conn, err := l.Accept()
 	if err != nil {
 		t.Fatal(err)
