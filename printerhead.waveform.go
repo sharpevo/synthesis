@@ -19,14 +19,14 @@ func (i *InstructionPrinterHeadWaveform) Execute(args ...string) (resp interface
 	rowIndexOfHeadBoard := args[2]
 	voltagePercentage := args[3]
 	segmentCount := args[4]
-	segment := args[5]
+	segmentArgumentList := args[5:]
 
 	resp, err = ricoh_g5.Instance("").SendWaveform(
 		headBoardIndex,
 		rowIndexOfHeadBoard,
 		voltagePercentage,
 		segmentCount,
-		segment,
+		segmentArgumentList,
 	)
 	variable.Value = resp
 	if err != nil {
