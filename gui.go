@@ -456,7 +456,8 @@ func initPrinter(network string, address string, secondString string) (err error
 	i := instruction.InstructionPrinterHeadPrinterStatus{}
 	_, err = i.Execute()
 	if err != nil {
-		return err
+		log.Println(err)
+		return fmt.Errorf("printer is not ready")
 	}
 	return nil
 }
