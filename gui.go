@@ -6,7 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"posam/dao/alientek"
+	"posam/dao/ricoh_g5"
 	"posam/protocol/serialport"
+	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 	"runtime"
 	"strconv"
@@ -47,6 +49,8 @@ RETRY -2 3
 PRINT 3
 SLEEP 1
 PRINT 4`
+	CMD_PRINTER = `ERRORCODE var1
+GETVAR var1`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
@@ -75,6 +79,11 @@ func main() {
 	InstructionMap.Set("RETRY", instruction.InstructionRetry{})
 	InstructionMap.Set("LED", instruction.InstructionLed{})
 	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
+	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
+	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
+	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
+	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
+	InstructionMap.Set("WAVEFORM", instruction.InstructionPrinterHeadWaveform{})
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
@@ -96,7 +105,35 @@ func main() {
 	})
 
 	input := widgets.NewQTextEdit(nil)
-	input.SetPlainText(CMD_LED_SERIAL)
+	input.SetPlainText(CMD_PRINTER)
+
+	// tcp group
+
+	printerGroup := widgets.NewQGroupBox2("Printer", nil)
+
+	printerNetworkLabel := widgets.NewQLabel2("Network", nil, 0)
+	printerAddressLabel := widgets.NewQLabel2("Address", nil, 0)
+	printerTimeoutLabel := widgets.NewQLabel2("Timeout", nil, 0)
+
+	printerNetworkInput := widgets.NewQLineEdit(nil)
+	printerNetworkInput.SetPlaceholderText("tcp, tcp4, tcp6")
+	printerNetworkInput.SetText("tcp")
+	printerAddressInput := widgets.NewQLineEdit(nil)
+	printerAddressInput.SetPlaceholderText("localhost:3000")
+	printerAddressInput.SetText("192.168.100.215:21005")
+	printerTimeoutInput := widgets.NewQLineEdit(nil)
+	printerTimeoutInput.SetPlaceholderText("10")
+	printerTimeoutInput.SetText("10")
+
+	printerLayout := widgets.NewQGridLayout2()
+	printerLayout.AddWidget(printerNetworkLabel, 0, 0, 0)
+	printerLayout.AddWidget(printerNetworkInput, 0, 1, 0)
+	printerLayout.AddWidget(printerAddressLabel, 1, 0, 0)
+	printerLayout.AddWidget(printerAddressInput, 1, 1, 0)
+	printerLayout.AddWidget(printerTimeoutLabel, 2, 0, 0)
+	printerLayout.AddWidget(printerTimeoutInput, 2, 1, 0)
+
+	printerGroup.SetLayout(printerLayout)
 
 	// serial group
 
@@ -154,6 +191,8 @@ func main() {
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
 
+	stack := concurrentmap.NewConcurrentMap()
+
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.ConnectClicked(func(bool) {
 
@@ -171,7 +210,15 @@ func main() {
 		)
 		if err != nil {
 			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-			return
+		}
+
+		err = initPrinter(
+			printerNetworkInput.Text(),
+			printerAddressInput.Text(),
+			printerTimeoutInput.Text(),
+		)
+		if err != nil {
+			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 		}
 
 		result.SetText("RUNNING")
@@ -182,7 +229,7 @@ func main() {
 		interpreter.InitParser(InstructionMap)
 		statementGroup := interpreter.StatementGroup{
 			Execution: interpreter.SYNC,
-			Stack:     concurrentmap.NewConcurrentMap(),
+			Stack:     stack,
 		}
 		interpreter.ParseReader(
 			strings.NewReader(input.ToPlainText()),
@@ -215,7 +262,7 @@ func main() {
 					}
 					resp.Completec <- true
 				}
-				resultList = append(resultList, fmt.Sprintf("%s", resp.Output))
+				resultList = append(resultList, fmt.Sprintf("%#v", resp.Output))
 				result.SetText(strings.Join(resultList, "\n"))
 			}
 			result.SetText(strings.Join(resultList, "\n") + "\n\nDONE")
@@ -260,8 +307,9 @@ func main() {
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(input, 0, 0, 0)
-	inputLayout.AddWidget(serialGroup, 1, 0, 0)
-	inputLayout.AddWidget(runButton, 2, 0, 0)
+	inputLayout.AddWidget(printerGroup, 1, 0, 0)
+	inputLayout.AddWidget(serialGroup, 2, 0, 0)
+	inputLayout.AddWidget(runButton, 3, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
 	outputGroup := widgets.NewQGroupBox2("Results", nil)
@@ -390,4 +438,26 @@ func initSerialDevice(
 	}
 
 	return
+}
+
+func initPrinter(network string, address string, secondString string) (err error) {
+	if ricoh_g5.Instance("") != nil {
+		return
+	}
+	secondInt, err := strconv.Atoi(secondString)
+	if err != nil {
+		return err
+	}
+	ricoh_g5.AddInstance(&ricoh_g5.Dao{
+		DeviceAddress: address,
+		TCPClient:     tcp.NewTCPClient(network, address, secondInt, false),
+	})
+
+	i := instruction.InstructionPrinterHeadPrinterStatus{}
+	_, err = i.Execute()
+	if err != nil {
+		log.Println(err)
+		return fmt.Errorf("printer is not ready")
+	}
+	return nil
 }
