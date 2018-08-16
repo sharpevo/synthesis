@@ -10,7 +10,7 @@ type InstructionPrinterHeadWaveform struct {
 }
 
 func (i *InstructionPrinterHeadWaveform) Execute(args ...string) (resp interface{}, err error) {
-	if len(args) != 6 {
+	if len(args) < 18 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
 
