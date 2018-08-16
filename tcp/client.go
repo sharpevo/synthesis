@@ -29,12 +29,9 @@ func NewTCPClient(network string, address string, second int, concurrency bool) 
 	}
 }
 
-var connectionMap *concurrentmap.ConcurrentMap
-
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
 	connectivityMap = concurrentmap.NewConcurrentMap()
-	connectionMap = concurrentmap.NewConcurrentMap()
 }
 
 type TCPRequest struct {
