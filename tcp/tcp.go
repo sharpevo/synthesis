@@ -104,7 +104,7 @@ func (c *Client) launch() {
 	//time.Sleep(3 * time.Second)
 	log.Println("client launched")
 	for {
-		req := c.RequestQueue.Pop().(Request)
+		req := c.RequestQueue.Pop().(*Request)
 
 		if c.Conn == nil {
 			log.Println("connecting to the server...")
@@ -115,7 +115,7 @@ func (c *Client) launch() {
 				continue
 			}
 		}
-		c.send(&req)
+		c.send(req)
 	}
 }
 
@@ -169,7 +169,7 @@ func (c *Client) Send(
 		Expected:  expected,
 		Responsec: make(chan Response),
 	}
-	c.RequestQueue.Push(req)
+	c.RequestQueue.Push(&req)
 	log.Println("waiting for response:", message)
 	resp := <-req.Responsec
 	return resp.Message, resp.Error
