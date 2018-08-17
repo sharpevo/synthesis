@@ -8,7 +8,6 @@ import (
 	"posam/dao/alientek"
 	"posam/dao/ricoh_g5"
 	"posam/protocol/serialport"
-	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 	"runtime"
 	"strconv"
@@ -448,10 +447,10 @@ func initPrinter(network string, address string, secondString string) (err error
 	if err != nil {
 		return err
 	}
-	ricoh_g5.AddInstance(&ricoh_g5.Dao{
-		DeviceAddress: address,
-		TCPClient:     tcp.NewTCPClient(network, address, secondInt, false),
-	})
+	_, err = ricoh_g5.NewDao(network, address, secondInt)
+	if err != nil {
+		return err
+	}
 
 	i := instruction.InstructionPrinterHeadPrinterStatus{}
 	_, err = i.Execute()
