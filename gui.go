@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"posam/dao/alientek"
 	"posam/dao/ricoh_g5"
-	"posam/protocol/serialport"
 	"posam/util/concurrentmap"
 	"runtime"
 	"strconv"
@@ -367,16 +366,14 @@ func initSerialDevice(
 	//return
 	//}
 
-	alientek.AddInstance(&alientek.Dao{
-		DeviceAddress: deviceAddress,
-		SerialPort: &serialport.SerialPort{
-			Name:     device,
-			BaudRate: baudInt,
-			DataBits: characterInt,
-			StopBits: stopInt,
-			Parity:   -1,
-		},
-	})
+	alientek.NewDao(
+		device,
+		baudInt,
+		characterInt,
+		stopInt,
+		-1,
+		deviceAddress,
+	)
 
 	switch runtime.GOOS {
 	case "windows":
