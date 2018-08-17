@@ -19,6 +19,29 @@ type Dao struct {
 	id        string
 	TCPClient tcp.Clienter
 }
+
+func NewDao(
+	network string,
+	address string,
+	timeout int,
+) (*Dao, error) {
+	tcpClient, err := tcp.NewClient(
+		network,
+		address,
+		timeout,
+	)
+	if err != nil {
+		return nil, err
+	}
+	dao := &Dao{
+		TCPClient: tcpClient,
+	}
+	err = dao.SetID(address)
+	if err != nil {
+		return dao, err
+	}
+	AddInstance(dao)
+	return dao, nil
 }
 
 func AddInstance(dao *Dao) {
