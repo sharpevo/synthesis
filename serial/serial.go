@@ -53,7 +53,7 @@ func ResetInstance() {
 
 type Clienter interface {
 	connect() error
-	Send([]byte, []byte) ([]byte, error)
+	Send([]byte, []byte, []byte) ([]byte, error)
 }
 
 type Client struct {
@@ -102,13 +102,15 @@ func (c *Client) connect() error {
 		return err
 	}
 	c.Connection = openedPort
+	log.Printf("Serial port %q opened", c.Name)
 	return nil
 }
 
 type Request struct {
-	Message   []byte
-	Expected  []byte
-	Responsec chan Response
+	Message     []byte
+	RecExpected []byte
+	ComExpected []byte
+	Responsec   chan Response
 }
 
 type Response struct {
@@ -141,7 +143,7 @@ func (c *Client) launch() {
 func (c *Client) send(req *Request) {
 	respc := req.Responsec
 	resp := Response{}
-	log.Println("sending request...", req.Message)
+	log.Printf("sending request %#v", req.Message)
 
 	_, err := c.Connection.Write(req.Message)
 	if err != nil {
@@ -155,30 +157,17 @@ func (c *Client) send(req *Request) {
 		return
 	}
 
-	max := len(req.Expected)
-	buf := make([]byte, max)
-	cnt := 0
-	for {
-		n, err := c.Connection.Read(buf)
-		if err != nil {
-			resp.Error = err
-			respc <- resp
-			return
-		}
-		cnt += n
-		resp.Message = append(resp.Message, buf[:n]...)
-		if cnt >= max || n == 0 {
-			break
-		}
+	resp.Message, resp.Error = c.receive(req.RecExpected)
+	if resp.Error != nil {
+		respc <- resp
+		return
 	}
-	log.Printf("%x | %x", req.Expected, resp.Message)
-	if !bytes.Equal(req.Expected, resp.Message) {
-		resp.Error = fmt.Errorf(
-			"invalid response code %x (%x)",
-			resp.Message,
-			req.Expected,
-		)
+	resp.Message, resp.Error = c.receive(req.ComExpected)
+	if resp.Error != nil {
+		respc <- resp
+		return
 	}
+
 	respc <- resp
 	log.Println("response received:", resp)
 	return
@@ -186,18 +175,50 @@ func (c *Client) send(req *Request) {
 
 func (c *Client) Send(
 	message []byte,
-	expected []byte,
+	recExpected []byte,
+	comExpected []byte,
 ) ([]byte, error) {
 	modbus.AppendCRC(&message)
 	req := Request{
-		Message:   message,
-		Expected:  expected,
-		Responsec: make(chan Response),
+		Message:     message,
+		RecExpected: recExpected,
+		ComExpected: comExpected,
+		Responsec:   make(chan Response),
 	}
 	c.RequestQueue.Push(&req)
 	log.Println("waiting for response:", message)
 	resp := <-req.Responsec
 	return resp.Message, resp.Error
+}
+
+func (c *Client) receive(expected []byte) (resp []byte, err error) {
+	if len(expected) == 0 {
+		log.Println("response checking ignored")
+		return
+	}
+	log.Printf("check response %x\n", expected)
+	max := len(expected)
+	buf := make([]byte, max)
+	cnt := 0
+	for {
+		n, err := c.Connection.Read(buf)
+		if err != nil {
+			return resp, err
+		}
+		cnt += n
+		resp = append(resp, buf[:n]...)
+		if cnt >= max || n == 0 {
+			break
+		}
+	}
+	if !bytes.Equal(expected, resp) {
+		return resp, fmt.Errorf(
+			"invalid response code %x (%x)",
+			resp,
+			expected,
+		)
+	}
+	return
 }
 
 func toHexString(input []byte) (output string) {
