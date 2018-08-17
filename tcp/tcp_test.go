@@ -3,39 +3,30 @@ package tcp_test
 import (
 	"fmt"
 	"net"
-	"os"
 	"posam/protocol/tcp"
 	"testing"
 	"time"
 )
 
-type MockConnectioner struct {
-	tcp.Connectivity
-}
+//type MockConnectioner struct {
+//tcp.Connectivity
+//}
 
-func (m *MockConnectioner) Connect(network string, address string, timeout time.Duration) (conn *net.TCPConn, err error) {
-	return
-}
+//func (m *MockConnectioner) Connect(network string, address string, timeout time.Duration) (conn *net.TCPConn, err error) {
+//return
+//}
 
-func TestMain(m *testing.M) {
-	ret := m.Run()
-	os.Exit(ret)
-}
+//func TestMain(m *testing.M) {
+//ret := m.Run()
+//os.Exit(ret)
+//}
 
 func TestSendSerial(t *testing.T) {
 	//t.SkipNow()
 
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6507"
-	//client := tcp.TCPClient{
-	//Connectivitier:    &tcp.Connectivity{},
-	//ServerNetwork:     ServerNetwork,
-	//ServerAddress:     ServerAddress,
-	//ServerTimeout:     1 * time.Second,
-	//ServerConcurrency: false,
-	//}
-
-	client := tcp.NewTCPClient(ServerNetwork, ServerAddress, 10, false)
+	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 10)
 	testList := []struct {
 		timeout     time.Duration
 		message     []byte
@@ -119,7 +110,7 @@ func TestSendConcurrent(t *testing.T) {
 
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6508"
-	client := tcp.NewTCPClient(ServerNetwork, ServerAddress, 10, false)
+	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 10)
 	//client := tcp.TCPClient{
 	//Connectivitier:    &tcp.Connectivity{},
 	//ServerNetwork:     ServerNetwork,
@@ -207,6 +198,7 @@ func TestSendConcurrent(t *testing.T) {
 }
 
 func TestConnectivityQueue(t *testing.T) {
+	// enable sleeper in launch()
 
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6508"
@@ -217,8 +209,7 @@ func TestConnectivityQueue(t *testing.T) {
 	//ServerTimeout:     10 * time.Second,
 	//ServerConcurrency: false,
 	//}
-	client := tcp.NewTCPClient(ServerNetwork, ServerAddress, 10, false)
-
+	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 10)
 	for index := range [10]int{} {
 		s := fmt.Sprintf("%d", index)
 		go func() {
