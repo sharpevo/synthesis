@@ -6,7 +6,6 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
-	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 	"strings"
 	"testing"
@@ -16,15 +15,11 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6507"
 	ricoh_g5.ResetInstance()
-	ricoh_g5.AddInstance(&ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient: &tcp.TCPClient{
-			Connectivitier:    &tcp.Connectivity{},
-			ServerNetwork:     ServerNetwork,
-			ServerAddress:     ServerAddress,
-			ServerConcurrency: true,
-		},
-	})
+	// TODO: concurrency
+	_, err := ricoh_g5.NewDao(ServerNetwork, ServerAddress, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
 	testList := []struct {
 		args            []string
 		response        []byte
@@ -60,8 +55,8 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 	i.Env = concurrentmap.NewConcurrentMap()
 
 	go func() {
+		<-readyc
 		for _, test := range testList {
-			<-readyc
 			resp, err := i.Execute(test.args...)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
@@ -96,12 +91,13 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	readyc <- true
+	conn, err := l.Accept()
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range testList {
-		readyc <- true
-		conn, err := l.Accept()
-		if err != nil {
-			t.Fatal(err)
-		}
 
 		buf := make([]byte, 32)
 		n, err := conn.Read(buf)
@@ -119,8 +115,8 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 		t.Logf("Receive mesage: %x\n", msg)
 		t.Logf("Write mesage: %x\n", test.response)
 		conn.Write(test.response)
-		conn.Close()
 	}
+	conn.Close()
 	<-completec
 
 }

@@ -7,7 +7,6 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
-	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 	"strings"
 	"testing"
@@ -17,15 +16,11 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:6507"
 	ricoh_g5.ResetInstance()
-	ricoh_g5.AddInstance(&ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient: &tcp.TCPClient{
-			Connectivitier:    &tcp.Connectivity{},
-			ServerNetwork:     ServerNetwork,
-			ServerAddress:     ServerAddress,
-			ServerConcurrency: true,
-		},
-	})
+	_, err := ricoh_g5.NewDao(ServerNetwork, ServerAddress, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	testList := []struct {
 		args            []string
 		response        []byte
@@ -83,8 +78,8 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 	}
 
 	go func() {
+		<-readyc
 		for _, test := range testList {
-			<-readyc
 			resp, err := i.Execute(test.args...)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
@@ -115,36 +110,39 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 	}()
 
 	req := ricoh_g5.PrintDataUnit.Request()
-	for _, test := range testList {
+
+	go func() {
 		readyc <- true
 		conn, err := l.Accept()
 		if err != nil {
 			if !strings.Contains(err.Error(), "use of closed network connection") {
 				t.Fatal(err)
 			} else {
-				continue
+				panic(err)
 			}
 		}
+		for _, test := range testList {
 
-		buf := make([]byte, 32)
-		n, err := conn.Read(buf)
-		if err != nil {
-			t.Fatal(err)
+			buf := make([]byte, 32)
+			n, err := conn.Read(buf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			msg := buf[:n]
+			expected := append(req.Bytes(), test.expectedRequest...)
+			if test.errString == "" && !bytes.Equal(msg, expected) {
+				t.Errorf(
+					"\nEXPECT: '%x'\nGET:    '%x'\n",
+					expected,
+					msg,
+				)
+			}
+			t.Logf("Receive mesage: %x\n", msg)
+			t.Logf("Write mesage: %x\n", test.response)
+			conn.Write(test.response)
 		}
-		msg := buf[:n]
-		expected := append(req.Bytes(), test.expectedRequest...)
-		if test.errString == "" && !bytes.Equal(msg, expected) {
-			t.Errorf(
-				"\nEXPECT: '%x'\nGET:    '%x'\n",
-				expected,
-				msg,
-			)
-		}
-		t.Logf("Receive mesage: %x\n", msg)
-		t.Logf("Write mesage: %x\n", test.response)
-		conn.Write(test.response)
 		conn.Close()
-	}
+	}()
 	<-completec
 
 }

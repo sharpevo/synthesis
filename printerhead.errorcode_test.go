@@ -7,27 +7,19 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
-	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 	ServerNetwork := "tcp"
 	ServerAddress := "localhost:21005"
 	ricoh_g5.ResetInstance()
-	ricoh_g5.AddInstance(&ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient: &tcp.TCPClient{
-			Connectivitier:    &tcp.Connectivity{},
-			ServerNetwork:     ServerNetwork,
-			ServerAddress:     ServerAddress,
-			ServerTimeout:     1 * time.Second,
-			ServerConcurrency: true,
-		},
-	})
+	_, err := ricoh_g5.NewDao(ServerNetwork, ServerAddress, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testList := []struct {
 		args            []string
@@ -64,8 +56,8 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 	i.Env = concurrentmap.NewConcurrentMap()
 
 	go func() {
+		<-readyc
 		for _, test := range testList {
-			<-readyc
 			resp, err := i.Execute(test.args...)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
@@ -101,31 +93,33 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, test := range testList {
+	go func() {
 		readyc <- true
 		conn, err := l.Accept()
 		if err != nil {
 			t.Fatal(err)
 		}
+		for _, test := range testList {
 
-		buf := make([]byte, 32)
-		n, err := conn.Read(buf)
-		if err != nil {
-			t.Fatal(err)
+			buf := make([]byte, 32)
+			n, err := conn.Read(buf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			msg := buf[:n]
+			if test.errString == "" && !bytes.Equal(msg, test.expectedRequest) {
+				t.Errorf(
+					"\nEXPECT: '%x'\nGET:    '%x'\n",
+					test.expectedRequest,
+					msg,
+				)
+			}
+			t.Logf("Receive mesage: %x\n", msg)
+			fmt.Printf("Write mesage: %x\n", test.response)
+			conn.Write(test.response)
 		}
-		msg := buf[:n]
-		if test.errString == "" && !bytes.Equal(msg, test.expectedRequest) {
-			t.Errorf(
-				"\nEXPECT: '%x'\nGET:    '%x'\n",
-				test.expectedRequest,
-				msg,
-			)
-		}
-		t.Logf("Receive mesage: %x\n", msg)
-		t.Logf("Write mesage: %x\n", test.response)
-		conn.Write(test.response)
 		conn.Close()
-	}
+	}()
 	<-completec
 
 }
@@ -135,16 +129,10 @@ func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 	ServerNetwork := "tcp"
 	ServerAddress := "192.168.100.215:21005"
 	ricoh_g5.ResetInstance()
-	ricoh_g5.AddInstance(&ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient: &tcp.TCPClient{
-			Connectivitier:    &tcp.Connectivity{},
-			ServerNetwork:     ServerNetwork,
-			ServerAddress:     ServerAddress,
-			ServerTimeout:     1 * time.Second,
-			ServerConcurrency: false,
-		},
-	})
+	_, err := ricoh_g5.NewDao(ServerNetwork, ServerAddress, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testList := []struct {
 		instruction     instruction.Instructioner
