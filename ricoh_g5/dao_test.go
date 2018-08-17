@@ -26,12 +26,8 @@ var ServerAddress = "localhost:6507"
 func TestQueryFunction(t *testing.T) {
 
 	ricoh_g5.ResetInstance()
-	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 5)
-	ricohDao := &ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient:     client,
-	}
-	ricoh_g5.AddInstance(ricohDao)
+
+	ricoh_g5.NewDao(ServerNetwork, ServerAddress, 5)
 
 	testList := []struct {
 		function  func() (interface{}, error)
@@ -132,12 +128,7 @@ func TestQueryFunction(t *testing.T) {
 func TestPrintData(t *testing.T) {
 
 	ricoh_g5.ResetInstance()
-	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 5)
-	ricohDao := &ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient:     client,
-	}
-	ricoh_g5.AddInstance(ricohDao)
+	ricoh_g5.NewDao(ServerNetwork, ServerAddress, 5)
 
 	testList := []struct {
 		bitsPerPixel    string
@@ -288,12 +279,7 @@ func TestPrintData(t *testing.T) {
 func TestSendWaveform(t *testing.T) {
 
 	ricoh_g5.ResetInstance()
-	client, _ := tcp.NewClient(ServerNetwork, ServerAddress, 5)
-	ricohDao := &ricoh_g5.Dao{
-		DeviceAddress: ServerAddress,
-		TCPClient:     client,
-	}
-	ricoh_g5.AddInstance(ricohDao)
+	ricoh_g5.NewDao(ServerNetwork, ServerAddress, 5)
 
 	testList := []struct {
 		headBoardIndex      string

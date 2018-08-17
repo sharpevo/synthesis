@@ -16,12 +16,36 @@ func init() {
 }
 
 type Dao struct {
-	DeviceAddress string
-	TCPClient     tcp.Clienter
+	id        string
+	TCPClient tcp.Clienter
+}
+
+func NewDao(
+	network string,
+	address string,
+	timeout int,
+) (*Dao, error) {
+	tcpClient, err := tcp.NewClient(
+		network,
+		address,
+		timeout,
+	)
+	if err != nil {
+		return nil, err
+	}
+	dao := &Dao{
+		TCPClient: tcpClient,
+	}
+	err = dao.SetID(address)
+	if err != nil {
+		return dao, err
+	}
+	AddInstance(dao)
+	return dao, nil
 }
 
 func AddInstance(dao *Dao) {
-	deviceMap.Set(dao.DeviceAddress, dao)
+	deviceMap.Set(dao.ID(), dao)
 }
 
 func ResetInstance() {
@@ -42,6 +66,18 @@ func Instance(address string) *Dao {
 		}
 	}
 	log.Println("nil device instance")
+	return nil
+}
+
+func (d *Dao) ID() string {
+	return d.id
+}
+
+func (d *Dao) SetID(id string) error {
+	if _, ok := deviceMap.Get(id); ok {
+		return fmt.Errorf("ID %q is duplicated", id)
+	}
+	d.id = id
 	return nil
 }
 
