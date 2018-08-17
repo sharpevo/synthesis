@@ -5,6 +5,7 @@ import (
 	"posam/dao/alientek"
 	"posam/protocol/serialport"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -24,18 +25,17 @@ func (m *MockSerialPort) Receive(expect []byte) (data []byte, err error) {
 }
 
 func TestTurnOnLed(t *testing.T) {
-
-	alientekDao := alientek.Dao{
-		DeviceAddress: 0x01,
-		SerialPort: &MockSerialPort{
-			serialport.SerialPort{
-				Name:     "/dev/ttyUSB0",
-				BaudRate: 9600,
-				DataBits: 8,
-				StopBits: 1,
-				Parity:   -1,
-			},
-		},
+	alientek.ResetInstance()
+	alientekDao, err := alientek.NewDao(
+		"/dev/ttyUSB0",
+		9600,
+		8,
+		1,
+		-1,
+		0x01,
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	alientekDao.TurnOnLed()
@@ -43,23 +43,22 @@ func TestTurnOnLed(t *testing.T) {
 }
 
 func TestInstanceOperation(t *testing.T) {
-
-	alientekDao := &alientek.Dao{
-		DeviceAddress: 0x01,
-		SerialPort: &MockSerialPort{
-			serialport.SerialPort{
-				Name:     "/dev/ttyUSB0",
-				BaudRate: 9600,
-				DataBits: 8,
-				StopBits: 1,
-				Parity:   -1,
-			},
-		},
+	alientek.ResetInstance()
+	alientekDao, err := alientek.NewDao(
+		"/dev/ttyUSB0",
+		9600,
+		8,
+		1,
+		-1,
+		0x01,
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
-	alientek.AddInstance(alientekDao)
+
 	if !reflect.DeepEqual(
 		alientekDao,
-		alientek.Instance(string(alientekDao.DeviceAddress)),
+		alientek.Instance(alientekDao.ID()),
 	) {
 		t.Errorf("Failed to get instance from deviceMap")
 	}
@@ -73,18 +72,17 @@ func TestInstanceConcurrency(t *testing.T) {
 	}()
 	go func() {
 		for {
-			alientek.AddInstance(&alientek.Dao{
-				DeviceAddress: 0x01,
-				SerialPort: &MockSerialPort{
-					serialport.SerialPort{
-						Name:     "/dev/ttyUSB0",
-						BaudRate: 9600,
-						DataBits: 8,
-						StopBits: 1,
-						Parity:   -1,
-					},
-				},
-			})
+			_, err := alientek.NewDao(
+				"/dev/ttyUSB0",
+				9600,
+				8,
+				1,
+				-1,
+				0x01,
+			)
+			if !strings.Contains(err.Error(), "existed") {
+				t.Errorf(err.Error())
+			}
 		}
 	}()
 	select {
