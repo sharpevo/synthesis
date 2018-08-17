@@ -4,82 +4,119 @@ import (
 	"fmt"
 	"log"
 	"posam/dao"
-	"posam/protocol/serialport"
+	"posam/protocol/serial"
+	//"posam/protocol/serialport"
 	"posam/util/concurrentmap"
 )
 
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
-	deviceMap = concurrentmap.NewConcurrentMap()
+	ResetInstance()
 }
 
 type Dao struct {
-	DeviceAddress byte
-	SerialPort    serialport.SerialPorter
+	id           string
+	AddressByte  byte
+	SerialClient serial.Clienter
+}
+
+func NewDao(
+	name string,
+	baud int,
+	databits int,
+	stopbits int,
+	parity int,
+	addressbyte byte,
+) (*Dao, error) {
+	serialClient, err := serial.NewClient(
+		name,
+		baud,
+		databits,
+		stopbits,
+		parity,
+	)
+	if err != nil {
+		return nil, err
+	}
+	dao := &Dao{
+		AddressByte:  addressbyte,
+		SerialClient: serialClient,
+	}
+	err = dao.SetID(string(addressbyte))
+	if err != nil {
+		return dao, err
+	}
+	AddInstance(dao)
+	return dao, nil
 }
 
 func AddInstance(dao *Dao) {
-	deviceMap.Set(string(dao.DeviceAddress), dao)
+	deviceMap.Set(dao.ID(), dao)
+}
+
+func ResetInstance() {
+	deviceMap = concurrentmap.NewConcurrentMap()
+	serial.ResetInstance()
 }
 
 func Instance(address string) *Dao {
-	if device, ok := deviceMap.Get(address); ok {
-		return device.(*Dao)
+	if address == "" {
+		for device := range deviceMap.Iter() {
+			return device.Value.(*Dao)
+		}
 	} else {
-		return nil
+		if device, ok := deviceMap.Get(address); ok {
+			return device.(*Dao)
+		} else {
+			return nil
+		}
 	}
+	log.Println("nil device instance")
+	return nil
 }
 
-func (d *Dao) TurnOnLed() (resp string, err error) {
+func (d *Dao) ID() string {
+	return d.id
+}
+
+func (d *Dao) SetID(id string) error {
+	if _, ok := deviceMap.Get(id); ok {
+		return fmt.Errorf("ID %q is duplicated", id)
+	}
+	d.id = id
+	return nil
+}
+
+func (d *Dao) TurnOnLed() (resp interface{}, err error) {
 	req := d.makeRequest(LedOnUnit.Request())
-	err = d.SerialPort.Send(req.Bytes())
+	resp, err = d.SerialClient.Send(
+		req.Bytes(),
+		LedOnUnit.RecResp(),
+		LedOnUnit.ComResp(),
+	)
 	if err != nil {
 		log.Println(err)
 		return resp, err
 	}
-
-	resp, err = d.checkResponse("Turn on LED", "sent", LedOnUnit.RecResp())
-	if err != nil {
-		return
-	}
-	resp, err = d.checkResponse("Turn on LED", "complete", LedOnUnit.ComResp())
-	if err != nil {
-		return
-	}
-
 	return
 }
 
-func (d *Dao) TurnOffLed() (resp string, err error) {
+func (d *Dao) TurnOffLed() (resp interface{}, err error) {
 	req := d.makeRequest(LedOffUnit.Request())
-	err = d.SerialPort.Send(req.Bytes())
+	resp, err = d.SerialClient.Send(
+		req.Bytes(),
+		LedOffUnit.RecResp(),
+		LedOffUnit.ComResp(),
+	)
 	if err != nil {
 		log.Println(err)
-	}
-
-	resp, err = d.checkResponse("Turn off LED", "sent", LedOffUnit.RecResp())
-	if err != nil {
-		return
-	}
-	resp, err = d.checkResponse("Turn off LED", "complete", LedOffUnit.ComResp())
-	if err != nil {
-		return
+		return resp, err
 	}
 	return
 }
 
 func (d *Dao) makeRequest(req dao.Request) dao.Request {
-	req.Address = d.DeviceAddress
+	req.Address = d.AddressByte
 	return req
-}
-
-func (d *Dao) checkResponse(title string, action string, expect []byte) (resp string, err error) {
-	log.Printf("%s: check %s response %x", title, action, expect)
-	respBytes, err := d.SerialPort.Receive(expect)
-	resp = fmt.Sprintf("%x", respBytes)
-	if err != nil {
-		return resp, fmt.Errorf("%s: failed to %s | %s", title, action, err)
-	}
-	return resp, nil
 }
