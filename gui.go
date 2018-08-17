@@ -52,6 +52,7 @@ PRINT 4`
 GETVAR var1`
 	CMD_WAVEFORM = `WAVEFORM var1 1 2 11.22 1 1.1 2.2 3.3 4.4 5.5 6.6 7.7 8.8 9.9 10.10 11.11 12.12 1
 ASYNC testscripts/tcpconcurrency`
+	CMD_TMP = `ASYNC testscripts/serialconcurrency`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
