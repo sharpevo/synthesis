@@ -1,8 +1,8 @@
-package variable_test
+package vrb_test
 
 import (
 	"fmt"
-	"posam/interpreter/variable"
+	"posam/interpreter/vrb"
 	"testing"
 )
 
@@ -10,32 +10,32 @@ func TestNewVariable(t *testing.T) {
 	testList := []struct {
 		name         string
 		value        interface{}
-		expectedType variable.VariableType
+		expectedType vrb.VariableType
 	}{
 		{
 			name:         "var1",
 			value:        "string value",
-			expectedType: variable.STRING,
+			expectedType: vrb.STRING,
 		},
 		{
 			name:         "var2",
 			value:        "1024",
-			expectedType: variable.INT,
+			expectedType: vrb.INT,
 		},
 		{
 			name:         "var3",
 			value:        "1024.0",
-			expectedType: variable.FLOAT,
+			expectedType: vrb.FLOAT,
 		},
 		{
 			name:         "var1",
 			value:        "10.24",
-			expectedType: variable.FLOAT,
+			expectedType: vrb.FLOAT,
 		},
 	}
 
 	for _, test := range testList {
-		v, err := variable.NewVariable(test.name, test.value.(string))
+		v, err := vrb.NewVariable(test.name, test.value.(string))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -55,78 +55,78 @@ func TestCompare(t *testing.T) {
 	testList := []struct {
 		var1   string
 		var2   string
-		result variable.ComparisonType
+		result vrb.ComparisonType
 	}{
 		// string
 		{
 			var1:   "string1",
 			var2:   "string2",
-			result: variable.UNEQUAL,
+			result: vrb.UNEQUAL,
 		},
 		{
 			var1:   "string3",
 			var2:   "string3",
-			result: variable.EQUAL,
+			result: vrb.EQUAL,
 		},
 
 		// int
 		{
 			var1:   "1",
 			var2:   "2",
-			result: variable.LESS,
+			result: vrb.LESS,
 		},
 		{
 			var1:   "3",
 			var2:   "3",
-			result: variable.EQUAL,
+			result: vrb.EQUAL,
 		},
 		{
 			var1:   "5",
 			var2:   "4",
-			result: variable.GREATER,
+			result: vrb.GREATER,
 		},
 
 		// float
 		{
 			var1:   "1.1",
 			var2:   "1.2",
-			result: variable.LESS,
+			result: vrb.LESS,
 		},
 		{
 			var1:   "1.3",
 			var2:   "1.30",
-			result: variable.EQUAL,
+			result: vrb.EQUAL,
 		},
 		{
 			var1:   "1.5",
 			var2:   "1.4",
-			result: variable.GREATER,
+			result: vrb.GREATER,
 		},
 
 		// exceptions
 		{
 			var1:   "string5",
 			var2:   "6",
-			result: variable.UNKNOWN,
+			result: vrb.UNKNOWN,
 		},
 		{
 			var1:   "7",
 			var2:   "8.0",
-			result: variable.UNKNOWN,
+			result: vrb.UNKNOWN,
 		},
 	}
 
 	for k, test := range testList {
 		t.Logf("#%d", k)
-		var1, _ := variable.NewVariable(
+		var1, _ := vrb.NewVariable(
 			fmt.Sprintf("var%d-1", k),
 			test.var1,
 		)
-		var2, _ := variable.NewVariable(
+		var2, _ := vrb.NewVariable(
 			fmt.Sprintf("var%d-2", k),
 			test.var2,
 		)
-		actual, _ := variable.Compare(var1, var2)
+		actual, _ := vrb.Compare(var1, var2)
 		expected := test.result
 		if actual != expected {
 			t.Errorf(
