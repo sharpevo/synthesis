@@ -12,7 +12,8 @@ func (i *InstructionVariableGet) Execute(args ...string) (resp interface{}, err 
 	if len(args) != 1 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	variable, _ := i.ParseVariable(args[0])
-	resp = variable.Value
+	name := args[0]
+	variable, _ := i.ParseVariable(name)
+	resp = fmt.Sprintf("%v %s = %v", variable.Type, name, variable.Value)
 	return resp, nil
 }
