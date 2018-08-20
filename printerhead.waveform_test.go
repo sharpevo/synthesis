@@ -6,7 +6,7 @@ import (
 	"net"
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
-	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 	"strings"
 	"testing"
@@ -122,7 +122,7 @@ func TestInstructionPrinterHeadWaveformExecute(t *testing.T) {
 				}
 			}
 			v, _ := i.Env.Get(test.args[0])
-			actual := v.(*interpreter.Variable).Value
+			actual := v.(*vrb.Variable).Value
 			// save to the stack
 			if !bytes.Equal(actual.([]byte), resp.([]byte)) {
 				t.Errorf(

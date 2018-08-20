@@ -3,7 +3,7 @@ package instruction
 import (
 	"fmt"
 	"math/big"
-	"posam/interpreter"
+	"posam/interpreter/vrb"
 )
 
 type InstructionArithmetic struct {
@@ -11,7 +11,7 @@ type InstructionArithmetic struct {
 }
 
 func (i *InstructionArithmetic) ParseObjects(arg1 string, arg2 string) (
-	variable *interpreter.Variable,
+	variable *vrb.Variable,
 	v1 *big.Float,
 	v2 *big.Float,
 	err error,
@@ -20,7 +20,7 @@ func (i *InstructionArithmetic) ParseObjects(arg1 string, arg2 string) (
 	if !found {
 		return variable, v1, v2, fmt.Errorf("Invalid variable %q", arg1)
 	}
-	variable, ok := v.(*interpreter.Variable)
+	variable, ok := v.(*vrb.Variable)
 	if !ok {
 		return variable, v1, v2, fmt.Errorf("Invalid type of variable %q", arg1)
 	}
@@ -53,7 +53,7 @@ func (i *InstructionArithmetic) GetBigFloat64(
 			}
 			return floatv, nil
 		}
-	case *interpreter.Variable:
+	case *vrb.Variable:
 		return i.GetBigFloat64(v.Value)
 	case *big.Float:
 		return v, nil

@@ -4,23 +4,23 @@ import (
 	"fmt"
 	"math/big"
 	"posam/instruction"
-	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 	"strings"
 	"testing"
 )
 
 func TestParseObjects(t *testing.T) {
-	var variable *interpreter.Variable
+	var variable *vrb.Variable
 	var v1 *big.Float
 	var v2 *big.Float
 	var err error
 
 	i := instruction.InstructionArithmetic{}
 	i.Env = concurrentmap.NewConcurrentMap()
-	i.Env.Set("var1", &interpreter.Variable{Value: "11.11"})
-	i.Env.Set("var2", &interpreter.Variable{Value: "22.22"})
-	i.Env.Set("var3", interpreter.Variable{Value: "not variable pointer"})
+	i.Env.Set("var1", &vrb.Variable{Value: "11.11"})
+	i.Env.Set("var2", &vrb.Variable{Value: "22.22"})
+	i.Env.Set("var3", vrb.Variable{Value: "not variable pointer"})
 
 	variable, v1, v2, err = i.ParseObjects("var1", "var2")
 	if v1.Cmp(big.NewFloat(11.11)) != 0 ||
@@ -78,7 +78,7 @@ func TestGetBigFloat64(t *testing.T) {
 
 	arithmetic := instruction.InstructionArithmetic{}
 	arithmetic.Env = concurrentmap.NewConcurrentMap()
-	variable := interpreter.Variable{
+	variable := vrb.Variable{
 		Value: "55.55",
 	}
 	v, err = arithmetic.GetBigFloat64(variable)

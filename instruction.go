@@ -1,7 +1,7 @@
 package instruction
 
 import (
-	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 )
 
@@ -46,15 +46,15 @@ func (i *Instruction) initEnv() {
 	i.Env = concurrentmap.NewConcurrentMap()
 }
 
-func (i *Instruction) ParseVariable(name string) (*interpreter.Variable, error) {
+func (i *Instruction) ParseVariable(name string) (*vrb.Variable, error) {
 	v, found := i.Env.Get(name)
 	if !found {
-		newVariable := &interpreter.Variable{}
+		newVariable := &vrb.Variable{}
 		newVariablei := i.Env.Set(name, newVariable)
-		variable := newVariablei.(*interpreter.Variable)
+		variable := newVariablei.(*vrb.Variable)
 		return variable, nil
 	} else {
-		variable := v.(*interpreter.Variable)
+		variable := v.(*vrb.Variable)
 		return variable, nil
 	}
 }
