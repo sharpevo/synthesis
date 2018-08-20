@@ -20,14 +20,6 @@ func init() {
 
 type ExecutionType int
 
-type Variable struct {
-	Value interface{}
-
-	Name string
-	Type string
-	Base int // 0, 2, 10, 16
-}
-
 const (
 	SYNC ExecutionType = iota
 	ASYNC
