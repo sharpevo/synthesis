@@ -15,6 +15,21 @@ const (
 	BYTEARRAY
 )
 
+func (v VariableType) String() string {
+	switch v {
+	case STRING:
+		return "string"
+	case INT:
+		return "int"
+	case FLOAT:
+		return "float"
+	case BYTEARRAY:
+		return "bytes"
+	default:
+		return "unknown"
+	}
+}
+
 type ComparisonType int
 
 const (
