@@ -1,6 +1,7 @@
 package instruction_test
 
 import (
+	"fmt"
 	"posam/instruction"
 	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
@@ -31,8 +32,8 @@ func TestInstructionVariableSet(t *testing.T) {
 		},
 		{
 			name:    "var1",
-			value:   "new value",
-			vrbtype: vrb.STRING,
+			value:   "4",
+			vrbtype: vrb.INT,
 		},
 	}
 	i := instruction.InstructionVariableSet{}
@@ -43,6 +44,8 @@ func TestInstructionVariableSet(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+
+	var var1Original *vrb.Variable
 
 	for k, test := range testList {
 		t.Logf("#%d", k)
@@ -63,6 +66,9 @@ func TestInstructionVariableSet(t *testing.T) {
 			)
 		}
 		t.Logf("%#v", i.Env)
+		if k == 0 {
+			var1Original = variable
+		}
 	}
 
 	v, found := i.Env.Get("var1")
@@ -73,13 +79,27 @@ func TestInstructionVariableSet(t *testing.T) {
 	if !ok {
 		t.Fatal(err)
 	}
-	expected := "new value"
-	actual := variable.Value.(string)
+	expected := "4"
+	actual := fmt.Sprintf("%d", variable.Value.(int64))
 	if actual != expected {
 		t.Errorf(
 			"\nEXPECT: %v\nGET: %v\n",
 			expected,
 			actual,
+		)
+	}
+	if variable.Type != vrb.INT {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			vrb.INT,
+			variable.Type,
+		)
+	}
+	if variable != var1Original {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			var1Original,
+			variable,
 		)
 	}
 }

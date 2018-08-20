@@ -3,6 +3,7 @@ package instruction
 import (
 	"fmt"
 	"posam/interpreter/vrb"
+	"strings"
 )
 
 type InstructionVariableSet struct {
@@ -14,15 +15,22 @@ func (i *InstructionVariableSet) Execute(args ...string) (resp interface{}, err 
 		return resp, fmt.Errorf("not enough arguments")
 	}
 	name := args[0]
-	value := args[1]
-	variable, err := vrb.NewVariable(name, value)
-	if err != nil {
-		return resp, err
+	value := strings.Join(args[1:], " ")
+	v, found := i.Env.Get(name)
+	if !found {
+		variable, err := vrb.NewVariable(name, value)
+		if err != nil {
+			return resp, err
+		}
+		resp = i.Env.Set(name, variable)
+		return fmt.Sprintf(
+			"variable %q is set to \"%v\"",
+			name,
+			value,
+		), nil
+	} else {
+		variable := v.(*vrb.Variable)
+		variable.Value, variable.Type, _ = vrb.ParseValue(value)
+		return resp, nil
 	}
-	resp = i.Env.Set(name, variable)
-	return fmt.Sprintf(
-		"variable %q is set to %v",
-		name,
-		value,
-	), nil
 }
