@@ -51,10 +51,13 @@ func NewVariable(name string, input string) (*Variable, error) {
 	variable := &Variable{
 		Name: name,
 	}
+	variable.Value, variable.Type, _ = ParseValue(input)
+	return variable, nil
+}
+
+func ParseValue(input string) (interface{}, VariableType, error) {
 	if output, err := strconv.ParseInt(input, 0, 64); err == nil {
-		variable.Value = output
-		variable.Type = INT
-		return variable, nil
+		return output, INT, nil
 	}
 	if output, _, err := big.ParseFloat(
 		input,
@@ -62,13 +65,9 @@ func NewVariable(name string, input string) (*Variable, error) {
 		53,
 		big.ToNearestEven,
 	); err == nil {
-		variable.Value = output
-		variable.Type = FLOAT
-		return variable, nil
+		return output, FLOAT, nil
 	}
-	variable.Value = input
-	variable.Type = STRING
-	return variable, nil
+	return input, STRING, nil
 }
 
 func Compare(var1 *Variable, var2 *Variable) (ComparisonType, error) {
