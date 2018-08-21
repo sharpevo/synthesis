@@ -17,6 +17,6 @@ func (i *InstructionDivisionFloat64) Execute(args ...string) (resp interface{}, 
 	if v1.IsInf() {
 		return resp, fmt.Errorf("inf quotition")
 	}
-	variable.Value = v1.String()
+	variable.Value = v1
 	return v1.String(), nil
 }
