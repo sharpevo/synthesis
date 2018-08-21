@@ -41,10 +41,10 @@ func (s *Stack) Get(name string) (variable *vrb.Variable, found bool) {
 	return
 }
 
-func (s *Stack) Set(name string, variable *vrb.Variable) *vrb.Variable {
+func (s *Stack) Set(variable *vrb.Variable) *vrb.Variable {
 	// TODO: global variable creation
 	cmap := s.cmaps[0]
-	result := cmap.Set(name, variable)
+	result := cmap.Set(variable.Name, variable)
 	return result.(*vrb.Variable)
 }
 

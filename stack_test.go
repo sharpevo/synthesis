@@ -51,7 +51,7 @@ func TestStackGetAndSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	stack.Set(variable.Name, variable)
+	stack.Set(variable)
 	if v, found := stack.Get("var1"); !found {
 		t.Errorf(
 			"\nEXPECT: %v\nGET:%v\n",
