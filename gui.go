@@ -92,6 +92,7 @@ func main() {
 	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
 	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
 	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
+	InstructionMap.Set("CMPVAR", instruction.InstructionVariableCompare{})
 	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
 	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
 	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
