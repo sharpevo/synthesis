@@ -51,7 +51,17 @@ PRINT 4`
 GETVAR var1`
 	CMD_WAVEFORM = `WAVEFORM var1 1 2 11.22 1 1.1 2.2 3.3 4.4 5.5 6.6 7.7 8.8 9.9 10.10 11.11 12.12 1
 ASYNC testscripts/tcpconcurrency`
-	CMD_TMP = `ASYNC testscripts/serialconcurrency`
+	CMD_VARIABLE_SETTER_GETTER = `SETVAR var1 This is a string variable
+GETVAR var1
+SETVAR var2 2
+GETVAR var2
+SETVAR var3 3.0
+GETVAR var3`
+	CMD_VARIABLE_GLOBAL = `SETVAR globalvar1 This is a global string variable
+GETVAR globalvar1
+IMPORT testscripts/variable/modification
+GETVAR localvar1
+GETVAR globalvar1`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
@@ -81,6 +91,7 @@ func main() {
 	InstructionMap.Set("LED", instruction.InstructionLed{})
 	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
 	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
+	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
 	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
 	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
 	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
@@ -106,7 +117,7 @@ func main() {
 	})
 
 	input := widgets.NewQTextEdit(nil)
-	input.SetPlainText(CMD_WAVEFORM)
+	input.SetPlainText(CMD_VARIABLE_GLOBAL)
 
 	// waveform group
 
