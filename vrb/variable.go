@@ -40,6 +40,21 @@ const (
 	UNEQUAL                // 14
 )
 
+func (c ComparisonType) String() string {
+	switch c {
+	case GREATER:
+		return ">"
+	case LESS:
+		return "<"
+	case EQUAL:
+		return "=="
+	case UNEQUAL:
+		return "!="
+	default:
+		return "unknown"
+	}
+}
+
 type Variable struct {
 	Name  string
 	Value interface{}
