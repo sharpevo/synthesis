@@ -3,8 +3,8 @@ package instruction_test
 import (
 	"fmt"
 	"posam/instruction"
+	"posam/interpreter"
 	"posam/interpreter/vrb"
-	"posam/util/concurrentmap"
 	"strings"
 	"testing"
 )
@@ -37,7 +37,7 @@ func TestInstructionVariableSet(t *testing.T) {
 		},
 	}
 	i := instruction.InstructionVariableSet{}
-	i.Env = concurrentmap.NewConcurrentMap()
+	i.Env = interpreter.NewStack()
 	_, err := i.Execute("var0")
 	if err != nil {
 		if !strings.Contains(err.Error(), "not enough") {
@@ -50,12 +50,8 @@ func TestInstructionVariableSet(t *testing.T) {
 	for k, test := range testList {
 		t.Logf("#%d", k)
 		_, err := i.Execute(test.name, test.value)
-		v, found := i.Env.Get(test.name)
+		variable, found := i.Env.Get(test.name)
 		if !found {
-			t.Fatal(err)
-		}
-		variable, ok := v.(*vrb.Variable)
-		if !ok {
 			t.Fatal(err)
 		}
 		if variable.Type != test.vrbtype {
@@ -71,12 +67,8 @@ func TestInstructionVariableSet(t *testing.T) {
 		}
 	}
 
-	v, found := i.Env.Get("var1")
+	variable, found := i.Env.Get("var1")
 	if !found {
-		t.Fatal(err)
-	}
-	variable, ok := v.(*vrb.Variable)
-	if !ok {
 		t.Fatal(err)
 	}
 	expected := "4"

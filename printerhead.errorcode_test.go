@@ -6,8 +6,8 @@ import (
 	"net"
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
-	"posam/interpreter/vrb"
-	"posam/util/concurrentmap"
+	"posam/interpreter"
+	//"posam/interpreter/vrb"
 	"strings"
 	"testing"
 )
@@ -53,7 +53,7 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 	completec := make(chan interface{})
 
 	i := instruction.InstructionPrinterHeadErrorCode{}
-	i.Env = concurrentmap.NewConcurrentMap()
+	i.Env = interpreter.NewStack()
 
 	go func() {
 		<-readyc
@@ -74,7 +74,7 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 				}
 			}
 			v, _ := i.Env.Get(test.args[0])
-			actual := v.(*vrb.Variable).Value
+			actual := v.Value
 			// save to the stack
 			if !bytes.Equal(actual.([]byte), resp.([]byte)) {
 				t.Errorf(
@@ -124,58 +124,58 @@ func TestInstructionPrinterHeadErrorCodeExecute(t *testing.T) {
 
 }
 
-func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
-	t.SkipNow()
-	ServerNetwork := "tcp"
-	ServerAddress := "192.168.100.215:21005"
-	ricoh_g5.ResetInstance()
-	_, err := ricoh_g5.NewDao(ServerNetwork, ServerAddress, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+//func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
+//t.SkipNow()
+//ServerNetwork := "tcp"
+//ServerAddress := "192.168.100.215:21005"
+//ricoh_g5.ResetInstance()
+//_, err := ricoh_g5.NewDao(ServerNetwork, ServerAddress, 1)
+//if err != nil {
+//t.Fatal(err)
+//}
 
-	testList := []struct {
-		instruction     instruction.Instructioner
-		args            []string
-		response        []byte
-		expectedRequest []byte
-		errString       string
-	}{
-		{
-			instruction: &instruction.InstructionPrinterHeadErrorCode{},
-			args:        []string{"var1"},
-		},
-		{
-			instruction: &instruction.InstructionPrinterHeadPrinterStatus{},
-			args:        []string{"var1"},
-			errString:   "response error",
-		},
-	}
-	for k, test := range testList {
-		i := test.instruction
-		i.Env = interpreter.NewStack()
-		resp, err := i.Execute(test.args...)
-		t.Logf("#%d, %v, %v", k, resp, err)
-		if err != nil {
-			fmt.Println("err", err)
-			if test.errString != "" && strings.Contains(err.Error(), test.errString) {
-				t.Logf("error occured as expected %s", err)
+//testList := []struct {
+//instruction     instruction.Instructioner
+//args            []string
+//response        []byte
+//expectedRequest []byte
+//errString       string
+//}{
+//{
+//instruction: &instruction.InstructionPrinterHeadErrorCode{},
+//args:        []string{"var1"},
+//},
+//{
+//instruction: &instruction.InstructionPrinterHeadPrinterStatus{},
+//args:        []string{"var1"},
+//errString:   "response error",
+//},
+//}
+//for k, test := range testList {
+//i := test.instruction
+//i.Env = interpreter.NewStack()
+//resp, err := i.Execute(test.args...)
+//t.Logf("#%d, %v, %v", k, resp, err)
+//if err != nil {
+//fmt.Println("err", err)
+//if test.errString != "" && strings.Contains(err.Error(), test.errString) {
+//t.Logf("error occured as expected %s", err)
 
-				continue
-			} else {
-				// panic if change errString to "foo"
-				panic(err)
-			}
-		}
-		v, _ := i.Env.Get(test.args[0])
-		actual := v.(*vrb.Variable).Value
-		// save to the stack
-		if !bytes.Equal(actual.([]byte), resp.([]byte)) {
-			t.Errorf(
-				"\nEXPECT: '%s'\nGET:    '%x'\n",
-				resp,
-				actual,
-			)
-		}
-	}
-}
+//continue
+//} else {
+//// panic if change errString to "foo"
+//panic(err)
+//}
+//}
+//v, _ := i.Env.Get(test.args[0])
+//actual := v.(*vrb.Variable).Value
+//// save to the stack
+//if !bytes.Equal(actual.([]byte), resp.([]byte)) {
+//t.Errorf(
+//"\nEXPECT: '%s'\nGET:    '%x'\n",
+//resp,
+//actual,
+//)
+//}
+//}
+//}
