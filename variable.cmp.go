@@ -32,5 +32,5 @@ func (i *InstructionVariableCompare) Execute(args ...string) (resp interface{}, 
 		return resp, fmt.Errorf("failed to load variable CMP")
 	}
 	v.Value = result
-	return result, nil
+	return result.String(), nil
 }
