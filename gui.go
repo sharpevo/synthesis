@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"posam/dao/alientek"
 	"posam/dao/ricoh_g5"
-	"posam/util/concurrentmap"
 	"runtime"
 	"strconv"
 	"strings"
@@ -287,7 +286,7 @@ func main() {
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
 
-	stack := concurrentmap.NewConcurrentMap()
+	stack := interpreter.NewStack()
 
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.ConnectClicked(func(bool) {
