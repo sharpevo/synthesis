@@ -51,11 +51,24 @@ var PreservedNames = map[string]bool{
 	"SYS_ERR": true,
 }
 
+func NewPreservedVariables() []*Variable {
+	variableList := []*Variable{}
+	for k, _ := range PreservedNames {
+		variable, _ := newVariable(k, k)
+		variableList = append(variableList, variable)
+	}
+	return variableList
+}
+
 // TODO: value out of range error processing
 func NewVariable(name string, input string) (*Variable, error) {
 	if PreservedNames[name] {
 		return nil, fmt.Errorf("%q is reserved variable", name)
 	}
+	return newVariable(name, input)
+}
+
+func newVariable(name string, input string) (*Variable, error) {
 	variable := &Variable{
 		Name: name,
 	}

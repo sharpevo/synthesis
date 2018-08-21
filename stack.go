@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 )
 
@@ -12,6 +13,10 @@ type Stack struct {
 
 func NewStack(stackList ...*Stack) *Stack {
 	newMap := concurrentmap.NewConcurrentMap()
+	preservedVariableList := vrb.NewPreservedVariables()
+	for _, v := range preservedVariableList {
+		newMap.Set(v.Name, v)
+	}
 	newStack := &Stack{
 		cmaps: []*concurrentmap.ConcurrentMap{newMap},
 	}

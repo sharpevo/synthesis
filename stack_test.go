@@ -2,6 +2,7 @@ package interpreter_test
 
 import (
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 	"testing"
 )
@@ -14,6 +15,16 @@ func TestNewStackAndLenAndPush(t *testing.T) {
 			1,
 			s1.Len(),
 		)
+	}
+	for k, _ := range vrb.PreservedNames {
+		_, ok := s1.Get(k)
+		if !ok {
+			t.Errorf(
+				"\nEXPECT: %v: %q\nGET:%v\n",
+				"init stack with preserved variable", k,
+				"not found",
+			)
+		}
 	}
 	s1.Push(concurrentmap.NewConcurrentMap())
 	s2 := interpreter.NewStack(s1)
