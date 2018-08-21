@@ -1,8 +1,8 @@
 package instruction
 
 import (
+	"posam/interpreter"
 	"posam/interpreter/vrb"
-	"posam/util/concurrentmap"
 )
 
 type Instructioner interface {
@@ -13,7 +13,7 @@ type Instructioner interface {
 }
 
 type Instruction struct {
-	Env   *concurrentmap.ConcurrentMap
+	Env   *interpreter.Stack
 	title string
 	path  string
 }
