@@ -153,7 +153,7 @@ func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 	}
 	for k, test := range testList {
 		i := test.instruction
-		i.SetEnv(concurrentmap.NewConcurrentMap())
+		i.Env = interpreter.NewStack()
 		resp, err := i.Execute(test.args...)
 		t.Logf("#%d, %v, %v", k, resp, err)
 		if err != nil {
@@ -167,7 +167,7 @@ func TestInstructionPrinterHeadErrorCodeExecuteForRealServer(t *testing.T) {
 				panic(err)
 			}
 		}
-		v, _ := i.GetEnv().Get(test.args[0])
+		v, _ := i.Env.Get(test.args[0])
 		actual := v.(*vrb.Variable).Value
 		// save to the stack
 		if !bytes.Equal(actual.([]byte), resp.([]byte)) {

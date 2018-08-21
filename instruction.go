@@ -7,8 +7,6 @@ import (
 
 type Instructioner interface {
 	Execute(args ...string) (interface{}, error)
-	SetEnv(*concurrentmap.ConcurrentMap)
-	GetEnv() *concurrentmap.ConcurrentMap
 	// TODO: rb
 }
 
@@ -28,22 +26,6 @@ func (i *Instruction) SetTitle(title string) {
 
 func (i *Instruction) Execute(args ...string) (interface{}, error) {
 	return "", nil
-}
-
-// TODO: Env with tons of reflect relavent jobs
-func (i *Instruction) GetEnv() *concurrentmap.ConcurrentMap {
-	if i.Env == nil {
-		i.initEnv()
-	}
-	return i.Env
-}
-
-func (i *Instruction) SetEnv(env *concurrentmap.ConcurrentMap) {
-	i.Env = env
-}
-
-func (i *Instruction) initEnv() {
-	i.Env = concurrentmap.NewConcurrentMap()
 }
 
 func (i *Instruction) ParseVariable(name string) (*vrb.Variable, error) {
