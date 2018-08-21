@@ -47,7 +47,11 @@ func TestStackGetAndSet(t *testing.T) {
 			v,
 		)
 	}
-	stack.Set("var1", "test")
+	variable, err := vrb.NewVariable("var1", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stack.Set(variable.Name, variable)
 	if v, found := stack.Get("var1"); !found {
 		t.Errorf(
 			"\nEXPECT: %v\nGET:%v\n",

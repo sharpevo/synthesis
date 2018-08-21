@@ -32,20 +32,20 @@ func (s *Stack) Len() int {
 	return len(s.cmaps)
 }
 
-func (s *Stack) Get(name string) (interface{}, bool) {
+func (s *Stack) Get(name string) (variable *vrb.Variable, found bool) {
 	for _, cmap := range s.cmaps {
 		if v, found := cmap.Get(name); found {
-			return v, found
+			return v.(*vrb.Variable), found
 		}
 	}
-	return nil, false
+	return
 }
 
-func (s *Stack) Set(name string, value interface{}) interface{} {
+func (s *Stack) Set(name string, variable *vrb.Variable) *vrb.Variable {
 	// TODO: global variable creation
 	cmap := s.cmaps[0]
-	result := cmap.Set(name, value)
-	return result
+	result := cmap.Set(name, variable)
+	return result.(*vrb.Variable)
 }
 
 func (s *Stack) Push(cmap *concurrentmap.ConcurrentMap) error {
