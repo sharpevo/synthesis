@@ -16,15 +16,14 @@ func (i *InstructionVariableSet) Execute(args ...string) (resp interface{}, err 
 	}
 	name := args[0]
 	value := strings.Join(args[1:], " ")
-	v, found := i.Env.Get(name)
+	variable, found := i.Env.Get(name)
 	if !found {
 		variable, err := vrb.NewVariable(name, value)
 		if err != nil {
 			return resp, err
 		}
-		resp = i.Env.Set(name, variable)
+		resp = i.Env.Set(variable)
 	} else {
-		variable := v.(*vrb.Variable)
 		variable.Value, variable.Type, _ = vrb.ParseValue(value)
 	}
 	return fmt.Sprintf(
