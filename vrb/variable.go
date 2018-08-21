@@ -46,14 +46,14 @@ type Variable struct {
 	Type  VariableType
 }
 
-var reserved = map[string]bool{
+var PreservedNames = map[string]bool{
 	"SYS_CMP": true,
 	"SYS_ERR": true,
 }
 
 // TODO: value out of range error processing
 func NewVariable(name string, input string) (*Variable, error) {
-	if reserved[name] {
+	if PreservedNames[name] {
 		return nil, fmt.Errorf("%q is reserved variable", name)
 	}
 	variable := &Variable{
