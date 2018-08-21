@@ -5,6 +5,7 @@ import (
 	"os"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 	"reflect"
 	"sort"
@@ -36,12 +37,11 @@ func (c *InstructionSetStack) Execute(args ...string) (interface{}, error) {
 
 	v, found := c.Env.Get(name)
 	if found {
-		v.(*interpreter.Variable).Value = value
+		v.(*vrb.Variable).Value = value
 	} else {
-		v := interpreter.Variable{
+		v := vrb.Variable{
 			Name:  name,
 			Value: value,
-			Type:  "blah...",
 		}
 		c.Env.Set(name, &v)
 	}
@@ -59,7 +59,7 @@ func (i *InstructionAdd) Execute(args ...string) (interface{}, error) {
 	v2 := GetFloat64(args[1], i.Env)
 	sum := v1 + v2
 	v, _ := i.Env.Get(args[0])
-	v.(*interpreter.Variable).Value = sum
+	v.(*vrb.Variable).Value = sum
 	//*v.(*float64) = sum
 	//i.Env.Set(args[0], v)
 	return sum, nil
@@ -79,7 +79,7 @@ func GetFloat64(v interface{}, env *interpreter.Stack) float64 {
 			}
 		}
 		return GetFloat64(v, env)
-	case *interpreter.Variable:
+	case *vrb.Variable:
 		fmt.Println("parse variable", i)
 		return GetFloat64(i.Value, env)
 	case float64:
@@ -87,37 +87,6 @@ func GetFloat64(v interface{}, env *interpreter.Stack) float64 {
 		return i
 	default:
 		fmt.Println("parse none", i)
-		return float64(0)
-	}
-}
-
-func xGetFloat64(v interface{}, env *concurrentmap.ConcurrentMap) float64 {
-	switch i := v.(type) {
-	case float64:
-		return float64(i)
-	case string:
-		vi, found := env.Get(string(i))
-		if !found {
-			f, err := strconv.ParseFloat(i, 64)
-			if err != nil {
-				return float64(0)
-			}
-			return f
-		} else {
-			//p := vi.(*float64)
-			//return float64(*p)
-			return GetFloat64(vi, env)
-		}
-	case *string:
-		p, err := strconv.ParseFloat(*i, 64)
-		if err != nil {
-			return float64(0)
-		} else {
-			return p
-		}
-	case *float64:
-		return float64(*i)
-	default:
 		return float64(0)
 	}
 }
@@ -442,23 +411,23 @@ MOVEX 5`,
 func TestStack(t *testing.T) {
 	sg := interpreter.StatementGroup{
 		Execution: interpreter.SYNC,
-		Stack:     concurrentmap.NewConcurrentMap(),
+		Stack:     interpreter.NewStack(),
 	}
 
-	v1 := interpreter.Variable{
+	v1 := vrb.Variable{
 		Name:  "KeyRoot1",
 		Value: 12.34,
-		Type:  "float64",
+		Type:  vrb.FLOAT,
 	}
-	v2 := interpreter.Variable{
+	v2 := vrb.Variable{
 		Name:  "KeyRoot2",
 		Value: "stringtext",
-		Type:  "string",
+		Type:  vrb.STRING,
 	}
-	v3 := interpreter.Variable{
+	v3 := vrb.Variable{
 		Name:  "KeyRoot3",
 		Value: 22.11,
-		Type:  "float64",
+		Type:  vrb.FLOAT,
 	}
 	sg.Stack.Set("KeyRoot1", &v1)
 	sg.Stack.Set("KeyRoot2", &v2)
@@ -483,7 +452,7 @@ PRINT 15`
 	}
 
 	if v, ok := sg.Stack.Get("KeyRoot1"); ok {
-		p := v.(*interpreter.Variable)
+		p := v.(*vrb.Variable)
 		if p.Value != 55.55 {
 			t.Errorf(
 				"\nEXPECT: %v\nGET:%v\n",
@@ -493,7 +462,7 @@ PRINT 15`
 		}
 	}
 	if v, ok := sg.Stack.Get("KeyRoot2"); ok {
-		p := v.(*interpreter.Variable)
+		p := v.(*vrb.Variable)
 		if p.Value != "fromimport" {
 			t.Errorf(
 				"\nEXPECT:%v\nGET:%v\n",
@@ -503,7 +472,7 @@ PRINT 15`
 		}
 	}
 	if v, ok := sg.Stack.Get("KeyRoot3"); ok {
-		p := v.(*interpreter.Variable)
+		p := v.(*vrb.Variable)
 		if p.Value != 33.33 {
 			t.Errorf(
 				"\nEXPECT: %v\nGET:%v\n",
