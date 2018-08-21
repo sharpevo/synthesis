@@ -23,14 +23,13 @@ func (i *InstructionVariableSet) Execute(args ...string) (resp interface{}, err 
 			return resp, err
 		}
 		resp = i.Env.Set(name, variable)
-		return fmt.Sprintf(
-			"variable %q is set to \"%v\"",
-			name,
-			value,
-		), nil
 	} else {
 		variable := v.(*vrb.Variable)
 		variable.Value, variable.Type, _ = vrb.ParseValue(value)
-		return resp, nil
 	}
+	return fmt.Sprintf(
+		"variable %q is set to \"%v\"",
+		name,
+		value,
+	), nil
 }
