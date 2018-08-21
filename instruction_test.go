@@ -3,15 +3,18 @@ package instruction_test
 import (
 	"posam/instruction"
 	"posam/interpreter"
-	"posam/util/concurrentmap"
+	"posam/interpreter/vrb"
 	"testing"
 )
 
 func TestParseVariable(t *testing.T) {
 	i := instruction.Instruction{}
-	i.Env = concurrentmap.NewConcurrentMap()
-	i.Env.Set("var1", &interpreter.Variable{Value: "var1 test"})
-	v1, _ := i.ParseVariable("var1")
+
+	i.Env = interpreter.NewStack()
+	var1, _ := vrb.NewVariable("var1", "var1 test")
+	i.Env.Set(var1)
+
+	v1, _ := i.ParseVariable(var1.Name)
 	if v1.Value != "var1 test" {
 		t.Errorf(
 			"\nEXPECT: %v\nGET: %v\n",
@@ -22,8 +25,7 @@ func TestParseVariable(t *testing.T) {
 	v2, _ := i.ParseVariable("var2")
 	v2.Value = "test var2"
 
-	v2i, _ := i.Env.Get("var2")
-	var2 := v2i.(*interpreter.Variable)
+	var2, _ := i.Env.Get("var2")
 	if var2.Value != "test var2" {
 		t.Errorf(
 			"\nEXPECT: %v\nGET: %v\n",

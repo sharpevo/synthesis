@@ -12,6 +12,6 @@ func (i *InstructionMultiplicationFloat64) Execute(args ...string) (resp interfa
 		return resp, err
 	}
 	v1.Mul(v1, v2)
-	variable.Value = v1.String()
+	variable.Value = v1
 	return v1.String(), nil
 }

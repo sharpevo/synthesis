@@ -7,7 +7,6 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
-	"posam/util/concurrentmap"
 	"strings"
 	"testing"
 )
@@ -69,7 +68,7 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 	completec := make(chan interface{})
 
 	i := instruction.InstructionPrinterHeadPrintData{}
-	i.Env = concurrentmap.NewConcurrentMap()
+	i.Env = interpreter.NewStack()
 
 	l, err := net.Listen(ServerNetwork, ServerAddress)
 	defer l.Close()
@@ -95,7 +94,7 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 				}
 			}
 			v, _ := i.Env.Get(test.args[0])
-			actual := v.(*interpreter.Variable).Value
+			actual := v.Value
 			// save to the stack
 			if !bytes.Equal(actual.([]byte), resp.([]byte)) {
 				t.Errorf(

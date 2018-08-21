@@ -5,24 +5,27 @@ import (
 	"math/big"
 	"posam/instruction"
 	"posam/interpreter"
-	"posam/util/concurrentmap"
+	"posam/interpreter/vrb"
 	"strings"
 	"testing"
 )
 
 func TestParseObjects(t *testing.T) {
-	var variable *interpreter.Variable
+	var variable *vrb.Variable
 	var v1 *big.Float
 	var v2 *big.Float
 	var err error
 
 	i := instruction.InstructionArithmetic{}
-	i.Env = concurrentmap.NewConcurrentMap()
-	i.Env.Set("var1", &interpreter.Variable{Value: "11.11"})
-	i.Env.Set("var2", &interpreter.Variable{Value: "22.22"})
-	i.Env.Set("var3", interpreter.Variable{Value: "not variable pointer"})
+	i.Env = interpreter.NewStack()
+	var1, _ := vrb.NewVariable("var1", "11.11")
+	var2, _ := vrb.NewVariable("var2", "22.22")
+	var3, _ := vrb.NewVariable("var3", "string")
+	i.Env.Set(var1)
+	i.Env.Set(var2)
+	i.Env.Set(var3)
 
-	variable, v1, v2, err = i.ParseObjects("var1", "var2")
+	variable, v1, v2, err = i.ParseObjects(var1.Name, var2.Name)
 	if v1.Cmp(big.NewFloat(11.11)) != 0 ||
 		v2.Cmp(big.NewFloat(22.22)) != 0 {
 		t.Errorf(
@@ -32,7 +35,7 @@ func TestParseObjects(t *testing.T) {
 		)
 	}
 
-	variable, v1, v2, err = i.ParseObjects("var1", "33.33")
+	variable, v1, v2, err = i.ParseObjects(var1.Name, "33.33")
 	if v1.Cmp(big.NewFloat(11.11)) != 0 ||
 		v2.Cmp(big.NewFloat(33.33)) != 0 {
 		t.Errorf(
@@ -42,8 +45,8 @@ func TestParseObjects(t *testing.T) {
 		)
 	}
 
-	variable, v1, v2, err = i.ParseObjects("var1", "var3")
-	if !strings.Contains(err.Error(), "invalid float") {
+	variable, v1, v2, err = i.ParseObjects(var1.Name, var3.Name)
+	if !strings.Contains(err.Error(), "syntax error scanning number") {
 		t.Errorf(
 			"\nEXPECT: %v\nGET: %v\n",
 			"invalid float",
@@ -51,8 +54,8 @@ func TestParseObjects(t *testing.T) {
 		)
 	}
 
-	variable, v1, v2, err = i.ParseObjects("var3", "33.33")
-	if !strings.Contains(err.Error(), "Invalid type of variable") {
+	variable, v1, v2, err = i.ParseObjects(var3.Name, "33.33")
+	if !strings.Contains(err.Error(), "syntax error scanning number") {
 		t.Errorf(
 			"\nEXPECT: %v\nGET: %v\n",
 			"Invalid type of variable",
@@ -77,11 +80,10 @@ func TestGetBigFloat64(t *testing.T) {
 	var err error
 
 	arithmetic := instruction.InstructionArithmetic{}
-	arithmetic.Env = concurrentmap.NewConcurrentMap()
-	variable := interpreter.Variable{
-		Value: "55.55",
-	}
-	v, err = arithmetic.GetBigFloat64(variable)
+	arithmetic.Env = interpreter.NewStack()
+
+	nonFloatVar, _ := vrb.NewVariable("nonfloat", "none float")
+	v, err = arithmetic.GetBigFloat64(nonFloatVar)
 	if err == nil {
 		t.Errorf(
 			"\nEXPECT: %v\nGET: %v\n",
@@ -90,8 +92,9 @@ func TestGetBigFloat64(t *testing.T) {
 		)
 	}
 
-	arithmetic.Env.Set("testname", &variable)
-	varVariable, _ := arithmetic.Env.Get("testname")
+	variable, _ := vrb.NewVariable("testname", "55.55")
+	arithmetic.Env.Set(variable)
+	varVariable, _ := arithmetic.Env.Get(variable.Name)
 
 	v, err = arithmetic.GetBigFloat64(varVariable)
 	if err != nil || v.String() != "55.55" {
