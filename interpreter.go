@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"posam/util/concurrentmap"
 	"reflect"
 	"strconv"
 	"strings"
@@ -50,7 +49,7 @@ type Statement struct {
 type StatementGroup struct {
 	Execution ExecutionType
 	ItemList  []interface{}
-	Stack     *concurrentmap.ConcurrentMap
+	Stack     *Stack
 }
 
 type Response struct {
@@ -314,10 +313,9 @@ func ParseFile(
 		panic(err)
 	}
 	defer file.Close()
-	stack := concurrentmap.NewConcurrentMap()
 	statementGroup := StatementGroup{
 		Execution: execution,
-		Stack:     stack,
+		Stack:     NewStack(),
 	}
 
 	return ParseReader(file, &statementGroup)
@@ -325,7 +323,7 @@ func ParseFile(
 
 func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGroup, error) {
 	if statementGroup.Stack == nil {
-		statementGroup.Stack = concurrentmap.NewConcurrentMap()
+		statementGroup.Stack = NewStack()
 	}
 
 	scanner := bufio.NewScanner(reader)
@@ -338,7 +336,7 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				SYNC)
-			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
+			subStatementGroup.Stack = NewStack(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
@@ -346,7 +344,7 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 			subStatementGroup, _ := ParseFile(
 				statement.Arguments[0],
 				ASYNC)
-			subStatementGroup.Stack = concurrentmap.NewConcurrentMap(statementGroup.Stack)
+			subStatementGroup.Stack = NewStack(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)

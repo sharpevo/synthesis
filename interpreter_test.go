@@ -65,7 +65,7 @@ func (i *InstructionAdd) Execute(args ...string) (interface{}, error) {
 	return sum, nil
 }
 
-func GetFloat64(v interface{}, env *concurrentmap.ConcurrentMap) float64 {
+func GetFloat64(v interface{}, env *interpreter.Stack) float64 {
 	switch i := v.(type) {
 	case string:
 		fmt.Println("parse string", i)
@@ -201,7 +201,7 @@ func TestExecute(t *testing.T) {
 		statement, _ := interpreter.ParseLine(test.l)
 		statementGroup := interpreter.StatementGroup{
 			Execution: interpreter.SYNC,
-			Stack:     concurrentmap.NewConcurrentMap(),
+			Stack:     interpreter.NewStack(),
 		}
 		statement.StatementGroup = &statementGroup
 		completec := make(chan interface{})
@@ -363,7 +363,7 @@ MOVEX 5`,
 			statementGroup, _ := interpreter.ParseFile(
 				test.f,
 				interpreter.SYNC)
-			statementGroup.Stack = concurrentmap.NewConcurrentMap()
+			statementGroup.Stack = interpreter.NewStack()
 			//resultList, _ = statementGroup.Execute(terminatec, nil)
 			for resp := range statementGroup.Execute(terminatec, completec) {
 				time.Sleep(1 * time.Second)
@@ -388,7 +388,7 @@ MOVEX 5`,
 		case "string":
 			statementGroup := interpreter.StatementGroup{
 				Execution: interpreter.SYNC,
-				Stack:     concurrentmap.NewConcurrentMap(),
+				Stack:     interpreter.NewStack(),
 			}
 			reader := strings.NewReader(test.f)
 			interpreter.ParseReader(reader, &statementGroup)
