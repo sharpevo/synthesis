@@ -3,6 +3,7 @@ package vrb_test
 import (
 	"fmt"
 	"posam/interpreter/vrb"
+	"strings"
 	"testing"
 )
 
@@ -48,6 +49,17 @@ func TestNewVariable(t *testing.T) {
 				actual,
 			)
 		}
+	}
+}
+
+func TestNewVariableReserved(t *testing.T) {
+	_, err := vrb.NewVariable("SYS_CMP", "test")
+	if err == nil || !strings.Contains(err.Error(), "reserved") {
+		t.Errorf(
+			"\nEXPECT: %v\n GET: %v\n",
+			"reversed error",
+			err.Error(),
+		)
 	}
 }
 
