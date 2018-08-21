@@ -13,7 +13,11 @@ func (i *InstructionVariableGet) Execute(args ...string) (resp interface{}, err 
 		return resp, fmt.Errorf("not enough arguments")
 	}
 	name := args[0]
-	variable, _ := i.ParseVariable(name)
+	variable, found := i.Env.Get(name)
+	if !found {
+		resp = fmt.Sprintf("%s is not defined", name)
+		return
+	}
 	resp = fmt.Sprintf("%v %s = %v", variable.Type, name, variable.Value)
 	return resp, nil
 }
