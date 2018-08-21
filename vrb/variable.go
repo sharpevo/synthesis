@@ -94,7 +94,7 @@ func ParseValue(input string) (interface{}, VariableType, error) {
 func Compare(var1 *Variable, var2 *Variable) (ComparisonType, error) {
 	if var1.Type != var2.Type {
 		return UNKNOWN, fmt.Errorf(
-			"mismatched type comparison is not allowed: %s(%T) and %s(%T)",
+			"mismatched type comparison is not allowed: %s(%s) and %s(%s)",
 			var1.Name,
 			var1.Type,
 			var2.Name,
