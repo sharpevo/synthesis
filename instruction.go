@@ -29,14 +29,13 @@ func (i *Instruction) Execute(args ...string) (interface{}, error) {
 }
 
 func (i *Instruction) ParseVariable(name string) (*vrb.Variable, error) {
-	v, found := i.Env.Get(name)
+	variable, found := i.Env.Get(name)
 	if !found {
-		newVariable := &vrb.Variable{}
-		newVariablei := i.Env.Set(name, newVariable)
-		variable := newVariablei.(*vrb.Variable)
-		return variable, nil
-	} else {
-		variable := v.(*vrb.Variable)
-		return variable, nil
+		newVariable, err := vrb.NewVariable(name, name)
+		if err != nil {
+			return variable, err
+		}
+		variable = i.Env.Set(newVariable)
 	}
+	return variable, nil
 }

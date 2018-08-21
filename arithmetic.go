@@ -16,13 +16,9 @@ func (i *InstructionArithmetic) ParseObjects(arg1 string, arg2 string) (
 	v2 *big.Float,
 	err error,
 ) {
-	v, found := i.Env.Get(arg1)
+	variable, found := i.Env.Get(arg1)
 	if !found {
 		return variable, v1, v2, fmt.Errorf("Invalid variable %q", arg1)
-	}
-	variable, ok := v.(*vrb.Variable)
-	if !ok {
-		return variable, v1, v2, fmt.Errorf("Invalid type of variable %q", arg1)
 	}
 
 	v1, err = i.GetBigFloat64(arg1)
