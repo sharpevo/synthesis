@@ -62,6 +62,43 @@ GETVAR globalvar1
 IMPORT testscripts/variable/modification
 GETVAR localvar1
 GETVAR globalvar1`
+	CMD_CF = `PRINT ---- start ----
+SETVAR var1 11.11
+GETVAR var1
+SETVAR var2 11.11
+GETVAR var2
+CMPVAR var1 var2
+EQGOTO 10
+PRINT not here
+PRINT not here
+PRINT equal redirected
+SETVAR var3 33.33
+GETVAR var3
+CMPVAR var1 var3
+LTGOTO 17
+PRINT not here
+PRINT not here
+PRINT less than redirected
+CMPVAR var3 var1
+GTGOTO 22
+PRINT not here
+PRINT not here
+PRINT greater than redirected
+SETVAR var4 string1
+GETVAR var4
+SETVAR var5 string2
+GETVAR var5
+CMPVAR var4 var5
+NEGOTO 31
+PRINT not here
+PRINT not here
+PRINT not equal redirected
+CMPVAR var1 var5
+ERRGOTO 36
+PRINT not here
+PRINT not here
+PRINT error redirected
+PRINT ---- end ----`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
@@ -91,9 +128,16 @@ func main() {
 	InstructionMap.Set("RETRY", instruction.InstructionRetry{})
 	InstructionMap.Set("LED", instruction.InstructionLed{})
 	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
+
 	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
 	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
 	InstructionMap.Set("CMPVAR", instruction.InstructionVariableCompare{})
+	InstructionMap.Set("ERRGOTO", instruction.InstructionControlFlowErrGoto{})
+	InstructionMap.Set("EQGOTO", instruction.InstructionControlFlowEqualGoto{})
+	InstructionMap.Set("NEGOTO", instruction.InstructionControlFlowNotEqualGoto{})
+	InstructionMap.Set("GTGOTO", instruction.InstructionControlFlowGreaterThanGoto{})
+	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
+
 	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
 	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
 	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
@@ -119,7 +163,7 @@ func main() {
 	})
 
 	input := widgets.NewQTextEdit(nil)
-	input.SetPlainText(CMD_VARIABLE_GLOBAL)
+	input.SetPlainText(CMD_CF)
 
 	// waveform group
 
