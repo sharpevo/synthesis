@@ -299,13 +299,15 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 			varCur, _ := g.Stack.Get("SYS_CUR")
 			cur64 := varCur.Value.(int64)
 			cur := int(cur64)
-			if cur != 0 {
+			if cur > 0 {
 				target := cur - 2
 				if target == i+1 {
 					target += 1
 				}
 				i = target
 				varCur.Value = int64(0)
+			} else if cur < 0 {
+				break
 			}
 		}
 
