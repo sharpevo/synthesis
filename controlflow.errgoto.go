@@ -21,8 +21,10 @@ func (i *InstructionControlFlowErrGoto) Execute(args ...string) (resp interface{
 	if !found {
 		return resp, fmt.Errorf("failed to load variable ERR")
 	}
+	resp = fmt.Sprintf("error cheking passed and continue")
 	if v.Value.(string) != "" {
 		i.Goto(index)
+		resp = fmt.Sprintf("error detected and goto %d", index)
 	}
 	return resp, nil
 }
