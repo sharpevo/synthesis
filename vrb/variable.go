@@ -64,12 +64,23 @@ type Variable struct {
 var PreservedNames = map[string]bool{
 	"SYS_CMP": true,
 	"SYS_ERR": true,
+	"SYS_CUR": true,
 }
 
 func NewPreservedVariables() []*Variable {
 	variableList := []*Variable{}
 	for k, _ := range PreservedNames {
-		variable, _ := newVariable(k, k)
+		var variable *Variable
+		switch k {
+		case "SYS_CMP":
+			variable, _ = newVariable(k, fmt.Sprintf("%d", UNKNOWN))
+		case "SYS_ERR":
+			variable, _ = newVariable(k, "")
+		case "SYS_CUR":
+			variable, _ = newVariable(k, "0")
+		default:
+			variable, _ = newVariable(k, "")
+		}
 		variableList = append(variableList, variable)
 	}
 	return variableList

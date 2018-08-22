@@ -109,6 +109,11 @@ func (s *Statement) Run(completec chan<- interface{}) Response {
 		resp.Completec = completec
 		resp.IgnoreError = s.IgnoreError
 		log.Printf("'%s: %s' produces %q\n", s.InstructionName, s.Arguments, output)
+		message := ""
+		if resp.Error != nil {
+			message = resp.Error.Error()
+		}
+		instructionInstancev.MethodByName("IssueError").Call([]reflect.Value{reflect.ValueOf(message)})
 	}
 	return resp
 }
@@ -276,6 +281,13 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 					//log.Printf("'%s: %s' complet", item.InstructionName, item.Arguments)
 				}
 
+				if i < len(g.ItemList)-1 {
+					if s, ok := g.ItemList[i+1].(*Statement); ok &&
+						s.InstructionName == "ERRGOTO" {
+						item.IgnoreError = true
+					}
+				}
+
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				respcc <- item.Execute(terminatec, completec)
@@ -284,6 +296,20 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 			}
 
 			<-completec
+			varCur, _ := g.Stack.Get("SYS_CUR")
+			cur64 := varCur.Value.(int64)
+			cur := int(cur64)
+			if cur > 0 {
+				target := cur - 2
+				if target == i+1 {
+					target += 1
+				}
+				i = target
+				varCur.Value = int64(0)
+			} else if cur < 0 {
+				varCur.Value = int64(0)
+				break
+			}
 		}
 
 		pcompletec <- true
