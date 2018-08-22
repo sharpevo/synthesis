@@ -105,7 +105,11 @@ PRINT loop end
 SLEEP 2
 LOOP 38 loopcount
 PRINT last command
-PRINT ---- end ----`
+PRINT ---- end ----
+RETURN nil
+PRINT never executed
+PRINT never executed
+PRINT never executed`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
@@ -145,6 +149,7 @@ func main() {
 	InstructionMap.Set("GTGOTO", instruction.InstructionControlFlowGreaterThanGoto{})
 	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
 	InstructionMap.Set("LOOP", instruction.InstructionControlFlowLoop{})
+	InstructionMap.Set("RETURN", instruction.InstructionControlFlowReturn{})
 
 	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
 	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
