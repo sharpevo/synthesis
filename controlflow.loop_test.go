@@ -1,9 +1,9 @@
 package instruction_test
 
 import (
-	"fmt"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"testing"
 )
 
@@ -22,17 +22,21 @@ func TestInstructionControlFlowLoopExecute(t *testing.T) {
 
 	line := "5"
 	count := 3
+
+	varCount, _ := vrb.NewVariable("loopcount", "3")
+	i.Env.Set(varCount)
 	for index := range [3]int{} {
-		_, err := i.Execute(line, fmt.Sprintf("%d", count))
+		resp, err := i.Execute(line, varCount.Name)
+		t.Logf("%v", resp)
 		if err != nil {
 			t.Fatal(err)
 		}
-		expectedCount := index + 1
-		if i.Count() != expectedCount {
+		expectedCount := count - index - 1
+		if varCount.Value.(int64) != int64(expectedCount) {
 			t.Errorf(
 				"\nEXPECT: %v\nGET: %v\n",
 				expectedCount,
-				i.Count(),
+				varCount.Value,
 			)
 		}
 
