@@ -289,6 +289,13 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 			}
 
 			<-completec
+			varCur, _ := g.Stack.Get("SYS_CUR")
+			cur64 := varCur.Value.(int64)
+			cur := int(cur64)
+			if cur != 0 {
+				i = cur
+				varCur.Value = int64(0)
+			}
 		}
 
 		pcompletec <- true
