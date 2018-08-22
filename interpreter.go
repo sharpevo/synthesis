@@ -281,6 +281,13 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 					//log.Printf("'%s: %s' complet", item.InstructionName, item.Arguments)
 				}
 
+				if i < len(g.ItemList)-1 {
+					if s, ok := g.ItemList[i+1].(*Statement); ok &&
+						s.InstructionName == "ERRGOTO" {
+						item.IgnoreError = true
+					}
+				}
+
 			case StatementGroup, *StatementGroup:
 				item, _ := itemInterface.(*StatementGroup)
 				respcc <- item.Execute(terminatec, completec)
