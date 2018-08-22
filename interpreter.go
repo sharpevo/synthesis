@@ -293,7 +293,11 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 			cur64 := varCur.Value.(int64)
 			cur := int(cur64)
 			if cur != 0 {
-				i = cur
+				target := cur - 2
+				if target == i+1 {
+					target += 1
+				}
+				i = target
 				varCur.Value = int64(0)
 			}
 		}
