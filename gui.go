@@ -98,6 +98,13 @@ ERRGOTO 36
 PRINT not here
 PRINT not here
 PRINT error redirected
+SETVAR loopcount 3
+PRINT loop start
+PRINT loop body
+PRINT loop end
+SLEEP 2
+LOOP 38 loopcount
+PRINT last command
 PRINT ---- end ----`
 )
 
@@ -137,6 +144,7 @@ func main() {
 	InstructionMap.Set("NEGOTO", instruction.InstructionControlFlowNotEqualGoto{})
 	InstructionMap.Set("GTGOTO", instruction.InstructionControlFlowGreaterThanGoto{})
 	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
+	InstructionMap.Set("LOOP", instruction.InstructionControlFlowLoop{})
 
 	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
 	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
