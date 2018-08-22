@@ -6,12 +6,13 @@ import (
 	"os"
 	"os/exec"
 	"posam/dao/alientek"
-	"posam/protocol/serialport"
+	"posam/dao/ricoh_g5"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"posam/instruction"
 	"posam/interpreter"
@@ -46,17 +47,72 @@ RETRY -2 3
 PRINT 3
 SLEEP 1
 PRINT 4`
+	CMD_PRINTER = `ERRORCODE var1
+GETVAR var1`
+	CMD_WAVEFORM = `WAVEFORM var1 1 2 11.22 1 1.1 2.2 3.3 4.4 5.5 6.6 7.7 8.8 9.9 10.10 11.11 12.12 1
+ASYNC testscripts/tcpconcurrency`
+	CMD_VARIABLE_SETTER_GETTER = `SETVAR var1 This is a string variable
+GETVAR var1
+SETVAR var2 2
+GETVAR var2
+SETVAR var3 3.0
+GETVAR var3`
+	CMD_VARIABLE_GLOBAL = `SETVAR globalvar1 This is a global string variable
+GETVAR globalvar1
+IMPORT testscripts/variable/modification
+GETVAR localvar1
+GETVAR globalvar1`
+	CMD_CF = `PRINT ---- start ----
+SETVAR var1 11.11
+GETVAR var1
+SETVAR var2 11.11
+GETVAR var2
+CMPVAR var1 var2
+EQGOTO 10
+PRINT not here
+PRINT not here
+PRINT equal redirected
+SETVAR var3 33.33
+GETVAR var3
+CMPVAR var1 var3
+LTGOTO 17
+PRINT not here
+PRINT not here
+PRINT less than redirected
+CMPVAR var3 var1
+GTGOTO 22
+PRINT not here
+PRINT not here
+PRINT greater than redirected
+SETVAR var4 string1
+GETVAR var4
+SETVAR var5 string2
+GETVAR var5
+CMPVAR var4 var5
+NEGOTO 31
+PRINT not here
+PRINT not here
+PRINT not equal redirected
+CMPVAR var1 var5
+ERRGOTO 36
+PRINT not here
+PRINT not here
+PRINT error redirected
+SETVAR loopcount 3
+PRINT loop start
+PRINT loop body
+PRINT loop end
+SLEEP 2
+LOOP 38 loopcount
+PRINT last command
+PRINT ---- end ----
+RETURN nil
+PRINT never executed
+PRINT never executed
+PRINT never executed`
 )
 
-var InstructionMap = map[string]instruction.Instructioner{
-	"PRINT":      &Print,
-	"SLEEP":      &instruction.Sleep,
-	"IMPORT":     &instruction.Import,
-	"ASYNC":      &instruction.Async,
-	"RETRY":      &instruction.Retry,
-	"LED":        &instruction.Led,
-	"SENDSERIAL": &instruction.SendSerial,
-}
+var InstructionMap = make(interpreter.InstructionMapt)
 
 type InstructionPrint struct {
 	instruction.Instruction
@@ -65,7 +121,8 @@ type InstructionPrint struct {
 var Print InstructionPrint
 
 func (c *InstructionPrint) Execute(args ...string) (interface{}, error) {
-	return "Print: " + args[0], nil
+	message := strings.Join(args, " ")
+	return "Print: " + message, nil
 }
 
 type QMessageBoxWithCustomSlot struct {
@@ -74,6 +131,30 @@ type QMessageBoxWithCustomSlot struct {
 }
 
 func main() {
+
+	InstructionMap.Set("PRINT", InstructionPrint{})
+	InstructionMap.Set("SLEEP", instruction.InstructionSleep{})
+	InstructionMap.Set("IMPORT", instruction.InstructionImport{})
+	InstructionMap.Set("ASYNC", instruction.InstructionAsync{})
+	InstructionMap.Set("RETRY", instruction.InstructionRetry{})
+	InstructionMap.Set("LED", instruction.InstructionLed{})
+	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
+
+	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
+	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
+	InstructionMap.Set("CMPVAR", instruction.InstructionVariableCompare{})
+	InstructionMap.Set("ERRGOTO", instruction.InstructionControlFlowErrGoto{})
+	InstructionMap.Set("EQGOTO", instruction.InstructionControlFlowEqualGoto{})
+	InstructionMap.Set("NEGOTO", instruction.InstructionControlFlowNotEqualGoto{})
+	InstructionMap.Set("GTGOTO", instruction.InstructionControlFlowGreaterThanGoto{})
+	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
+	InstructionMap.Set("LOOP", instruction.InstructionControlFlowLoop{})
+	InstructionMap.Set("RETURN", instruction.InstructionControlFlowReturn{})
+
+	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
+	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
+	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
+	InstructionMap.Set("WAVEFORM", instruction.InstructionPrinterHeadWaveform{})
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
@@ -95,7 +176,129 @@ func main() {
 	})
 
 	input := widgets.NewQTextEdit(nil)
-	input.SetPlainText(CMD_LED_SERIAL)
+	input.SetPlainText(CMD_CF)
+
+	// waveform group
+
+	waveformGroup := widgets.NewQGroupBox2("WaveForm Builder", nil)
+
+	waveformLineTimeLabel := widgets.NewQLabel2("Time", nil, 1)
+	waveformLineTimeLabel.SetAlignment(core.Qt__AlignCenter)
+	waveformLineVoltageLabel := widgets.NewQLabel2("Percentage", nil, 1)
+	waveformLineVoltageLabel.SetAlignment(core.Qt__AlignCenter)
+	waveformFallLabel := widgets.NewQLabel2("Fall:", nil, 0)
+	waveformHoldLabel := widgets.NewQLabel2("Hold:", nil, 0)
+	waveformRisingLabel := widgets.NewQLabel2("Rising:", nil, 0)
+	waveformWaitLabel := widgets.NewQLabel2("Wait:", nil, 0)
+	waveformMnLabel := widgets.NewQLabel2("Mn:", nil, 0)
+	waveformVoltageLabel := widgets.NewQLabel2("Voltage:", nil, 0)
+
+	waveformFallTimeInput := widgets.NewQDoubleSpinBox(nil)
+	waveformFallTimeInput.SetMaximum(100)
+	waveformFallPercentageInput := widgets.NewQDoubleSpinBox(nil)
+	waveformFallPercentageInput.SetMaximum(100)
+	waveformHoldTimeInput := widgets.NewQDoubleSpinBox(nil)
+	waveformHoldTimeInput.SetMaximum(100)
+	waveformHoldPercentageInput := widgets.NewQDoubleSpinBox(nil)
+	waveformHoldPercentageInput.SetMaximum(100)
+	waveformRisingTimeInput := widgets.NewQDoubleSpinBox(nil)
+	waveformRisingTimeInput.SetMaximum(100)
+	waveformRisingPercentageInput := widgets.NewQDoubleSpinBox(nil)
+	waveformRisingPercentageInput.SetMaximum(100)
+	waveformWaitTimeInput := widgets.NewQDoubleSpinBox(nil)
+	waveformWaitTimeInput.SetMaximum(100)
+	waveformWaitPercentageInput := widgets.NewQDoubleSpinBox(nil)
+	waveformWaitPercentageInput.SetMaximum(100)
+	waveformMnInput := widgets.NewQSpinBox(nil)
+	waveformMnInput.SetMaximum(100)
+	waveformVoltageInput := widgets.NewQDoubleSpinBox(nil)
+	waveformVoltageInput.SetMaximum(100)
+
+	waveformGenerateButton := widgets.NewQPushButton2("INSERT", nil)
+	waveformGenerateButton.ConnectClicked(func(bool) {
+		argumentList := []string{
+			"WAVEFORM",
+			"VAR",
+			"HEADBOARD", // headboard
+			"ROW",       // row
+			fmt.Sprintf("%.2f", waveformVoltageInput.Value()),
+			"COUNT", // segment count
+
+			fmt.Sprintf("%.2f", waveformFallTimeInput.Value()),
+			fmt.Sprintf("%.2f", waveformFallPercentageInput.Value()),
+			fmt.Sprintf("%.2f", waveformHoldPercentageInput.Value()),
+
+			fmt.Sprintf("%.2f", waveformHoldTimeInput.Value()),
+			fmt.Sprintf("%.2f", waveformHoldPercentageInput.Value()),
+			fmt.Sprintf("%.2f", waveformRisingPercentageInput.Value()),
+
+			fmt.Sprintf("%.2f", waveformRisingTimeInput.Value()),
+			fmt.Sprintf("%.2f", waveformRisingPercentageInput.Value()),
+			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
+
+			fmt.Sprintf("%.2f", waveformWaitTimeInput.Value()),
+			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
+			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
+
+			fmt.Sprintf("%d", waveformMnInput.Value()),
+		}
+
+		input.InsertPlainText(strings.Join(argumentList, " "))
+	})
+
+	waveformLayout := widgets.NewQGridLayout2()
+
+	waveformLayout.AddWidget(waveformLineTimeLabel, 0, 1, 0)
+	waveformLayout.AddWidget(waveformLineVoltageLabel, 0, 2, 0)
+
+	waveformLayout.AddWidget(waveformFallLabel, 1, 0, 0)
+	waveformLayout.AddWidget(waveformFallTimeInput, 1, 1, 0)
+	waveformLayout.AddWidget(waveformFallPercentageInput, 1, 2, 0)
+	waveformLayout.AddWidget(waveformHoldLabel, 2, 0, 0)
+	waveformLayout.AddWidget(waveformHoldTimeInput, 2, 1, 0)
+	waveformLayout.AddWidget(waveformHoldPercentageInput, 2, 2, 0)
+	waveformLayout.AddWidget(waveformRisingLabel, 3, 0, 0)
+	waveformLayout.AddWidget(waveformRisingTimeInput, 3, 1, 0)
+	waveformLayout.AddWidget(waveformRisingPercentageInput, 3, 2, 0)
+	waveformLayout.AddWidget(waveformWaitLabel, 4, 0, 0)
+	waveformLayout.AddWidget(waveformWaitTimeInput, 4, 1, 0)
+	waveformLayout.AddWidget(waveformWaitPercentageInput, 4, 2, 0)
+
+	waveformLayout.AddWidget3(waveformVoltageLabel, 5, 0, 1, 1, 0)
+	waveformLayout.AddWidget3(waveformVoltageInput, 5, 1, 1, 2, 0)
+	waveformLayout.AddWidget3(waveformMnLabel, 6, 0, 1, 1, 0)
+	waveformLayout.AddWidget3(waveformMnInput, 6, 1, 1, 2, 0)
+	waveformLayout.AddWidget3(waveformGenerateButton, 7, 0, 1, 3, 0)
+
+	waveformGroup.SetLayout(waveformLayout)
+
+	// tcp group
+
+	printerGroup := widgets.NewQGroupBox2("Printer", nil)
+
+	printerNetworkLabel := widgets.NewQLabel2("Network:", nil, 0)
+	printerAddressLabel := widgets.NewQLabel2("Address:", nil, 0)
+	printerTimeoutLabel := widgets.NewQLabel2("Timeout:", nil, 0)
+
+	printerNetworkInput := widgets.NewQLineEdit(nil)
+	printerNetworkInput.SetPlaceholderText("tcp, tcp4, tcp6")
+	printerNetworkInput.SetText("tcp")
+	printerAddressInput := widgets.NewQLineEdit(nil)
+	printerAddressInput.SetPlaceholderText("localhost:3000")
+	printerAddressInput.SetText("192.168.100.215:21005")
+	printerTimeoutInput := widgets.NewQLineEdit(nil)
+	printerTimeoutInput.SetPlaceholderText("10")
+	printerTimeoutInput.SetText("10")
+
+	printerLayout := widgets.NewQGridLayout2()
+	printerLayout.AddWidget(printerNetworkLabel, 0, 0, 0)
+	printerLayout.AddWidget(printerNetworkInput, 0, 1, 0)
+	printerLayout.AddWidget(printerAddressLabel, 1, 0, 0)
+	printerLayout.AddWidget(printerAddressInput, 1, 1, 0)
+	printerLayout.AddWidget(printerTimeoutLabel, 2, 0, 0)
+	printerLayout.AddWidget(printerTimeoutInput, 2, 1, 0)
+
+	printerGroup.SetLayout(printerLayout)
 
 	// serial group
 
@@ -153,6 +356,8 @@ func main() {
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
 
+	stack := interpreter.NewStack()
+
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.ConnectClicked(func(bool) {
 
@@ -170,7 +375,15 @@ func main() {
 		)
 		if err != nil {
 			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-			return
+		}
+
+		err = initPrinter(
+			printerNetworkInput.Text(),
+			printerAddressInput.Text(),
+			printerTimeoutInput.Text(),
+		)
+		if err != nil {
+			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 		}
 
 		result.SetText("RUNNING")
@@ -179,7 +392,10 @@ func main() {
 		terminatecc <- terminatec
 
 		interpreter.InitParser(InstructionMap)
-		statementGroup := interpreter.StatementGroup{Execution: interpreter.SYNC}
+		statementGroup := interpreter.StatementGroup{
+			Execution: interpreter.SYNC,
+			Stack:     stack,
+		}
 		interpreter.ParseReader(
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
@@ -211,7 +427,7 @@ func main() {
 					}
 					resp.Completec <- true
 				}
-				resultList = append(resultList, fmt.Sprintf("%s", resp.Output))
+				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
 				result.SetText(strings.Join(resultList, "\n"))
 			}
 			result.SetText(strings.Join(resultList, "\n") + "\n\nDONE")
@@ -256,8 +472,10 @@ func main() {
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(input, 0, 0, 0)
-	inputLayout.AddWidget(serialGroup, 1, 0, 0)
-	inputLayout.AddWidget(runButton, 2, 0, 0)
+	inputLayout.AddWidget(waveformGroup, 1, 0, 0)
+	inputLayout.AddWidget(printerGroup, 2, 0, 0)
+	inputLayout.AddWidget(serialGroup, 3, 0, 0)
+	inputLayout.AddWidget(runButton, 4, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
 	outputGroup := widgets.NewQGroupBox2("Results", nil)
@@ -271,6 +489,8 @@ func main() {
 	layout := widgets.NewQGridLayout2()
 	layout.AddWidget(inputGroup, 0, 0, 0)
 	layout.AddWidget(outputGroup, 0, 1, 0)
+	layout.SetColumnStretch(0, 1)
+	layout.SetColumnStretch(1, 1)
 	widget.SetLayout(layout)
 
 	window.Show()
@@ -316,16 +536,14 @@ func initSerialDevice(
 	//return
 	//}
 
-	alientek.AddInstance(&alientek.Dao{
-		DeviceAddress: deviceAddress,
-		SerialPort: &serialport.SerialPort{
-			Name:     device,
-			BaudRate: baudInt,
-			DataBits: characterInt,
-			StopBits: stopInt,
-			Parity:   -1,
-		},
-	})
+	alientek.NewDao(
+		device,
+		baudInt,
+		characterInt,
+		stopInt,
+		-1,
+		deviceAddress,
+	)
 
 	switch runtime.GOOS {
 	case "windows":
@@ -386,4 +604,26 @@ func initSerialDevice(
 	}
 
 	return
+}
+
+func initPrinter(network string, address string, secondString string) (err error) {
+	if ricoh_g5.Instance("") != nil {
+		return
+	}
+	secondInt, err := strconv.Atoi(secondString)
+	if err != nil {
+		return err
+	}
+	_, err = ricoh_g5.NewDao(network, address, secondInt)
+	if err != nil {
+		return err
+	}
+
+	i := instruction.InstructionPrinterHeadPrinterStatus{}
+	_, err = i.Execute()
+	if err != nil {
+		log.Println(err)
+		return fmt.Errorf("printer is not ready")
+	}
+	return nil
 }
