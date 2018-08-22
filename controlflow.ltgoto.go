@@ -22,10 +22,11 @@ func (i *InstructionControlFlowLessThanGoto) Execute(args ...string) (resp inter
 	if !found {
 		return resp, fmt.Errorf("failed to load variable CMP")
 	}
-	resp = fmt.Sprintf("condition cheking passed and continue")
+	resp = fmt.Sprintf("condition 'less than' check failed and continue")
 	if v.Value == vrb.LESS {
 		i.Goto(index)
-		resp = fmt.Sprintf("condition satisfied and goto %d", index)
+		resp = fmt.Sprintf(
+			"condition 'less that' is satisfied and go to %d", index)
 	}
 	return resp, nil
 }

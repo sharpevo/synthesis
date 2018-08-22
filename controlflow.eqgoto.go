@@ -22,10 +22,11 @@ func (i *InstructionControlFlowEqualGoto) Execute(args ...string) (resp interfac
 	if !found {
 		return resp, fmt.Errorf("failed to load variable CMP")
 	}
-	resp = fmt.Sprintf("condition cheking passed and continue")
+	resp = fmt.Sprintf("condition 'equal to' check failed and continue")
 	if v.Value == vrb.EQUAL {
 		i.Goto(index)
-		resp = fmt.Sprintf("condition satisfied and goto %d", index)
+		resp = fmt.Sprintf(
+			"condition 'equal to' is satisfied and go to %d", index)
 	}
 	return resp, nil
 }
