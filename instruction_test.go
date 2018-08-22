@@ -34,3 +34,19 @@ func TestParseVariable(t *testing.T) {
 		)
 	}
 }
+
+func TestInstructionIssueError(t *testing.T) {
+	i := instruction.Instruction{}
+	i.Env = interpreter.NewStack()
+	message := "test message"
+	i.IssueError(message)
+	varErr, _ := i.Env.Get("SYS_ERR")
+	actual := varErr.Value.(string)
+	if actual != message {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			message,
+			actual,
+		)
+	}
+}

@@ -1,6 +1,7 @@
 package instruction
 
 import (
+	"log"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
 )
@@ -38,4 +39,16 @@ func (i *Instruction) ParseVariable(name string) (*vrb.Variable, error) {
 		variable = i.Env.Set(newVariable)
 	}
 	return variable, nil
+}
+
+func (i *Instruction) IssueError(message string) {
+	varErr, found := i.Env.Get("SYS_ERR")
+	if !found {
+		log.Printf("invalid variable ERR")
+	}
+	if message != "" {
+		varErr.Value = message
+	} else {
+		varErr.Value = ""
+	}
 }
