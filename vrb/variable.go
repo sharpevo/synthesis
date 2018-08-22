@@ -64,7 +64,6 @@ type Variable struct {
 var PreservedNames = map[string]bool{
 	"SYS_CMP": true,
 	"SYS_ERR": true,
-	"SYS_FOR": true,
 	"SYS_CUR": true,
 }
 
@@ -77,8 +76,6 @@ func NewPreservedVariables() []*Variable {
 			variable, _ = newVariable(k, fmt.Sprintf("%d", UNKNOWN))
 		case "SYS_ERR":
 			variable, _ = newVariable(k, "")
-		case "SYS_FOR":
-			variable, _ = newVariable(k, "0")
 		case "SYS_CUR":
 			variable, _ = newVariable(k, "0")
 		default:
