@@ -73,7 +73,8 @@ type InstructionPrint struct {
 var Print InstructionPrint
 
 func (c *InstructionPrint) Execute(args ...string) (interface{}, error) {
-	return "Print: " + args[0], nil
+	message := strings.Join(args, " ")
+	return "Print: " + message, nil
 }
 
 type QMessageBoxWithCustomSlot struct {
