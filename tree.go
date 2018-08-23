@@ -26,15 +26,15 @@ func NewInstructionTree() *InstructionTree {
 	return treeWidget
 }
 
-func (w *InstructionTree) customContextMenuRequested(p *core.QPoint) {
-	if w.contextMenu == nil {
-		w.contextMenu = widgets.NewQMenu(w)
-		menuAdd := w.contextMenu.AddAction("Add")
-		menuAdd.ConnectTriggered(func(checked bool) { w.addItem(p) })
-		menuRemove := w.contextMenu.AddAction("Remove")
-		menuRemove.ConnectTriggered(func(checked bool) { w.removeItem(p) })
+func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
+	if t.contextMenu == nil {
+		t.contextMenu = widgets.NewQMenu(t)
+		menuAdd := t.contextMenu.AddAction("Add")
+		menuAdd.ConnectTriggered(func(checked bool) { t.addItem(p) })
+		menuRemove := t.contextMenu.AddAction("Remove")
+		menuRemove.ConnectTriggered(func(checked bool) { t.removeItem(p) })
 	}
-	w.contextMenu.Exec2(w.MapToGlobal(p), nil)
+	t.contextMenu.Exec2(t.MapToGlobal(p), nil)
 }
 
 func (t *InstructionTree) addItem(p *core.QPoint) {
