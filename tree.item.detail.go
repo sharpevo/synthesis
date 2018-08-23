@@ -16,6 +16,8 @@ type InstructionDetail struct {
 	titleInput *widgets.QLineEdit
 	lineInput  *widgets.QLineEdit
 	typeInput  *widgets.QComboBox
+	instInput  *widgets.QComboBox
+	argsInput  *widgets.QLineEdit
 	saveButton *widgets.QPushButton
 }
 
@@ -23,13 +25,24 @@ func NewInstructionDetail() *InstructionDetail {
 
 	typeLabel := widgets.NewQLabel2("Type", nil, 0)
 	titleLabel := widgets.NewQLabel2("Title", nil, 0)
-	lineLabel := widgets.NewQLabel2("Instruction", nil, 0)
+	lineLabel := widgets.NewQLabel2("Line", nil, 0)
+	instLabel := widgets.NewQLabel2("Instruction", nil, 0)
+	argsLabel := widgets.NewQLabel2("Arguments", nil, 0)
 
 	d := InstructionDetail{}
 	d.typeInput = widgets.NewQComboBox(nil)
 	d.typeInput.AddItems([]string{TYPE_INS, TYPE_SET})
 	d.titleInput = widgets.NewQLineEdit(nil)
 	d.lineInput = widgets.NewQLineEdit(nil)
+
+	d.instInput = widgets.NewQComboBox(nil)
+	instructions := []string{}
+	for k, _ := range InstructionMap {
+		instructions = append(instructions, k)
+	}
+	d.instInput.AddItems(instructions)
+
+	d.argsInput = widgets.NewQLineEdit(nil)
 
 	d.saveButton = widgets.NewQPushButton2("SAVE", nil)
 	d.saveButton.ConnectClicked(func(bool) { d.saveInstruction() })
@@ -43,7 +56,12 @@ func NewInstructionDetail() *InstructionDetail {
 	layout.AddWidget(d.titleInput, 1, 1, 0)
 	layout.AddWidget(lineLabel, 2, 0, 0)
 	layout.AddWidget(d.lineInput, 2, 1, 0)
-	layout.AddWidget3(d.saveButton, 3, 0, 1, 2, 0)
+	layout.AddWidget(instLabel, 3, 0, 0)
+	layout.AddWidget(d.instInput, 3, 1, 0)
+	layout.AddWidget(argsLabel, 4, 0, 0)
+	layout.AddWidget(d.argsInput, 4, 1, 0)
+
+	layout.AddWidget3(d.saveButton, 5, 0, 1, 2, 0)
 	d.GroupBox.SetLayout(layout)
 	return &d
 }
