@@ -469,6 +469,8 @@ func main() {
 		}()
 	})
 
+	detail := NewInstructionDetail()
+
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(input, 0, 0, 0)
@@ -476,6 +478,7 @@ func main() {
 	inputLayout.AddWidget(printerGroup, 2, 0, 0)
 	inputLayout.AddWidget(serialGroup, 3, 0, 0)
 	inputLayout.AddWidget(runButton, 4, 0, 0)
+	inputLayout.AddWidget(detail.GroupBox, 5, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
 	outputGroup := widgets.NewQGroupBox2("Results", nil)
@@ -486,11 +489,18 @@ func main() {
 	outputLayout.AddWidget(resuButton, 1, 1, 0)
 	outputGroup.SetLayout(outputLayout)
 
+	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
+	treeLayout := widgets.NewQGridLayout2()
+	treeLayout.AddWidget(NewInstructionTree(detail), 0, 0, 0)
+	treeGroup.SetLayout(treeLayout)
+
 	layout := widgets.NewQGridLayout2()
-	layout.AddWidget(inputGroup, 0, 0, 0)
-	layout.AddWidget(outputGroup, 0, 1, 0)
+	layout.AddWidget(treeGroup, 0, 0, 0)
+	layout.AddWidget(inputGroup, 0, 1, 0)
+	layout.AddWidget(outputGroup, 0, 2, 0)
 	layout.SetColumnStretch(0, 1)
 	layout.SetColumnStretch(1, 1)
+	layout.SetColumnStretch(2, 1)
 	widget.SetLayout(layout)
 
 	window.Show()

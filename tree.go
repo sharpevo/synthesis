@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"log"
@@ -10,20 +9,36 @@ import (
 type InstructionTree struct {
 	widgets.QTreeWidget
 	contextMenu *widgets.QMenu
+	detail      *InstructionDetail
 }
 
-func NewInstructionTree() *InstructionTree {
+func NewInstructionTree(detail *InstructionDetail) *InstructionTree {
 
-	treeWidget := &InstructionTree{*widgets.NewQTreeWidget(nil), nil}
+	treeWidget := &InstructionTree{*widgets.NewQTreeWidget(nil), nil, detail}
 	treeWidget.SetWindowTitle("Graphical Programming")
 	treeWidget.SetContextMenuPolicy(core.Qt__CustomContextMenu)
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
+	treeWidget.ConnectItemClicked(treeWidget.customItemClicked)
 	rootNode := treeWidget.InvisibleRootItem()
-	anItem := widgets.NewQTreeWidgetItem2([]string{"first instruction"}, 0)
+	anItem := NewInstructionItem("first instruction", "preset")
 	rootNode.AddChild(anItem)
 	treeWidget.ExpandAll()
 
 	return treeWidget
+}
+
+func DataRole() int {
+	return int(core.Qt__UserRole) + 1
+}
+
+func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
+	treeItem := widgets.NewQTreeWidgetItem2([]string{title}, 0)
+	treeItem.SetData(
+		0,
+		DataRole(),
+		core.NewQVariant17(line),
+	)
+	return treeItem
 }
 
 func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
@@ -42,8 +57,7 @@ func (t *InstructionTree) addItem(p *core.QPoint) {
 	if root.Pointer() == nil {
 		root = t.InvisibleRootItem()
 	}
-	item := widgets.NewQTreeWidgetItem2([]string{"instruction"}, 0)
-	//item.SetFlags(^core.Qt__ItemIsEditable)
+	item := NewInstructionItem("instruction", "new")
 	root.AddChild(item)
 	root.SetExpanded(true)
 }
@@ -59,4 +73,8 @@ func (t *InstructionTree) removeItem(p *core.QPoint) {
 		parent = t.InvisibleRootItem()
 	}
 	parent.RemoveChild(item)
+}
+
+func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, column int) {
+	t.detail.Refresh(item.Data(0, DataRole()).ToString())
 }
