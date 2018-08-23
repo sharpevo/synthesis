@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"log"
 )
 
 type InstructionTree struct {
@@ -49,6 +50,13 @@ func (t *InstructionTree) addItem(p *core.QPoint) {
 
 func (t *InstructionTree) removeItem(p *core.QPoint) {
 	item := t.ItemAt(p)
-	fmt.Println(item.Text(0))
-	item.Parent().RemoveChild(item)
+	if item.Pointer() == nil {
+		log.Println("invalid tree item")
+		return
+	}
+	parent := item.Parent()
+	if parent.Pointer() == nil {
+		parent = t.InvisibleRootItem()
+	}
+	parent.RemoveChild(item)
 }
