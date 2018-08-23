@@ -473,12 +473,12 @@ func main() {
 
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
-	inputLayout.AddWidget(input, 0, 0, 0)
-	inputLayout.AddWidget(waveformGroup, 1, 0, 0)
-	inputLayout.AddWidget(printerGroup, 2, 0, 0)
-	inputLayout.AddWidget(serialGroup, 3, 0, 0)
-	inputLayout.AddWidget(runButton, 4, 0, 0)
-	inputLayout.AddWidget(detail.GroupBox, 5, 0, 0)
+	inputLayout.AddWidget(detail.GroupBox, 0, 0, 0)
+	inputLayout.AddWidget(input, 1, 0, 0)
+	inputLayout.AddWidget(waveformGroup, 2, 0, 0)
+	inputLayout.AddWidget(printerGroup, 3, 0, 0)
+	inputLayout.AddWidget(serialGroup, 4, 0, 0)
+	inputLayout.AddWidget(runButton, 5, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
 	outputGroup := widgets.NewQGroupBox2("Results", nil)
