@@ -5,24 +5,42 @@ import (
 )
 
 type InstructionDetail struct {
-	GroupBox  *widgets.QGroupBox
-	lineInput *widgets.QLineEdit
-	lineLabel *widgets.QLabel
+	treeItem   *widgets.QTreeWidgetItem
+	GroupBox   *widgets.QGroupBox
+	titleInput *widgets.QLineEdit
+	lineInput  *widgets.QLineEdit
+	saveButton *widgets.QPushButton
 }
 
 func NewInstructionDetail() *InstructionDetail {
-	detail := InstructionDetail{}
-	detail.lineInput = widgets.NewQLineEdit(nil)
-	detail.lineLabel = widgets.NewQLabel2("-", nil, 0)
+	d := InstructionDetail{}
+	d.titleInput = widgets.NewQLineEdit(nil)
+	d.lineInput = widgets.NewQLineEdit(nil)
+	d.saveButton = widgets.NewQPushButton2("SAVE", nil)
+	d.saveButton.ConnectClicked(func(bool) { d.saveInstruction() })
+	d.saveButton.SetEnabled(false)
 
-	detail.GroupBox = widgets.NewQGroupBox2("Instruction", nil)
-	detailLayout := widgets.NewQGridLayout2()
-	detailLayout.AddWidget(detail.lineInput, 0, 0, 0)
-	detailLayout.AddWidget(detail.lineLabel, 1, 0, 0)
-	detail.GroupBox.SetLayout(detailLayout)
-	return &detail
+	d.GroupBox = widgets.NewQGroupBox2("Instruction", nil)
+	layout := widgets.NewQGridLayout2()
+	layout.AddWidget(d.titleInput, 0, 0, 0)
+	layout.AddWidget(d.lineInput, 1, 0, 0)
+	layout.AddWidget(d.saveButton, 2, 0, 0)
+	d.GroupBox.SetLayout(layout)
+	return &d
 }
 
-func (d *InstructionDetail) Refresh(line string) {
-	d.lineLabel.SetText(line)
+func (d *InstructionDetail) saveInstruction() {
+	if d.treeItem == nil {
+		return
+	}
+	d.treeItem.SetText(0, d.titleInput.Text())
+	SetTreeItemData(d.treeItem, d.lineInput.Text())
+}
+
+func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
+	line := GetTreeItemData(item)
+	d.treeItem = item
+	d.titleInput.SetText(item.Text(0))
+	d.lineInput.SetText(line)
+	d.saveButton.SetEnabled(true)
 }
