@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/therecipe/qt/widgets"
 	"strings"
 )
@@ -11,14 +12,15 @@ const (
 )
 
 type InstructionDetail struct {
-	treeItem   *widgets.QTreeWidgetItem
-	GroupBox   *widgets.QGroupBox
-	titleInput *widgets.QLineEdit
-	lineInput  *widgets.QLineEdit
-	typeInput  *widgets.QComboBox
-	instInput  *widgets.QComboBox
-	argsInput  *widgets.QLineEdit
-	saveButton *widgets.QPushButton
+	treeItem        *widgets.QTreeWidgetItem
+	instructionList []string
+	GroupBox        *widgets.QGroupBox
+	titleInput      *widgets.QLineEdit
+	lineInput       *widgets.QLineEdit
+	typeInput       *widgets.QComboBox
+	instInput       *widgets.QComboBox
+	argsInput       *widgets.QLineEdit
+	saveButton      *widgets.QPushButton
 }
 
 func NewInstructionDetail() *InstructionDetail {
@@ -36,11 +38,11 @@ func NewInstructionDetail() *InstructionDetail {
 	d.lineInput = widgets.NewQLineEdit(nil)
 
 	d.instInput = widgets.NewQComboBox(nil)
-	instructions := []string{}
 	for k, _ := range InstructionMap {
-		instructions = append(instructions, k)
+		d.instructionList = append(d.instructionList, k)
 	}
-	d.instInput.AddItems(instructions)
+	d.instInput.AddItems(d.instructionList)
+	d.instInput.ConnectCurrentTextChanged(d.onInstructionChanged)
 
 	d.argsInput = widgets.NewQLineEdit(nil)
 
@@ -70,8 +72,13 @@ func (d *InstructionDetail) saveInstruction() {
 	if d.treeItem == nil {
 		return
 	}
+
+	instruction := d.GetInstructionFromLine()
+	d.lineInput.SetText(fmt.Sprintf("%s %s", instruction, d.argsInput.Text()))
+
 	d.treeItem.SetText(0, d.titleInput.Text())
 	SetTreeItemData(d.treeItem, d.lineInput.Text())
+
 }
 
 func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
@@ -80,7 +87,13 @@ func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	d.titleInput.SetText(item.Text(0))
 	d.lineInput.SetText(line)
 	d.SetTypeInput()
+	d.SetInstInput()
+	d.SetArgsInput()
 	d.saveButton.SetEnabled(true)
+}
+
+func (d *InstructionDetail) Line() string {
+	return d.lineInput.Text()
 }
 
 func (d *InstructionDetail) TypeInput() string {
@@ -94,5 +107,34 @@ func (d *InstructionDetail) SetTypeInput() {
 	} else {
 		d.typeInput.SetCurrentText(TYPE_INS)
 	}
+}
 
+func (d *InstructionDetail) GetInstructionFromLine() string {
+	list := strings.Split(d.Line(), " ")
+	return list[0]
+}
+
+func (d *InstructionDetail) SetInstInput() {
+	instruction := d.GetInstructionFromLine()
+	for _, v := range d.instructionList {
+		if instruction == v {
+			d.instInput.SetCurrentText(instruction)
+			break
+		}
+	}
+}
+
+func (d *InstructionDetail) GetArgumentsFromLine() string {
+	instruction := d.GetInstructionFromLine()
+	return strings.Trim(d.Line(), fmt.Sprintf("%s ", instruction))
+}
+
+func (d *InstructionDetail) SetArgsInput() {
+	d.argsInput.SetText(d.GetArgumentsFromLine())
+}
+
+func (d *InstructionDetail) onInstructionChanged(selected string) {
+	instruction := d.GetInstructionFromLine()
+	newLine := strings.Replace(d.Line(), instruction, selected, 1)
+	d.lineInput.SetText(newLine)
 }
