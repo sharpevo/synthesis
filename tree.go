@@ -403,25 +403,6 @@ func (n *Node) Type() (string, error) {
 		case 1:
 			return TYPE_SET_LOOP, nil
 		case 3:
-			switch argumentList[1] {
-			case ">":
-				argumentList[1] = "GTGOTO"
-				break
-			case "<":
-				argumentList[1] = "LTGOTO"
-				break
-			case "!=":
-				argumentList[1] = "NEGOTO"
-				break
-			case "==":
-				argumentList[1] = "EQGOTO"
-				break
-			default:
-				return "", fmt.Errorf(
-					"invalid operator in %q",
-					n.Title,
-				)
-			}
 			return TYPE_SET_COND, nil
 		default:
 			return "", fmt.Errorf(
