@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"log"
+	"os"
 )
 
 type InstructionTree struct {
@@ -159,29 +161,72 @@ func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, colum
 	t.detail.Refresh(item)
 }
 
-type serl struct {
-	title    string
-	data     string
-	children []serl
-}
-
 func (t *InstructionTree) Import() {
+	node := new(Node)
+	node.Read()
+	t.Clear()
+	for i := 0; i < len(node.Children); i++ {
+		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
+	}
 }
 
-func (t *InstructionTree) ExportAll() serl {
+func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
+	item := NewInstructionItem(node.Title, node.Data)
+	for i := 0; i < len(node.Children); i++ {
+		item.AddChild(t.ImportNode(node.Children[i]))
+	}
+	return item
+}
+
+func (t *InstructionTree) ExportAll() error {
 	item := t.InvisibleRootItem()
-	s := t.export(item)
-	fmt.Printf("%#v\n", s)
-	return s
+	node := t.ExportNode(item)
+	err := node.Write()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (t *InstructionTree) export(root *widgets.QTreeWidgetItem) serl {
-	s := serl{
-		title: root.Text(0),
-		data:  GetTreeItemData(root),
+func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
+	node := Node{
+		Title: root.Text(0),
+		Data:  GetTreeItemData(root),
 	}
 	for i := 0; i < root.ChildCount(); i++ {
-		s.children = append(s.children, t.export(root.Child(i)))
+		node.Children = append(node.Children, t.ExportNode(root.Child(i)))
 	}
-	return s
+	return node
+}
+
+type Node struct {
+	Title    string
+	Data     string
+	Children []Node
+}
+
+func (n *Node) Write() error {
+	file, err := os.Create("/tmp/gob/test")
+	defer file.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	encoder := gob.NewEncoder(file)
+	encoder.Encode(n)
+	return nil
+}
+
+func (n *Node) Read() error {
+	file, err := os.Open("/tmp/gob/test")
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(n)
+	if err != nil {
+		return err
+	}
+	return nil
 }
