@@ -491,7 +491,17 @@ func main() {
 
 	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
 	treeLayout := widgets.NewQGridLayout2()
-	treeLayout.AddWidget(NewInstructionTree(detail), 0, 0, 0)
+	treeWidget := NewInstructionTree(detail)
+	treeLayout.AddWidget3(treeWidget, 0, 0, 1, 2, 0)
+
+	treeExportButton := widgets.NewQPushButton2("EXPORT", nil)
+	treeExportButton.ConnectClicked(func(bool) { treeWidget.ExportAll() })
+	treeLayout.AddWidget(treeExportButton, 1, 0, 0)
+
+	treeImportButton := widgets.NewQPushButton2("IMPORT", nil)
+	treeImportButton.ConnectClicked(func(bool) { treeWidget.Import() })
+	treeLayout.AddWidget(treeImportButton, 1, 1, 0)
+
 	treeGroup.SetLayout(treeLayout)
 
 	layout := widgets.NewQGridLayout2()

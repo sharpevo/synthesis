@@ -158,3 +158,30 @@ func (t *InstructionTree) removeItem(p *core.QPoint) {
 func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, column int) {
 	t.detail.Refresh(item)
 }
+
+type serl struct {
+	title    string
+	data     string
+	children []serl
+}
+
+func (t *InstructionTree) Import() {
+}
+
+func (t *InstructionTree) ExportAll() serl {
+	item := t.InvisibleRootItem()
+	s := t.export(item)
+	fmt.Printf("%#v\n", s)
+	return s
+}
+
+func (t *InstructionTree) export(root *widgets.QTreeWidgetItem) serl {
+	s := serl{
+		title: root.Text(0),
+		data:  GetTreeItemData(root),
+	}
+	for i := 0; i < root.ChildCount(); i++ {
+		s.children = append(s.children, t.export(root.Child(i)))
+	}
+	return s
+}
