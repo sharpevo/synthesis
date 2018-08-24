@@ -42,7 +42,6 @@ func NewInstructionDetail() *InstructionDetail {
 		d.instructionList = append(d.instructionList, k)
 	}
 	d.instInput.AddItems(d.instructionList)
-	d.instInput.ConnectCurrentTextChanged(d.onInstructionChanged)
 
 	d.argsInput = widgets.NewQLineEdit(nil)
 
@@ -73,8 +72,7 @@ func (d *InstructionDetail) saveInstruction() {
 		return
 	}
 
-	instruction := d.GetInstructionFromLine()
-	d.lineInput.SetText(fmt.Sprintf("%s %s", instruction, d.argsInput.Text()))
+	d.SetLineInput()
 
 	d.treeItem.SetText(0, d.titleInput.Text())
 	SetTreeItemData(d.treeItem, d.lineInput.Text())
@@ -94,10 +92,6 @@ func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
 
 func (d *InstructionDetail) Line() string {
 	return d.lineInput.Text()
-}
-
-func (d *InstructionDetail) TypeInput() string {
-	return d.typeInput.CurrentText()
 }
 
 func (d *InstructionDetail) SetTypeInput() {
@@ -133,8 +127,6 @@ func (d *InstructionDetail) SetArgsInput() {
 	d.argsInput.SetText(d.GetArgumentsFromLine())
 }
 
-func (d *InstructionDetail) onInstructionChanged(selected string) {
-	instruction := d.GetInstructionFromLine()
-	newLine := strings.Replace(d.Line(), instruction, selected, 1)
-	d.lineInput.SetText(newLine)
+func (d *InstructionDetail) SetLineInput() {
+	d.lineInput.SetText(fmt.Sprintf("%s %s", d.instInput.CurrentText(), d.argsInput.Text()))
 }
