@@ -386,7 +386,7 @@ func (n *Node) Arguments() []string {
 }
 
 func (n *Node) Type() (string, error) {
-	dataList := strings.Split(n.Data, " ")
+	dataList := strings.Split(strings.Trim(n.Data, "\" "), " ")
 	instruction := dataList[0]
 	argumentList := dataList[1:]
 
