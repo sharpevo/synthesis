@@ -359,7 +359,7 @@ func (n *Node) Generate() (string, error) {
 				)
 			}
 
-			file.WriteString(fmt.Sprintf("CMP %s %s\n", var1, var2))
+			file.WriteString(fmt.Sprintf("CMPVAR %s %s\n", var1, var2))
 			file.WriteString(fmt.Sprintf("%s %d\n", opst, offset+3))
 			file.WriteString(fmt.Sprintf("GOTO %d\n", offset+4))
 			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction(), setPath))
