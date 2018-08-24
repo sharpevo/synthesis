@@ -6,10 +6,9 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
+	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
-	"posam/util/str"
 	"strings"
 )
 
@@ -277,19 +276,28 @@ func MessageBox(message string) {
 	)
 }
 
-func (t *InstructionTree) Generate() {
+func (t *InstructionTree) Generate() (string, error) {
 	root := t.InvisibleRootItem()
 	node := t.ExportNode(root)
-	path, err := node.Generate()
+	filePath, err := node.Generate()
 	if err != nil {
 		MessageBox(err.Error())
+		return filePath, err
 	}
-	fmt.Println(path)
+	return filePath, nil
 }
 
 func (n *Node) Generate() (string, error) {
-	filePath := filepath.Join(os.TempDir(), str.RandString(64))
-	file, err := os.Create(filePath)
+	dir, err := ioutil.TempDir("", "igenetech")
+	if err != nil {
+		return "", err
+	}
+	file, err := ioutil.TempFile(dir, "posam")
+	if err != nil {
+		return "", err
+	}
+	filePath := file.Name()
+
 	defer file.Close()
 	if err != nil {
 		return filePath, err
