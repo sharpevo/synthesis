@@ -206,7 +206,11 @@ type Node struct {
 }
 
 func (n *Node) Write() error {
-	file, err := os.Create("/tmp/gob/test")
+	filepath, err := FilePath()
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(filepath)
 	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -218,7 +222,11 @@ func (n *Node) Write() error {
 }
 
 func (n *Node) Read() error {
-	file, err := os.Open("/tmp/gob/test")
+	filepath, err := FilePath()
+	if err != nil {
+		return err
+	}
+	file, err := os.Open(filepath)
 	defer file.Close()
 	if err != nil {
 		return err
@@ -229,4 +237,13 @@ func (n *Node) Read() error {
 		return err
 	}
 	return nil
+}
+
+func FilePath() (string, error) {
+	dialog := widgets.NewQFileDialog2(nil, "Select file...", "", "")
+	if dialog.Exec() != int(widgets.QDialog__Accepted) {
+		return "", fmt.Errorf("nothing selected")
+	}
+	filepath := dialog.SelectedFiles()[0]
+	return filepath, nil
 }
