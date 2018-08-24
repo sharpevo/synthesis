@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/therecipe/qt/widgets"
+	"sort"
 	"strings"
 )
 
@@ -11,6 +12,10 @@ const (
 	TYPE_SET      = "Instruction Set"
 	INST_SET_SYNC = "IMPORT"
 	INST_SET_ASYN = "ASYNC"
+
+	TYPE_SET_ONCE = "ONCE"
+	TYPE_SET_COND = "COND"
+	TYPE_SET_LOOP = "LOOP"
 )
 
 type InstructionDetail struct {
@@ -48,6 +53,7 @@ func NewInstructionDetail() *InstructionDetail {
 			d.instructionList = append(d.instructionList, k)
 		}
 	}
+	sort.Sort(sort.StringSlice(d.instructionList))
 	d.instInput.AddItems(d.instructionList)
 
 	d.argsInput = widgets.NewQLineEdit(nil)

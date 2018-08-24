@@ -8,6 +8,9 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"log"
 	"os"
+	"path/filepath"
+	"posam/util/str"
+	"strings"
 )
 
 type InstructionTree struct {
@@ -24,7 +27,7 @@ func NewInstructionTree(detail *InstructionDetail) *InstructionTree {
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
 	treeWidget.ConnectItemClicked(treeWidget.customItemClicked)
 	rootNode := treeWidget.InvisibleRootItem()
-	anItem := NewInstructionItem("first instruction", "preset")
+	anItem := NewInstructionItem("Hello World!", "PRINT Hello World!")
 	rootNode.AddChild(anItem)
 
 	treeWidget.SetAcceptDrops(true)
@@ -139,7 +142,7 @@ func (t *InstructionTree) addItem(p *core.QPoint) {
 	if root.Pointer() == nil {
 		root = t.InvisibleRootItem()
 	}
-	item := NewInstructionItem("instruction", "new")
+	item := NewInstructionItem("print instruction", "PRINT instruction")
 	root.AddChild(item)
 	root.SetExpanded(true)
 }
@@ -168,6 +171,15 @@ func (t *InstructionTree) Import() {
 	for i := 0; i < len(node.Children); i++ {
 		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
 	}
+	t.ExpandAll()
+
+	widgets.QMessageBox_Information(
+		nil,
+		"OK",
+		"Imported",
+		widgets.QMessageBox__Ok,
+		widgets.QMessageBox__Ok,
+	)
 }
 
 func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
@@ -185,6 +197,13 @@ func (t *InstructionTree) ExportAll() error {
 	if err != nil {
 		return err
 	}
+	widgets.QMessageBox_Information(
+		nil,
+		"OK",
+		"Exported",
+		widgets.QMessageBox__Ok,
+		widgets.QMessageBox__Ok,
+	)
 	return nil
 }
 
@@ -206,11 +225,11 @@ type Node struct {
 }
 
 func (n *Node) Write() error {
-	filepath, err := FilePath()
+	filePath, err := FilePath()
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(filepath)
+	file, err := os.Create(filePath)
 	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -222,11 +241,11 @@ func (n *Node) Write() error {
 }
 
 func (n *Node) Read() error {
-	filepath, err := FilePath()
+	filePath, err := FilePath()
 	if err != nil {
 		return err
 	}
-	file, err := os.Open(filepath)
+	file, err := os.Open(filePath)
 	defer file.Close()
 	if err != nil {
 		return err
@@ -244,6 +263,171 @@ func FilePath() (string, error) {
 	if dialog.Exec() != int(widgets.QDialog__Accepted) {
 		return "", fmt.Errorf("nothing selected")
 	}
-	filepath := dialog.SelectedFiles()[0]
-	return filepath, nil
+	filePath := dialog.SelectedFiles()[0]
+	return filePath, nil
+}
+
+func MessageBox(message string) {
+	widgets.QMessageBox_Information(
+		nil,
+		"OK",
+		message,
+		widgets.QMessageBox__Ok,
+		widgets.QMessageBox__Ok,
+	)
+}
+
+func (t *InstructionTree) Generate() {
+	root := t.InvisibleRootItem()
+	node := t.ExportNode(root)
+	path, err := node.Generate()
+	if err != nil {
+		MessageBox(err.Error())
+	}
+	fmt.Println(path)
+}
+
+func (n *Node) Generate() (string, error) {
+	filePath := filepath.Join(os.TempDir(), str.RandString(64))
+	file, err := os.Create(filePath)
+	defer file.Close()
+	if err != nil {
+		return filePath, err
+	}
+	offset := 0
+	for _, child := range n.Children {
+		offset += 1
+		nodeType, err := child.Type()
+		if err != nil {
+			return filePath, err
+		}
+		switch nodeType {
+		case TYPE_INS:
+			file.WriteString(fmt.Sprintf("%s\n", child.Data))
+			break
+		case TYPE_SET_ONCE:
+			setPath, err := child.Generate()
+			if err != nil {
+				return filePath, err
+			}
+			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction(), setPath))
+			break
+		case TYPE_SET_LOOP:
+			setPath, err := child.Generate()
+			if err != nil {
+				return filePath, err
+			}
+			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction(), setPath))
+			file.WriteString(fmt.Sprintf("LOOP %d %s\n", offset, child.Arguments()[0]))
+			file.WriteString(fmt.Sprintf("PRINT loop done\n"))
+			offset += 3
+			break
+		case TYPE_SET_COND:
+			setPath, err := child.Generate()
+			if err != nil {
+				return filePath, err
+			}
+			var1 := child.Arguments()[0]
+			opsb := child.Arguments()[1]
+			var2 := child.Arguments()[2]
+			var opst string
+			switch opsb {
+			case ">":
+				opst = "GTGOTO"
+				break
+			case "<":
+				opst = "LTGOTO"
+				break
+			case "!=":
+				opst = "NEGOTO"
+				break
+			case "==":
+				opst = "EQGOTO"
+				break
+			default:
+				return filePath, fmt.Errorf(
+					"invalid operator in %q",
+					n.Title,
+				)
+			}
+
+			file.WriteString(fmt.Sprintf("CMP %s %s\n", var1, var2))
+			file.WriteString(fmt.Sprintf("%s %d\n", opst, offset+3))
+			file.WriteString(fmt.Sprintf("GOTO %d\n", offset+4))
+			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction(), setPath))
+			file.WriteString(fmt.Sprintf("PRINT condition done\n"))
+			offset += 4
+			break
+		}
+	}
+	file.Sync()
+	return filePath, nil
+}
+
+func shouldBeInstructionSet(instruction string) bool {
+	return instruction == INST_SET_SYNC ||
+		instruction == INST_SET_ASYN
+}
+
+func (n *Node) Instruction() string {
+	return strings.Split(n.Data, " ")[0]
+}
+
+func (n *Node) Arguments() []string {
+	return strings.Split(n.Data, " ")[1:]
+}
+
+func (n *Node) Type() (string, error) {
+	dataList := strings.Split(n.Data, " ")
+	instruction := dataList[0]
+	argumentList := dataList[1:]
+
+	if shouldBeInstructionSet(instruction) {
+		if len(n.Children) == 0 {
+			return "", fmt.Errorf(
+				"instruction set %q has no instructions",
+				n.Title,
+			)
+		}
+		switch len(argumentList) {
+		case 0:
+			return TYPE_SET_ONCE, nil
+		case 1:
+			return TYPE_SET_LOOP, nil
+		case 3:
+			switch argumentList[1] {
+			case ">":
+				argumentList[1] = "GTGOTO"
+				break
+			case "<":
+				argumentList[1] = "LTGOTO"
+				break
+			case "!=":
+				argumentList[1] = "NEGOTO"
+				break
+			case "==":
+				argumentList[1] = "EQGOTO"
+				break
+			default:
+				return "", fmt.Errorf(
+					"invalid operator in %q",
+					n.Title,
+				)
+			}
+			return TYPE_SET_COND, nil
+		default:
+			return "", fmt.Errorf(
+				"instruction %q is not valid instruction set",
+				n.Title,
+			)
+		}
+	} else {
+		if len(n.Children) > 0 {
+			return "", fmt.Errorf(
+				"instruction %q should be instruction set",
+				n.Title,
+			)
+		}
+		return TYPE_INS, nil
+	}
 }

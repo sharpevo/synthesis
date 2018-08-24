@@ -502,6 +502,10 @@ func main() {
 	treeImportButton.ConnectClicked(func(bool) { treeWidget.Import() })
 	treeLayout.AddWidget(treeImportButton, 1, 1, 0)
 
+	treeGenerateButton := widgets.NewQPushButton2("Generate", nil)
+	treeGenerateButton.ConnectClicked(func(bool) { treeWidget.Generate() })
+	treeLayout.AddWidget3(treeGenerateButton, 2, 0, 1, 2, 0)
+
 	treeGroup.SetLayout(treeLayout)
 
 	layout := widgets.NewQGridLayout2()
