@@ -18,9 +18,9 @@ func (i *InstructionControlFlowLoop) Execute(args ...string) (resp interface{}, 
 		return resp, fmt.Errorf("variable %q is not defined", args[1])
 	}
 
-	total64 := varTotal.Value.(int64)
+	total64 := varTotal.Value.(int64) - 1
 
-	if total64 == 0 {
+	if total64 < 0 {
 		return fmt.Sprintf("loop done"), nil
 	}
 
