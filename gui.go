@@ -137,7 +137,6 @@ func main() {
 	InstructionMap.Set("SLEEP", instruction.InstructionSleep{})
 	InstructionMap.Set("IMPORT", instruction.InstructionImport{})
 	InstructionMap.Set("ASYNC", instruction.InstructionAsync{})
-	InstructionMap.Set("RETRY", instruction.InstructionRetry{})
 	InstructionMap.Set("LED", instruction.InstructionLed{})
 	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
 
@@ -151,6 +150,7 @@ func main() {
 	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
 	InstructionMap.Set("LOOP", instruction.InstructionControlFlowLoop{})
 	InstructionMap.Set("RETURN", instruction.InstructionControlFlowReturn{})
+	InstructionMap.Set("GOTO", instruction.InstructionControlFlowGoto{})
 
 	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
 	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
