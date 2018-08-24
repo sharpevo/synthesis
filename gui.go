@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -503,7 +504,19 @@ func main() {
 	treeLayout.AddWidget(treeImportButton, 1, 1, 0)
 
 	treeGenerateButton := widgets.NewQPushButton2("Generate", nil)
-	treeGenerateButton.ConnectClicked(func(bool) { treeWidget.Generate() })
+	treeGenerateButton.ConnectClicked(func(bool) {
+		filePath, err := treeWidget.Generate()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		instBytes, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		input.SetPlainText(string(instBytes))
+	})
 	treeLayout.AddWidget3(treeGenerateButton, 2, 0, 1, 2, 0)
 
 	treeGroup.SetLayout(treeLayout)
