@@ -7,8 +7,10 @@ import (
 )
 
 const (
-	TYPE_INS = "Instruction"
-	TYPE_SET = "Instruction Set"
+	TYPE_INS      = "Instruction"
+	TYPE_SET      = "Instruction Set"
+	INST_SET_SYNC = "IMPORT"
+	INST_SET_ASYN = "ASYNC"
 )
 
 type InstructionDetail struct {
@@ -34,12 +36,17 @@ func NewInstructionDetail() *InstructionDetail {
 	d := InstructionDetail{}
 	d.typeInput = widgets.NewQComboBox(nil)
 	d.typeInput.AddItems([]string{TYPE_INS, TYPE_SET})
+	d.typeInput.ConnectCurrentTextChanged(d.onInstructionTypeChanged)
+
 	d.titleInput = widgets.NewQLineEdit(nil)
 	d.lineInput = widgets.NewQLineEdit(nil)
 
 	d.instInput = widgets.NewQComboBox(nil)
 	for k, _ := range InstructionMap {
-		d.instructionList = append(d.instructionList, k)
+		if k != INST_SET_SYNC &&
+			k != INST_SET_ASYN {
+			d.instructionList = append(d.instructionList, k)
+		}
 	}
 	d.instInput.AddItems(d.instructionList)
 
@@ -90,13 +97,24 @@ func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	d.saveButton.SetEnabled(true)
 }
 
+func (d *InstructionDetail) onInstructionTypeChanged(selected string) {
+	switch selected {
+	case TYPE_SET:
+		d.instInput.Clear()
+		d.instInput.AddItems([]string{INST_SET_SYNC, INST_SET_ASYN})
+	default:
+		d.instInput.Clear()
+		d.instInput.AddItems(d.instructionList)
+	}
+}
+
 func (d *InstructionDetail) Line() string {
 	return d.lineInput.Text()
 }
 
 func (d *InstructionDetail) SetTypeInput() {
-	if strings.HasPrefix(d.lineInput.Text(), "ASYNC") ||
-		strings.HasPrefix(d.lineInput.Text(), "IMPORT") {
+	if strings.HasPrefix(d.lineInput.Text(), INST_SET_SYNC) ||
+		strings.HasPrefix(d.lineInput.Text(), INST_SET_ASYN) {
 		d.typeInput.SetCurrentText(TYPE_SET)
 	} else {
 		d.typeInput.SetCurrentText(TYPE_INS)
