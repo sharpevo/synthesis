@@ -328,7 +328,7 @@ func (n *Node) Generate() (string, error) {
 			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction(), setPath))
 			file.WriteString(fmt.Sprintf("LOOP %d %s\n", offset, child.Arguments()[0]))
 			file.WriteString(fmt.Sprintf("PRINT loop done\n"))
-			offset += 3
+			offset += 2
 			break
 		case TYPE_SET_COND:
 			setPath, err := child.Generate()
