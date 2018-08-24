@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"log"
 )
@@ -22,9 +24,71 @@ func NewInstructionTree(detail *InstructionDetail) *InstructionTree {
 	rootNode := treeWidget.InvisibleRootItem()
 	anItem := NewInstructionItem("first instruction", "preset")
 	rootNode.AddChild(anItem)
+
+	treeWidget.SetAcceptDrops(true)
+	treeWidget.SetDragEnabled(true)
+	//treeWidget.SetDragDropMode()
+	treeWidget.ConnectDropEvent(treeWidget.customDropEvent)
 	treeWidget.ExpandAll()
 
 	return treeWidget
+}
+
+func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
+
+	//e.SetDropAction(core.Qt__CopyAction)
+	//e.AcceptProposedAction()
+	//e.SetAccepted(true)
+	index := t.IndexAt(e.Pos())
+	item := t.CurrentItem()
+	target := t.ItemFromIndex(index)
+	if !index.IsValid() ||
+		item.Pointer() == nil {
+		return
+	}
+	indic := t.DropIndicatorPosition()
+	fmt.Println("---")
+	fmt.Printf("mime: %#v\n", e.MimeData())
+	fmt.Printf("selected: %#v\n", t.CurrentItem().Text(0))
+	fmt.Printf("parent: %#v\n", index.Parent())
+	fmt.Printf("row: %#v\n", index.Row())
+	fmt.Printf("indic: %#v\n", indic)
+	fmt.Printf("text: %#v\n", t.ItemFromIndex(index).Text(0))
+	isAbove := false
+	switch indic {
+	case widgets.QAbstractItemView__OnItem:
+		fmt.Println("on")
+		isAbove = true
+		break
+	case widgets.QAbstractItemView__AboveItem:
+		fmt.Println("above")
+		break
+	case widgets.QAbstractItemView__BelowItem:
+		fmt.Println("below")
+		break
+	case widgets.QAbstractItemView__OnViewport:
+		fmt.Println("viewport")
+		break
+	}
+	parent := item.Parent()
+	if parent.Pointer() == nil {
+		fmt.Println("nil pointer")
+		parent = t.InvisibleRootItem()
+	}
+	parent.RemoveChild(item)
+
+	if isAbove {
+		target.AddChild(item)
+		target.SetExpanded(true)
+	} else {
+
+		tparent := target.Parent()
+		if tparent.Pointer() == nil {
+			fmt.Println("nil pointer")
+			tparent = t.InvisibleRootItem()
+		}
+		tparent.InsertChild(index.Row(), item)
+	}
 }
 
 func DataRole() int {
@@ -45,6 +109,10 @@ func SetTreeItemData(item *widgets.QTreeWidgetItem, data string) {
 
 func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
 	treeItem := widgets.NewQTreeWidgetItem2([]string{title}, 0)
+	treeItem.SetFlags(core.Qt__ItemIsEnabled |
+		core.Qt__ItemIsSelectable |
+		core.Qt__ItemIsDragEnabled |
+		core.Qt__ItemIsDropEnabled)
 	treeItem.SetData(
 		0,
 		DataRole(),
