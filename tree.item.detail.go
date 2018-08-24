@@ -137,8 +137,16 @@ func (d *InstructionDetail) SetInstInput() {
 	for _, v := range d.instructionList {
 		if instruction == v {
 			d.instInput.SetCurrentText(instruction)
-			break
+			return
 		}
+	}
+	if instruction == INST_SET_SYNC {
+		d.instInput.SetCurrentText(INST_SET_SYNC)
+		return
+	}
+	if instruction == INST_SET_ASYN {
+		d.instInput.SetCurrentText(INST_SET_ASYN)
+		return
 	}
 }
 
