@@ -20,7 +20,7 @@ func (i *InstructionControlFlowLoop) Execute(args ...string) (resp interface{}, 
 
 	total64 := varTotal.Value.(int64) - 1
 
-	if total64 < 0 {
+	if total64 < 1 {
 		return fmt.Sprintf("loop done"), nil
 	}
 
@@ -30,7 +30,7 @@ func (i *InstructionControlFlowLoop) Execute(args ...string) (resp interface{}, 
 	}
 
 	i.Goto(line)
-	varTotal.Value = total64 - 1
+	varTotal.Value = total64
 	resp = fmt.Sprintf("%d left loops from line %d", total64, line)
 	return resp, nil
 }
