@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"posam/instruction"
 	"posam/interpreter"
@@ -178,100 +177,6 @@ func main() {
 
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(CMD_CF)
-
-	// waveform group
-
-	waveformGroup := widgets.NewQGroupBox2("WaveForm Builder", nil)
-
-	waveformLineTimeLabel := widgets.NewQLabel2("Time", nil, 1)
-	waveformLineTimeLabel.SetAlignment(core.Qt__AlignCenter)
-	waveformLineVoltageLabel := widgets.NewQLabel2("Percentage", nil, 1)
-	waveformLineVoltageLabel.SetAlignment(core.Qt__AlignCenter)
-	waveformFallLabel := widgets.NewQLabel2("Fall:", nil, 0)
-	waveformHoldLabel := widgets.NewQLabel2("Hold:", nil, 0)
-	waveformRisingLabel := widgets.NewQLabel2("Rising:", nil, 0)
-	waveformWaitLabel := widgets.NewQLabel2("Wait:", nil, 0)
-	waveformMnLabel := widgets.NewQLabel2("Mn:", nil, 0)
-	waveformVoltageLabel := widgets.NewQLabel2("Voltage:", nil, 0)
-
-	waveformFallTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformFallTimeInput.SetMaximum(100)
-	waveformFallPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformFallPercentageInput.SetMaximum(100)
-	waveformHoldTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformHoldTimeInput.SetMaximum(100)
-	waveformHoldPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformHoldPercentageInput.SetMaximum(100)
-	waveformRisingTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformRisingTimeInput.SetMaximum(100)
-	waveformRisingPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformRisingPercentageInput.SetMaximum(100)
-	waveformWaitTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformWaitTimeInput.SetMaximum(100)
-	waveformWaitPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformWaitPercentageInput.SetMaximum(100)
-	waveformMnInput := widgets.NewQSpinBox(nil)
-	waveformMnInput.SetMaximum(100)
-	waveformVoltageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformVoltageInput.SetMaximum(100)
-
-	waveformGenerateButton := widgets.NewQPushButton2("INSERT", nil)
-	waveformGenerateButton.ConnectClicked(func(bool) {
-		argumentList := []string{
-			"WAVEFORM",
-			"VAR",
-			"HEADBOARD", // headboard
-			"ROW",       // row
-			fmt.Sprintf("%.2f", waveformVoltageInput.Value()),
-			"COUNT", // segment count
-
-			fmt.Sprintf("%.2f", waveformFallTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformFallPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformHoldPercentageInput.Value()),
-
-			fmt.Sprintf("%.2f", waveformHoldTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformHoldPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformRisingPercentageInput.Value()),
-
-			fmt.Sprintf("%.2f", waveformRisingTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformRisingPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
-
-			fmt.Sprintf("%.2f", waveformWaitTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
-
-			fmt.Sprintf("%d", waveformMnInput.Value()),
-		}
-
-		input.InsertPlainText(strings.Join(argumentList, " "))
-	})
-
-	waveformLayout := widgets.NewQGridLayout2()
-
-	waveformLayout.AddWidget(waveformLineTimeLabel, 0, 1, 0)
-	waveformLayout.AddWidget(waveformLineVoltageLabel, 0, 2, 0)
-
-	waveformLayout.AddWidget(waveformFallLabel, 1, 0, 0)
-	waveformLayout.AddWidget(waveformFallTimeInput, 1, 1, 0)
-	waveformLayout.AddWidget(waveformFallPercentageInput, 1, 2, 0)
-	waveformLayout.AddWidget(waveformHoldLabel, 2, 0, 0)
-	waveformLayout.AddWidget(waveformHoldTimeInput, 2, 1, 0)
-	waveformLayout.AddWidget(waveformHoldPercentageInput, 2, 2, 0)
-	waveformLayout.AddWidget(waveformRisingLabel, 3, 0, 0)
-	waveformLayout.AddWidget(waveformRisingTimeInput, 3, 1, 0)
-	waveformLayout.AddWidget(waveformRisingPercentageInput, 3, 2, 0)
-	waveformLayout.AddWidget(waveformWaitLabel, 4, 0, 0)
-	waveformLayout.AddWidget(waveformWaitTimeInput, 4, 1, 0)
-	waveformLayout.AddWidget(waveformWaitPercentageInput, 4, 2, 0)
-
-	waveformLayout.AddWidget3(waveformVoltageLabel, 5, 0, 1, 1, 0)
-	waveformLayout.AddWidget3(waveformVoltageInput, 5, 1, 1, 2, 0)
-	waveformLayout.AddWidget3(waveformMnLabel, 6, 0, 1, 1, 0)
-	waveformLayout.AddWidget3(waveformMnInput, 6, 1, 1, 2, 0)
-	waveformLayout.AddWidget3(waveformGenerateButton, 7, 0, 1, 3, 0)
-
-	waveformGroup.SetLayout(waveformLayout)
 
 	// tcp group
 
@@ -476,10 +381,9 @@ func main() {
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(detail.GroupBox, 0, 0, 0)
 	inputLayout.AddWidget(input, 1, 0, 0)
-	inputLayout.AddWidget(waveformGroup, 2, 0, 0)
-	inputLayout.AddWidget(printerGroup, 3, 0, 0)
-	inputLayout.AddWidget(serialGroup, 4, 0, 0)
-	inputLayout.AddWidget(runButton, 5, 0, 0)
+	inputLayout.AddWidget(printerGroup, 2, 0, 0)
+	inputLayout.AddWidget(serialGroup, 3, 0, 0)
+	inputLayout.AddWidget(runButton, 4, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
 	outputGroup := widgets.NewQGroupBox2("Results", nil)
