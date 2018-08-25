@@ -426,8 +426,8 @@ func main() {
 	treeGroup.SetLayout(treeLayout)
 
 	layout := widgets.NewQGridLayout2()
-	layout.AddWidget(treeGroup, 0, 0, 0)
-	layout.AddWidget(inputGroup, 0, 1, 0)
+	layout.AddWidget(inputGroup, 0, 0, 0)
+	layout.AddWidget(treeGroup, 0, 1, 0)
 	layout.AddWidget(outputGroup, 0, 2, 0)
 	layout.SetColumnStretch(0, 1)
 	layout.SetColumnStretch(1, 1)
