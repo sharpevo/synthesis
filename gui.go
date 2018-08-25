@@ -396,7 +396,7 @@ func main() {
 
 	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
 	treeLayout := widgets.NewQGridLayout2()
-	treeWidget := NewInstructionTree(detail)
+	treeWidget := NewInstructionTree(detail, runButton, input)
 	treeLayout.AddWidget3(treeWidget, 0, 0, 1, 2, 0)
 
 	treeExportButton := widgets.NewQPushButton2("EXPORT", nil)

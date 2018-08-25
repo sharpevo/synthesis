@@ -16,11 +16,23 @@ type InstructionTree struct {
 	widgets.QTreeWidget
 	contextMenu *widgets.QMenu
 	detail      *InstructionDetail
+	runButton   *widgets.QPushButton
+	inputEdit   *widgets.QTextEdit
 }
 
-func NewInstructionTree(detail *InstructionDetail) *InstructionTree {
+func NewInstructionTree(
+	detail *InstructionDetail,
+	runButton *widgets.QPushButton,
+	inputEdit *widgets.QTextEdit,
+) *InstructionTree {
 
-	treeWidget := &InstructionTree{*widgets.NewQTreeWidget(nil), nil, detail}
+	treeWidget := &InstructionTree{
+		*widgets.NewQTreeWidget(nil),
+		nil,
+		detail,
+		runButton,
+		inputEdit,
+	}
 	treeWidget.SetWindowTitle("Graphical Programming")
 	treeWidget.SetContextMenuPolicy(core.Qt__CustomContextMenu)
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
@@ -128,10 +140,12 @@ func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
 func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
 	if t.contextMenu == nil {
 		t.contextMenu = widgets.NewQMenu(t)
-		menuAdd := t.contextMenu.AddAction("Add")
+		menuAdd := t.contextMenu.AddAction("Add child")
 		menuAdd.ConnectTriggered(func(checked bool) { t.addItem(p) })
-		menuRemove := t.contextMenu.AddAction("Remove")
+		menuRemove := t.contextMenu.AddAction("Remove node")
 		menuRemove.ConnectTriggered(func(checked bool) { t.removeItem(p) })
+		menuRun := t.contextMenu.AddAction("Execute single step")
+		menuRun.ConnectTriggered(func(checked bool) { t.executeItem(p) })
 	}
 	t.contextMenu.Exec2(t.MapToGlobal(p), nil)
 }
@@ -141,7 +155,7 @@ func (t *InstructionTree) addItem(p *core.QPoint) {
 	if root.Pointer() == nil {
 		root = t.InvisibleRootItem()
 	}
-	item := NewInstructionItem("print instruction", "PRINT instruction")
+	item := NewInstructionItem("print instruction", "PRINT")
 	root.AddChild(item)
 	root.SetExpanded(true)
 }
@@ -157,6 +171,32 @@ func (t *InstructionTree) removeItem(p *core.QPoint) {
 		parent = t.InvisibleRootItem()
 	}
 	parent.RemoveChild(item)
+}
+
+func (t *InstructionTree) executeItem(p *core.QPoint) {
+	item := t.ItemAt(p)
+	if item.Pointer() == nil {
+		log.Println("invalid tree item")
+		return
+	}
+	node := t.ExportNode(item)
+	pseudop := Node{}
+	pseudop.Children = []Node{node}
+	filePath, err := pseudop.Generate()
+	if err != nil {
+		MessageBox(err.Error())
+	}
+	t.WriteInputEdit(filePath)
+	t.runButton.Click()
+}
+
+func (t *InstructionTree) WriteInputEdit(filePath string) {
+	instBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	t.inputEdit.SetPlainText(string(instBytes))
 }
 
 func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, column int) {
@@ -281,10 +321,20 @@ func (t *InstructionTree) Generate() (string, error) {
 	node := t.ExportNode(root)
 	filePath, err := node.Generate()
 	if err != nil {
-		MessageBox(err.Error())
 		return filePath, err
 	}
 	return filePath, nil
+}
+
+func (t *InstructionTree) Execute() error {
+	filePath, err := t.Generate()
+	if err != nil {
+		MessageBox(err.Error())
+		return err
+	}
+	t.WriteInputEdit(filePath)
+	t.runButton.Click()
+	return nil
 }
 
 func (n *Node) Generate() (string, error) {
