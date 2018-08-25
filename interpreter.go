@@ -301,7 +301,7 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 			cur := int(cur64)
 			if cur > 0 {
 				target := cur - 2
-				if target == i+1 {
+				if target == i {
 					target += 1
 				}
 				i = target
