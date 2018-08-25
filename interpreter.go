@@ -331,6 +331,7 @@ func (g *StatementGroup) Execute(terminatec <-chan interface{}, completec chan<-
 }
 
 func ParseFile(
+	stack *Stack,
 	filePath string,
 	execution ExecutionType) (*StatementGroup, error) {
 
@@ -341,7 +342,7 @@ func ParseFile(
 	defer file.Close()
 	statementGroup := StatementGroup{
 		Execution: execution,
-		Stack:     NewStack(),
+		Stack:     stack,
 	}
 
 	return ParseReader(file, &statementGroup)
@@ -360,17 +361,17 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 		switch statement.InstructionName {
 		case "IMPORT":
 			subStatementGroup, _ := ParseFile(
+				NewStack(statementGroup.Stack),
 				statement.Arguments[0],
 				SYNC)
-			subStatementGroup.Stack = NewStack(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
 		case "ASYNC":
 			subStatementGroup, _ := ParseFile(
+				NewStack(statementGroup.Stack),
 				statement.Arguments[0],
 				ASYNC)
-			subStatementGroup.Stack = NewStack(statementGroup.Stack)
 			statementGroup.ItemList = append(
 				statementGroup.ItemList,
 				subStatementGroup)
