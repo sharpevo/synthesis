@@ -17,7 +17,6 @@ type InstructionTree struct {
 	inputEdit   *widgets.QTextEdit
 }
 
-//func NewInstructionTree(
 func NewTree(
 	detail *InstructionDetail,
 	runButton *widgets.QPushButton,
@@ -41,7 +40,6 @@ func NewTree(
 
 	treeWidget.SetAcceptDrops(true)
 	treeWidget.SetDragEnabled(true)
-	//treeWidget.SetDragDropMode()
 	treeWidget.ConnectDropEvent(treeWidget.customDropEvent)
 	treeWidget.ExpandAll()
 
@@ -50,9 +48,6 @@ func NewTree(
 
 func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
 
-	//e.SetDropAction(core.Qt__CopyAction)
-	//e.AcceptProposedAction()
-	//e.SetAccepted(true)
 	index := t.IndexAt(e.Pos())
 	item := t.CurrentItem()
 	target := t.ItemFromIndex(index)
@@ -61,13 +56,6 @@ func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
 		return
 	}
 	indic := t.DropIndicatorPosition()
-	fmt.Println("---")
-	fmt.Printf("mime: %#v\n", e.MimeData())
-	fmt.Printf("selected: %#v\n", t.CurrentItem().Text(0))
-	fmt.Printf("parent: %#v\n", index.Parent())
-	fmt.Printf("row: %#v\n", index.Row())
-	fmt.Printf("indic: %#v\n", indic)
-	fmt.Printf("text: %#v\n", t.ItemFromIndex(index).Text(0))
 	isAbove := false
 	switch indic {
 	case widgets.QAbstractItemView__OnItem:
