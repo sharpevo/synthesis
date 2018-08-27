@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -12,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"posam/gui/tree"
 	"posam/instruction"
 	"posam/interpreter"
 )
@@ -136,7 +137,6 @@ func main() {
 	InstructionMap.Set("SLEEP", instruction.InstructionSleep{})
 	InstructionMap.Set("IMPORT", instruction.InstructionImport{})
 	InstructionMap.Set("ASYNC", instruction.InstructionAsync{})
-	InstructionMap.Set("RETRY", instruction.InstructionRetry{})
 	InstructionMap.Set("LED", instruction.InstructionLed{})
 	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
 
@@ -150,6 +150,7 @@ func main() {
 	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
 	InstructionMap.Set("LOOP", instruction.InstructionControlFlowLoop{})
 	InstructionMap.Set("RETURN", instruction.InstructionControlFlowReturn{})
+	InstructionMap.Set("GOTO", instruction.InstructionControlFlowGoto{})
 
 	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
 	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
@@ -177,100 +178,7 @@ func main() {
 
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(CMD_CF)
-
-	// waveform group
-
-	waveformGroup := widgets.NewQGroupBox2("WaveForm Builder", nil)
-
-	waveformLineTimeLabel := widgets.NewQLabel2("Time", nil, 1)
-	waveformLineTimeLabel.SetAlignment(core.Qt__AlignCenter)
-	waveformLineVoltageLabel := widgets.NewQLabel2("Percentage", nil, 1)
-	waveformLineVoltageLabel.SetAlignment(core.Qt__AlignCenter)
-	waveformFallLabel := widgets.NewQLabel2("Fall:", nil, 0)
-	waveformHoldLabel := widgets.NewQLabel2("Hold:", nil, 0)
-	waveformRisingLabel := widgets.NewQLabel2("Rising:", nil, 0)
-	waveformWaitLabel := widgets.NewQLabel2("Wait:", nil, 0)
-	waveformMnLabel := widgets.NewQLabel2("Mn:", nil, 0)
-	waveformVoltageLabel := widgets.NewQLabel2("Voltage:", nil, 0)
-
-	waveformFallTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformFallTimeInput.SetMaximum(100)
-	waveformFallPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformFallPercentageInput.SetMaximum(100)
-	waveformHoldTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformHoldTimeInput.SetMaximum(100)
-	waveformHoldPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformHoldPercentageInput.SetMaximum(100)
-	waveformRisingTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformRisingTimeInput.SetMaximum(100)
-	waveformRisingPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformRisingPercentageInput.SetMaximum(100)
-	waveformWaitTimeInput := widgets.NewQDoubleSpinBox(nil)
-	waveformWaitTimeInput.SetMaximum(100)
-	waveformWaitPercentageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformWaitPercentageInput.SetMaximum(100)
-	waveformMnInput := widgets.NewQSpinBox(nil)
-	waveformMnInput.SetMaximum(100)
-	waveformVoltageInput := widgets.NewQDoubleSpinBox(nil)
-	waveformVoltageInput.SetMaximum(100)
-
-	waveformGenerateButton := widgets.NewQPushButton2("INSERT", nil)
-	waveformGenerateButton.ConnectClicked(func(bool) {
-		argumentList := []string{
-			"WAVEFORM",
-			"VAR",
-			"HEADBOARD", // headboard
-			"ROW",       // row
-			fmt.Sprintf("%.2f", waveformVoltageInput.Value()),
-			"COUNT", // segment count
-
-			fmt.Sprintf("%.2f", waveformFallTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformFallPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformHoldPercentageInput.Value()),
-
-			fmt.Sprintf("%.2f", waveformHoldTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformHoldPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformRisingPercentageInput.Value()),
-
-			fmt.Sprintf("%.2f", waveformRisingTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformRisingPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
-
-			fmt.Sprintf("%.2f", waveformWaitTimeInput.Value()),
-			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
-			fmt.Sprintf("%.2f", waveformWaitPercentageInput.Value()),
-
-			fmt.Sprintf("%d", waveformMnInput.Value()),
-		}
-
-		input.InsertPlainText(strings.Join(argumentList, " "))
-	})
-
-	waveformLayout := widgets.NewQGridLayout2()
-
-	waveformLayout.AddWidget(waveformLineTimeLabel, 0, 1, 0)
-	waveformLayout.AddWidget(waveformLineVoltageLabel, 0, 2, 0)
-
-	waveformLayout.AddWidget(waveformFallLabel, 1, 0, 0)
-	waveformLayout.AddWidget(waveformFallTimeInput, 1, 1, 0)
-	waveformLayout.AddWidget(waveformFallPercentageInput, 1, 2, 0)
-	waveformLayout.AddWidget(waveformHoldLabel, 2, 0, 0)
-	waveformLayout.AddWidget(waveformHoldTimeInput, 2, 1, 0)
-	waveformLayout.AddWidget(waveformHoldPercentageInput, 2, 2, 0)
-	waveformLayout.AddWidget(waveformRisingLabel, 3, 0, 0)
-	waveformLayout.AddWidget(waveformRisingTimeInput, 3, 1, 0)
-	waveformLayout.AddWidget(waveformRisingPercentageInput, 3, 2, 0)
-	waveformLayout.AddWidget(waveformWaitLabel, 4, 0, 0)
-	waveformLayout.AddWidget(waveformWaitTimeInput, 4, 1, 0)
-	waveformLayout.AddWidget(waveformWaitPercentageInput, 4, 2, 0)
-
-	waveformLayout.AddWidget3(waveformVoltageLabel, 5, 0, 1, 1, 0)
-	waveformLayout.AddWidget3(waveformVoltageInput, 5, 1, 1, 2, 0)
-	waveformLayout.AddWidget3(waveformMnLabel, 6, 0, 1, 1, 0)
-	waveformLayout.AddWidget3(waveformMnInput, 6, 1, 1, 2, 0)
-	waveformLayout.AddWidget3(waveformGenerateButton, 7, 0, 1, 3, 0)
-
-	waveformGroup.SetLayout(waveformLayout)
+	input.SetVisible(false)
 
 	// tcp group
 
@@ -359,6 +267,7 @@ func main() {
 	stack := interpreter.NewStack()
 
 	runButton := widgets.NewQPushButton2("RUN", nil)
+	runButton.SetVisible(false)
 	runButton.ConnectClicked(func(bool) {
 
 		if len(terminatecc) != 0 {
@@ -469,10 +378,12 @@ func main() {
 		}()
 	})
 
+	detail := tree.NewInstructionDetail(InstructionMap)
+
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
-	inputLayout.AddWidget(input, 0, 0, 0)
-	inputLayout.AddWidget(waveformGroup, 1, 0, 0)
+	inputLayout.AddWidget(detail.GroupBox, 0, 0, 0)
+	inputLayout.AddWidget(input, 1, 0, 0)
 	inputLayout.AddWidget(printerGroup, 2, 0, 0)
 	inputLayout.AddWidget(serialGroup, 3, 0, 0)
 	inputLayout.AddWidget(runButton, 4, 0, 0)
@@ -486,9 +397,43 @@ func main() {
 	outputLayout.AddWidget(resuButton, 1, 1, 0)
 	outputGroup.SetLayout(outputLayout)
 
+	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
+	treeLayout := widgets.NewQGridLayout2()
+	treeWidget := tree.NewTree(detail, runButton, input)
+	treeLayout.AddWidget3(treeWidget, 0, 0, 1, 2, 0)
+
+	treeExportButton := widgets.NewQPushButton2("EXPORT", nil)
+	treeExportButton.ConnectClicked(func(bool) { treeWidget.ExportAll() })
+	treeLayout.AddWidget(treeExportButton, 1, 0, 0)
+
+	treeImportButton := widgets.NewQPushButton2("IMPORT", nil)
+	treeImportButton.ConnectClicked(func(bool) { treeWidget.Import() })
+	treeLayout.AddWidget(treeImportButton, 1, 1, 0)
+
+	treeGenerateButton := widgets.NewQPushButton2("RUN", nil)
+	treeGenerateButton.ConnectClicked(func(bool) {
+		filePath, err := treeWidget.Generate()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		instBytes, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		input.SetPlainText(string(instBytes))
+		runButton.Click()
+	})
+	treeLayout.AddWidget3(treeGenerateButton, 2, 0, 1, 2, 0)
+
+	treeGroup.SetLayout(treeLayout)
+
 	layout := widgets.NewQGridLayout2()
-	layout.AddWidget(inputGroup, 0, 0, 0)
-	layout.AddWidget(outputGroup, 0, 1, 0)
+	layout.AddWidget3(treeGroup, 0, 0, 2, 1, 0)
+	layout.AddWidget3(inputGroup, 0, 1, 1, 1, 0)
+	layout.AddWidget3(outputGroup, 1, 1, 1, 1, 0)
+
 	layout.SetColumnStretch(0, 1)
 	layout.SetColumnStretch(1, 1)
 	widget.SetLayout(layout)
