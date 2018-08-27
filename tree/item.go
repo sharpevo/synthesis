@@ -1,9 +1,10 @@
-package main
+package tree
 
 import (
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"posam/interpreter"
 	"sort"
 	"strings"
 )
@@ -32,11 +33,10 @@ type InstructionDetail struct {
 	saveButton      *widgets.QPushButton
 }
 
-func NewInstructionDetail() *InstructionDetail {
+func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *InstructionDetail {
 
 	typeLabel := widgets.NewQLabel2("Type", nil, 0)
 	titleLabel := widgets.NewQLabel2("Title", nil, 0)
-	lineLabel := widgets.NewQLabel2("Line", nil, 0)
 	instLabel := widgets.NewQLabel2("Instruction", nil, 0)
 	argsLabel := widgets.NewQLabel2("Arguments", nil, 0)
 
@@ -47,9 +47,10 @@ func NewInstructionDetail() *InstructionDetail {
 
 	d.titleInput = widgets.NewQLineEdit(nil)
 	d.lineInput = widgets.NewQLineEdit(nil)
+	d.lineInput.SetVisible(false)
 
 	d.instInput = widgets.NewQComboBox(nil)
-	for k, _ := range InstructionMap {
+	for k, _ := range instructionMap {
 		if k != INST_SET_SYNC &&
 			k != INST_SET_ASYN {
 			d.instructionList = append(d.instructionList, k)
@@ -169,8 +170,7 @@ func NewInstructionDetail() *InstructionDetail {
 	layout.AddWidget(d.instInput, 2, 1, 0)
 	layout.AddWidget(argsLabel, 3, 0, 0)
 	layout.AddWidget(d.argsInput, 3, 1, 0)
-	layout.AddWidget(lineLabel, 4, 0, 0)
-	layout.AddWidget(d.lineInput, 4, 1, 0)
+	layout.AddWidget3(d.lineInput, 4, 0, 1, 2, 0)
 	layout.AddWidget3(d.waveformGroup, 5, 0, 1, 2, 0)
 
 	layout.AddWidget3(d.saveButton, 6, 0, 1, 2, 0)

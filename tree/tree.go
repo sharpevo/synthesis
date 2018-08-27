@@ -1,4 +1,4 @@
-package main
+package tree
 
 import (
 	"encoding/gob"
@@ -20,7 +20,8 @@ type InstructionTree struct {
 	inputEdit   *widgets.QTextEdit
 }
 
-func NewInstructionTree(
+//func NewInstructionTree(
+func NewTree(
 	detail *InstructionDetail,
 	runButton *widgets.QPushButton,
 	inputEdit *widgets.QTextEdit,

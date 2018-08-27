@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/therecipe/qt/widgets"
+	"posam/gui/tree"
 	"posam/instruction"
 	"posam/interpreter"
 )
@@ -177,6 +178,7 @@ func main() {
 
 	input := widgets.NewQTextEdit(nil)
 	input.SetPlainText(CMD_CF)
+	input.SetVisible(false)
 
 	// tcp group
 
@@ -375,7 +377,7 @@ func main() {
 		}()
 	})
 
-	detail := NewInstructionDetail()
+	detail := tree.NewInstructionDetail(InstructionMap)
 
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
@@ -396,7 +398,7 @@ func main() {
 
 	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
 	treeLayout := widgets.NewQGridLayout2()
-	treeWidget := NewInstructionTree(detail, runButton, input)
+	treeWidget := tree.NewTree(detail, runButton, input)
 	treeLayout.AddWidget3(treeWidget, 0, 0, 1, 2, 0)
 
 	treeExportButton := widgets.NewQPushButton2("EXPORT", nil)
@@ -407,7 +409,7 @@ func main() {
 	treeImportButton.ConnectClicked(func(bool) { treeWidget.Import() })
 	treeLayout.AddWidget(treeImportButton, 1, 1, 0)
 
-	treeGenerateButton := widgets.NewQPushButton2("Generate", nil)
+	treeGenerateButton := widgets.NewQPushButton2("RUN", nil)
 	treeGenerateButton.ConnectClicked(func(bool) {
 		filePath, err := treeWidget.Generate()
 		if err != nil {
@@ -420,18 +422,19 @@ func main() {
 			return
 		}
 		input.SetPlainText(string(instBytes))
+		runButton.Click()
 	})
 	treeLayout.AddWidget3(treeGenerateButton, 2, 0, 1, 2, 0)
 
 	treeGroup.SetLayout(treeLayout)
 
 	layout := widgets.NewQGridLayout2()
-	layout.AddWidget(inputGroup, 0, 0, 0)
-	layout.AddWidget(treeGroup, 0, 1, 0)
-	layout.AddWidget(outputGroup, 0, 2, 0)
+	layout.AddWidget3(treeGroup, 0, 0, 2, 1, 0)
+	layout.AddWidget3(inputGroup, 0, 1, 1, 1, 0)
+	layout.AddWidget3(outputGroup, 1, 1, 1, 1, 0)
+
 	layout.SetColumnStretch(0, 1)
 	layout.SetColumnStretch(1, 1)
-	layout.SetColumnStretch(2, 1)
 	widget.SetLayout(layout)
 
 	window.Show()
