@@ -267,6 +267,7 @@ func main() {
 	stack := interpreter.NewStack()
 
 	runButton := widgets.NewQPushButton2("RUN", nil)
+	runButton.SetVisible(false)
 	runButton.ConnectClicked(func(bool) {
 
 		if len(terminatecc) != 0 {
