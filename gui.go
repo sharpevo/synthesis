@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/therecipe/qt/widgets"
-	"posam/gui/tree"
+	"posam/gui/tree/instree"
 	"posam/instruction"
 	"posam/interpreter"
 )
@@ -378,7 +378,7 @@ func main() {
 		}()
 	})
 
-	detail := tree.NewInstructionDetail(InstructionMap)
+	detail := instree.NewInstructionDetail(InstructionMap)
 
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
@@ -399,7 +399,7 @@ func main() {
 
 	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
 	treeLayout := widgets.NewQGridLayout2()
-	treeWidget := tree.NewTree(detail, runButton, input)
+	treeWidget := instree.NewTree(detail, runButton, input)
 	treeLayout.AddWidget3(treeWidget, 0, 0, 1, 2, 0)
 
 	treeExportButton := widgets.NewQPushButton2("EXPORT", nil)
