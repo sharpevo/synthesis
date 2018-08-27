@@ -191,20 +191,20 @@ func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, colum
 
 func (t *InstructionTree) Import() {
 	node := new(Node)
-	node.Read()
+	err := node.Read()
+	if err != nil {
+		if err.Error() == "nothing selected" {
+			return
+		}
+		log.Println(err)
+	}
 	t.Clear()
 	for i := 0; i < len(node.Children); i++ {
 		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
 	}
 	t.ExpandAll()
 
-	widgets.QMessageBox_Information(
-		nil,
-		"OK",
-		"Imported",
-		widgets.QMessageBox__Ok,
-		widgets.QMessageBox__Ok,
-	)
+	MessageBox("Imported")
 }
 
 func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
@@ -222,13 +222,7 @@ func (t *InstructionTree) ExportAll() error {
 	if err != nil {
 		return err
 	}
-	widgets.QMessageBox_Information(
-		nil,
-		"OK",
-		"Exported",
-		widgets.QMessageBox__Ok,
-		widgets.QMessageBox__Ok,
-	)
+	MessageBox("Exported")
 	return nil
 }
 
@@ -249,7 +243,7 @@ func MessageBox(message string) {
 		"OK",
 		message,
 		widgets.QMessageBox__Ok,
-		widgets.QMessageBox__Ok,
+		widgets.QMessageBox__Close,
 	)
 }
 
