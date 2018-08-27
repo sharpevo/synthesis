@@ -6,7 +6,9 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Node struct {
@@ -16,7 +18,7 @@ type Node struct {
 }
 
 func (n *Node) Write() error {
-	filePath, err := FilePath()
+	filePath, err := getFilePath()
 	if err != nil {
 		return err
 	}
@@ -32,7 +34,7 @@ func (n *Node) Write() error {
 }
 
 func (n *Node) Read() error {
-	filePath, err := FilePath()
+	filePath, err := getFilePath()
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,7 @@ func (n *Node) Read() error {
 	return nil
 }
 
-func FilePath() (string, error) {
+func getFilePath() (string, error) {
 	dialog := widgets.NewQFileDialog2(nil, "Select file...", "", "")
 	if dialog.Exec() != int(widgets.QDialog__Accepted) {
 		return "", fmt.Errorf("nothing selected")
@@ -59,11 +61,15 @@ func FilePath() (string, error) {
 }
 
 func (n *Node) Generate() (string, error) {
-	dir, err := ioutil.TempDir("", "igenetech")
-	if err != nil {
-		return "", err
+	dir := filepath.Join(
+		os.TempDir(),
+		"igenetech",
+		time.Now().Format("2006-01-02"),
+	)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		os.MkdirAll(dir, os.ModePerm)
 	}
-	file, err := ioutil.TempFile(dir, "posam")
+	file, err := ioutil.TempFile(dir, "")
 	if err != nil {
 		return "", err
 	}
