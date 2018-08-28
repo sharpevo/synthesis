@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"posam/gui/tree"
 	"posam/interpreter"
 	"sort"
 	"strings"
@@ -186,12 +187,12 @@ func (d *InstructionDetail) saveInstruction() {
 	d.SetLineInput()
 
 	d.treeItem.SetText(0, d.titleInput.Text())
-	SetTreeItemData(d.treeItem, d.lineInput.Text())
+	tree.SetTreeItemData(d.treeItem, d.lineInput.Text())
 
 }
 
 func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
-	line := GetTreeItemData(item)
+	line := tree.GetTreeItemData(item)
 	d.treeItem = item
 	d.titleInput.SetText(item.Text(0))
 	d.lineInput.SetText(line)
