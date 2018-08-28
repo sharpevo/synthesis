@@ -174,6 +174,47 @@ func (t *InstructionTree) Execute() error {
 	return nil
 }
 
+func (t *InstructionTree) Import(filePath string) error {
+	node := new(Node)
+	err := tree.ImportNode(node, filePath)
+	if err != nil {
+		if err.Error() == "nothing selected" {
+			return nil
+		}
+		return err
+	}
+	t.Clear()
+	for i := 0; i < len(node.Children); i++ {
+		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
+	}
+	t.ExpandAll()
+	return nil
+}
+
+func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
+	item := widgets.NewQTreeWidgetItem2([]string{node.Title}, 0)
+	item.SetData(
+		0,
+		tree.DataRole(),
+		core.NewQVariant17(node.Data),
+	)
+	for i := 0; i < len(node.Children); i++ {
+		item.AddChild(t.ImportNode(node.Children[i]))
+	}
+	return item
+}
+
+func (t *InstructionTree) Export(filePath string) error {
+	item := t.InvisibleRootItem()
+	node := t.ExportNode(item)
+	err := tree.ExportNode(node, filePath)
+	if err != nil {
+		return err
+	}
+	uiutil.MessageBoxInfo("Exported")
+	return nil
+}
+
 func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 	node := Node{}
 	node.Title = root.Text(0)
