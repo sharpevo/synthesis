@@ -83,7 +83,7 @@ func (t *Tree) RemoveItem(p *core.QPoint) {
 
 func (t *Tree) Import(filePath string) error {
 	node := new(Node)
-	err := node.Read(filePath)
+	err := ImportNode(node, filePath)
 	if err != nil {
 		if err.Error() == "nothing selected" {
 			return nil
@@ -115,7 +115,7 @@ func (t *Tree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 func (t *Tree) Export(filePath string) error {
 	item := t.InvisibleRootItem()
 	node := t.ExportNode(item)
-	err := node.Write(filePath)
+	err := ExportNode(node, filePath)
 	if err != nil {
 		return err
 	}
