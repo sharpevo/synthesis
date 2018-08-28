@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -163,8 +162,8 @@ func main() {
 	window.SetMinimumSize2(500, 400)
 	window.SetWindowTitle("POSaM Control Software by iGeneTech")
 
-	widget := widgets.NewQWidget(nil, 0)
-	window.SetCentralWidget(widget)
+	tabWidget := widgets.NewQTabWidget(nil)
+	window.SetCentralWidget(tabWidget)
 
 	msgBox := NewQMessageBoxWithCustomSlot(nil)
 
@@ -248,7 +247,6 @@ func main() {
 	// result group
 
 	result := widgets.NewQTextEdit(nil)
-	//result := widgets.NewQTextBrowser(nil)
 	result.SetReadOnly(true)
 	result.SetStyleSheet("QTextEdit { background-color: #e6e6e6}")
 
@@ -397,46 +395,18 @@ func main() {
 	outputLayout.AddWidget(resuButton, 1, 1, 0)
 	outputGroup.SetLayout(outputLayout)
 
-	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
-	treeLayout := widgets.NewQGridLayout2()
-	treeWidget := instree.NewTree(detail, runButton, input)
-	treeLayout.AddWidget3(treeWidget, 0, 0, 1, 2, 0)
+	insTab := widgets.NewQWidget(nil, 0)
+	insTabLayout := widgets.NewQGridLayout2()
+	insTabLayout.AddWidget3(instree.NewInsTree(detail, runButton, input), 0, 0, 2, 1, 0)
+	insTabLayout.AddWidget3(inputGroup, 0, 1, 1, 1, 0)
+	insTabLayout.AddWidget3(outputGroup, 1, 1, 1, 1, 0)
 
-	treeExportButton := widgets.NewQPushButton2("EXPORT", nil)
-	treeExportButton.ConnectClicked(func(bool) { treeWidget.ExportAll() })
-	treeLayout.AddWidget(treeExportButton, 1, 0, 0)
+	insTabLayout.SetColumnStretch(0, 1)
+	insTabLayout.SetColumnStretch(1, 1)
 
-	treeImportButton := widgets.NewQPushButton2("IMPORT", nil)
-	treeImportButton.ConnectClicked(func(bool) { treeWidget.Import() })
-	treeLayout.AddWidget(treeImportButton, 1, 1, 0)
+	insTab.SetLayout(insTabLayout)
+	tabWidget.AddTab(insTab, "Instructions")
 
-	treeGenerateButton := widgets.NewQPushButton2("RUN", nil)
-	treeGenerateButton.ConnectClicked(func(bool) {
-		filePath, err := treeWidget.Generate()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		instBytes, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		input.SetPlainText(string(instBytes))
-		runButton.Click()
-	})
-	treeLayout.AddWidget3(treeGenerateButton, 2, 0, 1, 2, 0)
-
-	treeGroup.SetLayout(treeLayout)
-
-	layout := widgets.NewQGridLayout2()
-	layout.AddWidget3(treeGroup, 0, 0, 2, 1, 0)
-	layout.AddWidget3(inputGroup, 0, 1, 1, 1, 0)
-	layout.AddWidget3(outputGroup, 1, 1, 1, 1, 0)
-
-	layout.SetColumnStretch(0, 1)
-	layout.SetColumnStretch(1, 1)
-	widget.SetLayout(layout)
 
 	window.Show()
 	app.Exec()
