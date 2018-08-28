@@ -66,6 +66,7 @@ func (t *DeviceTree) customItemClicked(item *widgets.QTreeWidgetItem, column int
 }
 
 func (t *DeviceTree) customItemChanged(item *widgets.QTreeWidgetItem, column int) {
+	// TODO: save once
 	err := t.Save()
 	if err != nil {
 		uiutil.MessageBoxError(err.Error())
@@ -91,8 +92,8 @@ func (t *DeviceTree) Save() error {
 	if err != nil {
 		return err
 	}
-	uiutil.MessageBoxInfo(fmt.Sprintf(
-		"Configuration is saved as %q", DEVICE_CONF_FILEPATH))
+	//uiutil.MessageBoxInfo(fmt.Sprintf(
+	//"Configuration is saved as %q", DEVICE_CONF_FILEPATH))
 	return nil
 }
 
