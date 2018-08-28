@@ -81,22 +81,22 @@ func (t *Tree) RemoveItem(p *core.QPoint) {
 	parent.RemoveChild(item)
 }
 
-func (t *Tree) Import(filePath string) {
+func (t *Tree) Import(filePath string) error {
 	node := new(Node)
 	err := node.Read(filePath)
 	if err != nil {
 		if err.Error() == "nothing selected" {
-			return
+			return nil
 		}
 		log.Println(err)
+		return err
 	}
 	t.Clear()
 	for i := 0; i < len(node.Children); i++ {
 		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
 	}
 	t.ExpandAll()
-
-	uiutil.MessageBoxInfo("Imported")
+	return nil
 }
 
 func (t *Tree) ImportNode(node Node) *widgets.QTreeWidgetItem {
