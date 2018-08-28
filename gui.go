@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/therecipe/qt/widgets"
+	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
 	"posam/instruction"
 	"posam/interpreter"
@@ -407,7 +408,12 @@ func main() {
 	insTab.SetLayout(insTabLayout)
 	tabWidget.AddTab(insTab, "Instructions")
 
+	devTab := widgets.NewQWidget(nil, 0)
+	devTabLayout := widgets.NewQGridLayout2()
+	devTabLayout.AddWidget(devtree.NewDevTree(), 0, 0, 0)
+	devTab.SetLayout(devTabLayout)
 
+	tabWidget.AddTab(devTab, "Devices")
 	window.Show()
 	app.Exec()
 }
