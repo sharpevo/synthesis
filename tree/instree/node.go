@@ -1,63 +1,18 @@
 package instree
 
 import (
-	"encoding/gob"
 	"fmt"
-	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"posam/gui/tree"
 	"strings"
 	"time"
 )
 
 type Node struct {
-	Title    string
-	Data     string
+	tree.Node
 	Children []Node
-}
-
-func (n *Node) Write() error {
-	filePath, err := getFilePath()
-	if err != nil {
-		return err
-	}
-	file, err := os.Create(filePath)
-	defer file.Close()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	encoder := gob.NewEncoder(file)
-	encoder.Encode(n)
-	return nil
-}
-
-func (n *Node) Read() error {
-	filePath, err := getFilePath()
-	if err != nil {
-		return err
-	}
-	file, err := os.Open(filePath)
-	defer file.Close()
-	if err != nil {
-		return err
-	}
-	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(n)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getFilePath() (string, error) {
-	dialog := widgets.NewQFileDialog2(nil, "Select file...", "", "")
-	if dialog.Exec() != int(widgets.QDialog__Accepted) {
-		return "", fmt.Errorf("nothing selected")
-	}
-	filePath := dialog.SelectedFiles()[0]
-	return filePath, nil
 }
 
 func (n *Node) Generate() (string, error) {
