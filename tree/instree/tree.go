@@ -7,14 +7,15 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"log"
+	"posam/gui/tree"
+	"posam/gui/uiutil"
 )
 
 type InstructionTree struct {
-	widgets.QTreeWidget
-	contextMenu *widgets.QMenu
-	detail      *InstructionDetail
-	runButton   *widgets.QPushButton
-	inputEdit   *widgets.QTextEdit
+	tree.Tree
+	detail    *InstructionDetail
+	runButton *widgets.QPushButton
+	inputEdit *widgets.QTextEdit
 }
 
 func NewTree(
@@ -24,8 +25,10 @@ func NewTree(
 ) *InstructionTree {
 
 	treeWidget := &InstructionTree{
-		*widgets.NewQTreeWidget(nil),
-		nil,
+		tree.Tree{
+			*widgets.NewQTreeWidget(nil),
+			nil,
+		},
 		detail,
 		runButton,
 		inputEdit,
@@ -93,22 +96,6 @@ func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
 	}
 }
 
-func DataRole() int {
-	return int(core.Qt__UserRole) + 1
-}
-
-func GetTreeItemData(item *widgets.QTreeWidgetItem) string {
-	return item.Data(0, DataRole()).ToString()
-}
-
-func SetTreeItemData(item *widgets.QTreeWidgetItem, data string) {
-	item.SetData(
-		0,
-		DataRole(),
-		core.NewQVariant17(data),
-	)
-}
-
 func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
 	treeItem := widgets.NewQTreeWidgetItem2([]string{title}, 0)
 	treeItem.SetFlags(core.Qt__ItemIsEnabled |
@@ -117,46 +104,23 @@ func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
 		core.Qt__ItemIsDropEnabled)
 	treeItem.SetData(
 		0,
-		DataRole(),
+		tree.DataRole(),
 		core.NewQVariant17(line),
 	)
 	return treeItem
 }
 
 func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
-	if t.contextMenu == nil {
-		t.contextMenu = widgets.NewQMenu(t)
-		menuAdd := t.contextMenu.AddAction("Add child")
-		menuAdd.ConnectTriggered(func(checked bool) { t.addItem(p) })
-		menuRemove := t.contextMenu.AddAction("Remove node")
-		menuRemove.ConnectTriggered(func(checked bool) { t.removeItem(p) })
-		menuRun := t.contextMenu.AddAction("Execute single step")
+	if t.ContextMenu == nil {
+		t.ContextMenu = widgets.NewQMenu(t)
+		menuAdd := t.ContextMenu.AddAction("Add child")
+		menuAdd.ConnectTriggered(func(checked bool) { t.AddItem(p, NewInstructionItem("print instruction", "PRINT")) })
+		menuRemove := t.ContextMenu.AddAction("Remove node")
+		menuRemove.ConnectTriggered(func(checked bool) { t.RemoveItem(p) })
+		menuRun := t.ContextMenu.AddAction("Execute single step")
 		menuRun.ConnectTriggered(func(checked bool) { t.executeItem(p) })
 	}
-	t.contextMenu.Exec2(t.MapToGlobal(p), nil)
-}
-
-func (t *InstructionTree) addItem(p *core.QPoint) {
-	root := t.ItemAt(p)
-	if root.Pointer() == nil {
-		root = t.InvisibleRootItem()
-	}
-	item := NewInstructionItem("print instruction", "PRINT")
-	root.AddChild(item)
-	root.SetExpanded(true)
-}
-
-func (t *InstructionTree) removeItem(p *core.QPoint) {
-	item := t.ItemAt(p)
-	if item.Pointer() == nil {
-		log.Println("invalid tree item")
-		return
-	}
-	parent := item.Parent()
-	if parent.Pointer() == nil {
-		parent = t.InvisibleRootItem()
-	}
-	parent.RemoveChild(item)
+	t.ContextMenu.Exec2(t.MapToGlobal(p), nil)
 }
 
 func (t *InstructionTree) executeItem(p *core.QPoint) {
@@ -170,7 +134,7 @@ func (t *InstructionTree) executeItem(p *core.QPoint) {
 	pseudop.Children = []Node{node}
 	filePath, err := pseudop.Generate()
 	if err != nil {
-		MessageBox(err.Error())
+		uiutil.MessageBoxError(err.Error())
 	}
 	t.WriteInputEdit(filePath)
 	t.runButton.Click()
@@ -189,64 +153,6 @@ func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, colum
 	t.detail.Refresh(item)
 }
 
-func (t *InstructionTree) Import() {
-	node := new(Node)
-	err := node.Read()
-	if err != nil {
-		if err.Error() == "nothing selected" {
-			return
-		}
-		log.Println(err)
-	}
-	t.Clear()
-	for i := 0; i < len(node.Children); i++ {
-		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
-	}
-	t.ExpandAll()
-
-	MessageBox("Imported")
-}
-
-func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
-	item := NewInstructionItem(node.Title, node.Data)
-	for i := 0; i < len(node.Children); i++ {
-		item.AddChild(t.ImportNode(node.Children[i]))
-	}
-	return item
-}
-
-func (t *InstructionTree) ExportAll() error {
-	item := t.InvisibleRootItem()
-	node := t.ExportNode(item)
-	err := node.Write()
-	if err != nil {
-		return err
-	}
-	MessageBox("Exported")
-	return nil
-}
-
-func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
-	node := Node{
-		Title: root.Text(0),
-		Data:  GetTreeItemData(root),
-	}
-	for i := 0; i < root.ChildCount(); i++ {
-		node.Children = append(node.Children, t.ExportNode(root.Child(i)))
-	}
-	return node
-}
-
-func MessageBox(message string) {
-	widgets.QMessageBox_Information(
-		nil,
-		"OK",
-		message,
-		widgets.QMessageBox__Ok,
-		widgets.QMessageBox__Close,
-	)
-}
-
 func (t *InstructionTree) Generate() (string, error) {
 	root := t.InvisibleRootItem()
 	node := t.ExportNode(root)
@@ -260,10 +166,20 @@ func (t *InstructionTree) Generate() (string, error) {
 func (t *InstructionTree) Execute() error {
 	filePath, err := t.Generate()
 	if err != nil {
-		MessageBox(err.Error())
+		uiutil.MessageBoxError(err.Error())
 		return err
 	}
 	t.WriteInputEdit(filePath)
 	t.runButton.Click()
 	return nil
+}
+
+func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
+	node := Node{}
+	node.Title = root.Text(0)
+	node.Data = tree.GetTreeItemData(root)
+	for i := 0; i < root.ChildCount(); i++ {
+		node.Children = append(node.Children, t.ExportNode(root.Child(i)))
+	}
+	return node
 }
