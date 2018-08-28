@@ -33,10 +33,17 @@ func NewInsTree(
 	treeImportButton.ConnectClicked(func(bool) {
 		filePath, err := uiutil.FilePath()
 		if err != nil {
+			if err.Error() == "nothing selected" {
+				return
+			}
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		treeWidget.Import(filePath)
+		err = treeWidget.Import(filePath)
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+		}
+		uiutil.MessageBoxInfo("Imported")
 	})
 	layout.AddWidget(treeImportButton, 1, 1, 0)
 
