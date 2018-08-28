@@ -2,7 +2,6 @@ package tree
 
 import (
 	"encoding/gob"
-	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"os"
