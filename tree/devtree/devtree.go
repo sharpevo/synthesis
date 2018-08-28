@@ -16,6 +16,7 @@ func NewDevTree() *widgets.QGroupBox {
 
 	treeSaveButton := widgets.NewQPushButton2("SAVE", nil)
 	treeSaveButton.ConnectClicked(func(bool) { treeWidget.Save() })
+	treeSaveButton.SetVisible(false)
 	treeLayout.AddWidget(treeSaveButton, 1, 0, 0)
 
 	treeGroup.SetLayout(treeLayout)

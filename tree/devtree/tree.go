@@ -1,7 +1,6 @@
 package devtree
 
 import (
-	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"posam/gui/tree"
