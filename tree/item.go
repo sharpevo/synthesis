@@ -35,26 +35,25 @@ type Node struct {
 	Children []Node
 }
 
-func (n *Node) Write(filePath string) error {
+func ExportNode(node interface{}, filePath string) error {
 	file, err := os.Create(filePath)
 	defer file.Close()
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	encoder := gob.NewEncoder(file)
-	encoder.Encode(n)
+	encoder.Encode(node)
 	return nil
 }
 
-func (n *Node) Read(filePath string) error {
+func ImportNode(node interface{}, filePath string) error {
 	file, err := os.Open(filePath)
 	defer file.Close()
 	if err != nil {
 		return err
 	}
 	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(n)
+	err = decoder.Decode(node)
 	if err != nil {
 		return err
 	}
