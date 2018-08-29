@@ -269,6 +269,8 @@ func main() {
 	runButton.SetVisible(false)
 	runButton.ConnectClicked(func(bool) {
 
+		devtree.InitStack(stack)
+
 		if len(terminatecc) != 0 {
 			return
 		}
