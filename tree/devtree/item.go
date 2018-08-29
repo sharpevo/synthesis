@@ -89,7 +89,6 @@ func (d *DeviceDetail) saveDeviceDetail() {
 		return
 	}
 	d.treeItem.SetText(0, d.titleInput.Text())
-	tree.SetTreeItemData(d.treeItem, d.lineInput.Text())
 	variantMap := MakeVariantMap(
 		d.lineInput.Text(),
 		d.typeInput.CurrentText(),
