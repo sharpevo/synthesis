@@ -111,10 +111,15 @@ func (t *DeviceTree) Import() error {
 
 func (t *DeviceTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 	item := widgets.NewQTreeWidgetItem2([]string{node.Title}, 0)
+	variantMap := MakeVariantMap(
+		node.Data,
+		node.Type,
+		node.Enabled,
+	)
 	item.SetData(
 		0,
 		tree.DataRole(),
-		core.NewQVariant17(node.Data),
+		core.NewQVariant25(variantMap),
 	)
 	for i := 0; i < len(node.Children); i++ {
 		item.AddChild(t.ImportNode(node.Children[i]))
@@ -125,7 +130,10 @@ func (t *DeviceTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 func (t *DeviceTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 	node := Node{}
 	node.Title = root.Text(0)
-	node.Data = tree.GetTreeItemData(root)
+	variantMap := VariantMap(root.Data(0, tree.DataRole()).ToMap())
+	node.Enabled = variantMap.Enabled()
+	node.Type = variantMap.Type()
+	node.Data = variantMap.Data()
 	for i := 0; i < root.ChildCount(); i++ {
 		node.Children = append(node.Children, t.ExportNode(root.Child(i)))
 	}
