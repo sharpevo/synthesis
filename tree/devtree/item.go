@@ -88,7 +88,11 @@ func (d *DeviceDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	d.titleInput.SetText(item.Text(0))
 	variantMap := VariantMap(item.Data(0, tree.DataRole()).ToMap())
 	d.lineInput.SetText(variantMap.Data())
-	d.typeInput.SetCurrentText(variantMap.Type())
+	if variantMap.Type() != "" {
+		d.typeInput.SetCurrentText(variantMap.Type())
+	} else {
+		d.typeInput.SetCurrentText("UNKNOWN")
+	}
 	d.enabledInput.SetCheckState(core.Qt__Unchecked)
 	if variantMap.Enabled() {
 		d.enabledInput.SetCheckState(core.Qt__Checked)
