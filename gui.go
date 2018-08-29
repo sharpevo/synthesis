@@ -15,7 +15,7 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
-	//"posam/gui/uiutil"
+	"posam/gui/uiutil"
 	"posam/instruction"
 	"posam/interpreter"
 )
@@ -268,36 +268,63 @@ func main() {
 	runButton.SetVisible(false)
 	runButton.ConnectClicked(func(bool) {
 
-		stack := interpreter.NewStack()
-		err := devtree.InitStack(stack)
-		if err != nil {
-			log.Println(err)
-		}
-
 		if len(terminatecc) != 0 {
 			return
 		}
 		suspButton.SetEnabled(true)
 
-		err = initSerialDevice(
-			serialDeviceInput.Text(),
-			serialBaudInput.Text(),
-			serialCharacterInput.Text(),
-			serialStopInput.Text(),
-			serialParityInput.Text(),
-		)
+		stack := interpreter.NewStack()
+		err := devtree.InitStack(stack)
+		log.Printf("Initiating serial devices: %v\n", devtree.ConnSRLVarNameList)
+		log.Printf("Initiating TCP devices: %v\n", devtree.ConnTCPVarNameList)
+		log.Printf("Initiating CAN devices: %v\n", devtree.ConnCANVarNameList)
 		if err != nil {
-			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+			log.Println(err)
 		}
 
-		err = initPrinter(
-			printerNetworkInput.Text(),
-			printerAddressInput.Text(),
-			printerTimeoutInput.Text(),
-		)
-		if err != nil {
-			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+		for _, s := range devtree.ConnSRLVarNameList {
+			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
+			name, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_NAME))
+			baud, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_BAUD))
+			character, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_CHARACTER))
+			stop, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_STOP))
+			parity, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_PARITY))
+			err = initSerialDevice(
+				fmt.Sprintf("%v", name.Value),
+				fmt.Sprintf("%v", baud.Value),
+				fmt.Sprintf("%v", character.Value),
+				fmt.Sprintf("%v", stop.Value),
+				fmt.Sprintf("%v", parity.Value),
+			)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+			}
 		}
+
+		for _, s := range devtree.ConnTCPVarNameList {
+			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
+			network, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_TCP_NETWORK))
+			address, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_TCP_ADDRESS))
+			timeout, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_TCP_TIMEOUT))
+			err = initTCPDevice(
+				fmt.Sprintf("%v", network.Value),
+				fmt.Sprintf("%v", address.Value),
+				fmt.Sprintf("%v", timeout.Value),
+			)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+			}
+		}
+
+		// TODO: init CAN devices
 
 		result.SetText("RUNNING")
 
@@ -532,7 +559,7 @@ func initSerialDevice(
 	return
 }
 
-func initPrinter(network string, address string, secondString string) (err error) {
+func initTCPDevice(network string, address string, secondString string) (err error) {
 	if ricoh_g5.Instance("") != nil {
 		return
 	}
