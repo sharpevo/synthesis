@@ -1,7 +1,7 @@
 package devtree
 
 import (
-	//"fmt"
+	"fmt"
 	//"io/ioutil"
 	//"os"
 	//"path/filepath"
@@ -17,7 +17,9 @@ const (
 	DEVICE_CONF_FILE = "devices.bin"
 )
 
-var ConnVarNameList []string
+var ConnSRLVarNameList []string
+var ConnTCPVarNameList []string
+var ConnCANVarNameList []string
 
 type Node struct {
 	tree.Node
@@ -28,7 +30,9 @@ type Node struct {
 
 func InitStack(stack *interpreter.Stack) error {
 	node := new(Node)
-	ConnVarNameList = []string{}
+	ConnSRLVarNameList = []string{}
+	ConnTCPVarNameList = []string{}
+	ConnCANVarNameList = []string{}
 	err := tree.ImportNode(node, DEVICE_CONF_FILE)
 	if err != nil {
 		return err
@@ -43,7 +47,19 @@ func InitStack(stack *interpreter.Stack) error {
 func setVar(ppath string, node Node, stack *interpreter.Stack) error {
 	cpath := path.Join(ppath, node.Title)
 	if isConnNode(node) {
-		ConnVarNameList = append(ConnVarNameList, cpath)
+		switch node.Type {
+		case DEV_TYPE_TCP:
+			ConnTCPVarNameList = append(ConnTCPVarNameList, cpath)
+			break
+		case DEV_TYPE_SRL:
+			ConnSRLVarNameList = append(ConnSRLVarNameList, cpath)
+			break
+		case DEV_TYPE_CAN:
+			ConnCANVarNameList = append(ConnCANVarNameList, cpath)
+			break
+		default:
+			return fmt.Errorf("invalid node type %q", node.Type)
+		}
 	}
 	variable, err := vrb.NewVariable(cpath, node.Data)
 	if err != nil {
@@ -58,4 +74,8 @@ func setVar(ppath string, node Node, stack *interpreter.Stack) error {
 
 func isConnNode(node Node) bool {
 	return node.Enabled && node.Type != DEV_TYPE_UNK
+}
+
+func ComposeVarName(args ...string) string {
+	return path.Join(args...)
 }
