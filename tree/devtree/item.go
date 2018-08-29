@@ -7,6 +7,13 @@ import (
 	"posam/gui/tree"
 )
 
+const (
+	DEV_TYPE_UNK = "UNKNOWN"
+	DEV_TYPE_TCP = "TCP"
+	DEV_TYPE_CAN = "CAN"
+	DEV_TYPE_SRL = "SERIAL"
+)
+
 type DeviceDetail struct {
 	treeItem     *widgets.QTreeWidgetItem
 	GroupBox     *widgets.QGroupBox
@@ -31,10 +38,10 @@ func NewDeviceDetail() *DeviceDetail {
 
 	d.typeInput = widgets.NewQComboBox(nil)
 	d.typeInput.AddItems([]string{
-		"UNKNOWN",
-		"TCP",
-		"SERIAL",
-		"CAN",
+		DEV_TYPE_UNK,
+		DEV_TYPE_SRL,
+		DEV_TYPE_TCP,
+		DEV_TYPE_CAN,
 	})
 	d.enabledInput = widgets.NewQCheckBox2("Enabled", nil)
 
@@ -91,7 +98,7 @@ func (d *DeviceDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	if variantMap.Type() != "" {
 		d.typeInput.SetCurrentText(variantMap.Type())
 	} else {
-		d.typeInput.SetCurrentText("UNKNOWN")
+		d.typeInput.SetCurrentText(DEV_TYPE_UNK)
 	}
 	d.enabledInput.SetCheckState(core.Qt__Unchecked)
 	if variantMap.Enabled() {
