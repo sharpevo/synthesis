@@ -117,6 +117,11 @@ func (d *DeviceDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	if variantMap.Enabled() {
 		d.enabledInput.SetCheckState(core.Qt__Checked)
 	}
+	if item.ChildCount() == 0 {
+		d.typeInput.SetEnabled(false)
+	} else {
+		d.typeInput.SetEnabled(true)
+	}
 }
 
 func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
