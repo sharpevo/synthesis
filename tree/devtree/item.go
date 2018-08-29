@@ -12,6 +12,18 @@ const (
 	DEV_TYPE_TCP = "TCP"
 	DEV_TYPE_CAN = "CAN"
 	DEV_TYPE_SRL = "SERIAL"
+
+	PRT_CONN = "CONN"
+
+	PRT_TCP_TIMEOUT = "TIMEOUT"
+	PRT_TCP_NETWORK = "NETWORK"
+	PRT_TCP_ADDRESS = "ADDRESS"
+
+	PRT_SRL_NAME      = "DEVICE_NAME"
+	PRT_SRL_BAUD      = "BAUD_RATE"
+	PRT_SRL_CHARACTER = "CHARACTER_BITS"
+	PRT_SRL_STOP      = "STOP_BITS"
+	PRT_SRL_PARITY    = "PARITY"
 )
 
 type DeviceDetail struct {
@@ -43,6 +55,7 @@ func NewDeviceDetail() *DeviceDetail {
 		DEV_TYPE_TCP,
 		DEV_TYPE_CAN,
 	})
+	d.typeInput.ConnectCurrentTextChanged(d.onDeviceTypeChanged)
 	d.enabledInput = widgets.NewQCheckBox2("Enabled", nil)
 
 	d.logInput = widgets.NewQTextEdit(nil)
@@ -103,6 +116,66 @@ func (d *DeviceDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	d.enabledInput.SetCheckState(core.Qt__Unchecked)
 	if variantMap.Enabled() {
 		d.enabledInput.SetCheckState(core.Qt__Checked)
+	}
+}
+
+func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
+
+	if selected == DEV_TYPE_UNK {
+		return
+	}
+
+	var connItem *widgets.QTreeWidgetItem
+	for i := 0; i < d.treeItem.ChildCount(); i++ {
+		if item := d.treeItem.Child(i); PRT_CONN == item.Text(0) {
+			connItem = item
+			break
+		}
+	}
+	if connItem.Pointer() == nil {
+		connItem = NewDeviceConnItem(PRT_CONN)
+		d.treeItem.InsertChild(0, connItem)
+	}
+
+	switch selected {
+	case DEV_TYPE_TCP:
+		for _, title := range []string{
+			PRT_TCP_TIMEOUT,
+			PRT_TCP_ADDRESS,
+			PRT_TCP_NETWORK,
+		} {
+			seen := false
+			for i := 0; i < connItem.ChildCount(); i++ {
+				if item := connItem.Child(i); title == item.Text(0) {
+					seen = true
+					break
+				}
+			}
+			if !seen {
+				item := NewDeviceConnItem(title)
+				connItem.InsertChild(0, item)
+			}
+		}
+	case DEV_TYPE_SRL:
+		for _, title := range []string{
+			PRT_SRL_PARITY,
+			PRT_SRL_STOP,
+			PRT_SRL_CHARACTER,
+			PRT_SRL_BAUD,
+			PRT_SRL_NAME,
+		} {
+			seen := false
+			for i := 0; i < connItem.ChildCount(); i++ {
+				if item := connItem.Child(i); title == item.Text(0) {
+					seen = true
+					break
+				}
+			}
+			if !seen {
+				item := NewDeviceConnItem(title)
+				connItem.InsertChild(0, item)
+			}
+		}
 	}
 }
 

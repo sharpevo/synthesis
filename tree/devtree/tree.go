@@ -56,6 +56,13 @@ func NewDeviceItem(title string, data string) *widgets.QTreeWidgetItem {
 	return treeItem
 }
 
+func NewDeviceConnItem(title string) *widgets.QTreeWidgetItem {
+	item := widgets.NewQTreeWidgetItem2([]string{title}, 0)
+	item.SetFlags(core.Qt__ItemIsEnabled |
+		core.Qt__ItemIsSelectable)
+	return item
+}
+
 func (t *DeviceTree) customItemClicked(item *widgets.QTreeWidgetItem, column int) {
 	t.detail.Refresh(item)
 }
