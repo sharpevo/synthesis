@@ -17,12 +17,6 @@ const (
 	DEVICE_CONF_FILE = "devices.bin"
 )
 
-var ComponentType = map[string]bool{
-	"UNKNOWN": true,
-	"TCP":     true,
-	"SERIAL":  true,
-	"CAN":     true,
-}
 
 type Node struct {
 	tree.Node
