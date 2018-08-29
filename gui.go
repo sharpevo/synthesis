@@ -264,12 +264,11 @@ func main() {
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
 
-	stack := interpreter.NewStack()
-
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.SetVisible(false)
 	runButton.ConnectClicked(func(bool) {
 
+		stack := interpreter.NewStack()
 		err := devtree.InitStack(stack)
 		if err != nil {
 			log.Println(err)
