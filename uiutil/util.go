@@ -5,6 +5,10 @@ import (
 	"github.com/therecipe/qt/widgets"
 )
 
+const (
+	DEVICE_CONF_FILE = "devices.bin"
+)
+
 func FilePath() (string, error) {
 	dialog := widgets.NewQFileDialog2(nil, "Select file...", "", "")
 	if dialog.Exec() != int(widgets.QDialog__Accepted) {

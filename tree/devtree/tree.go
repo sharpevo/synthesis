@@ -7,10 +7,6 @@ import (
 	"posam/gui/uiutil"
 )
 
-const (
-	DEVICE_CONF_FILEPATH = "devices.bin"
-)
-
 type DeviceTree struct {
 	tree.Tree
 	detail *DeviceDetail
@@ -87,18 +83,18 @@ func (t *DeviceTree) customContextMenuRequested(p *core.QPoint) {
 func (t *DeviceTree) Save() error {
 	item := t.InvisibleRootItem()
 	node := t.ExportNode(item)
-	err := tree.ExportNode(node, DEVICE_CONF_FILEPATH)
+	err := tree.ExportNode(node, uiutil.DEVICE_CONF_FILE)
 	if err != nil {
 		return err
 	}
 	//uiutil.MessageBoxInfo(fmt.Sprintf(
-	//"Configuration is saved as %q", DEVICE_CONF_FILEPATH))
+	//"Configuration is saved as %q", uiutil.DEVICE_CONF_FILE))
 	return nil
 }
 
 func (t *DeviceTree) Import() error {
 	node := new(Node)
-	err := tree.ImportNode(node, DEVICE_CONF_FILEPATH)
+	err := tree.ImportNode(node, uiutil.DEVICE_CONF_FILE)
 	if err != nil {
 		if err.Error() == "nothing selected" {
 			return nil
