@@ -17,6 +17,7 @@ const (
 	DEVICE_CONF_FILE = "devices.bin"
 )
 
+var ConnVarNameList []string
 
 type Node struct {
 	tree.Node
@@ -27,6 +28,7 @@ type Node struct {
 
 func InitStack(stack *interpreter.Stack) error {
 	node := new(Node)
+	ConnVarNameList = []string{}
 	err := tree.ImportNode(node, DEVICE_CONF_FILE)
 	if err != nil {
 		return err
@@ -40,6 +42,9 @@ func InitStack(stack *interpreter.Stack) error {
 
 func setVar(ppath string, node Node, stack *interpreter.Stack) error {
 	cpath := path.Join(ppath, node.Title)
+	if isConnNode(node) {
+		ConnVarNameList = append(ConnVarNameList, cpath)
+	}
 	variable, err := vrb.NewVariable(cpath, node.Data)
 	if err != nil {
 		return err
@@ -49,4 +54,8 @@ func setVar(ppath string, node Node, stack *interpreter.Stack) error {
 		err = setVar(cpath, v, stack)
 	}
 	return nil
+}
+
+func isConnNode(node Node) bool {
+	return node.Enabled && node.Type != DEV_TYPE_UNK
 }
