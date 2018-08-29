@@ -15,6 +15,7 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
+	//"posam/gui/uiutil"
 	"posam/instruction"
 	"posam/interpreter"
 )
@@ -269,14 +270,17 @@ func main() {
 	runButton.SetVisible(false)
 	runButton.ConnectClicked(func(bool) {
 
-		devtree.InitStack(stack)
+		err := devtree.InitStack(stack)
+		if err != nil {
+			log.Println(err)
+		}
 
 		if len(terminatecc) != 0 {
 			return
 		}
 		suspButton.SetEnabled(true)
 
-		err := initSerialDevice(
+		err = initSerialDevice(
 			serialDeviceInput.Text(),
 			serialBaudInput.Text(),
 			serialCharacterInput.Text(),
