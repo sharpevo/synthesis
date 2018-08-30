@@ -187,6 +187,8 @@ func main() {
 	input.SetPlainText(CMD_CF)
 	input.SetVisible(false)
 
+	instDetail := instree.NewInstructionDetail(InstructionMap)
+
 	// result group
 
 	result := widgets.NewQTextEdit(nil)
@@ -223,7 +225,10 @@ func main() {
 			log.Println(err)
 		}
 
+		devList := []string{}
+
 		for _, s := range devtree.ConnSRLVarNameList {
+			devList = append(devList, s)
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			name, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_SRL_NAME))
@@ -251,6 +256,7 @@ func main() {
 		}
 
 		for _, s := range devtree.ConnTCPVarNameList {
+			devList = append(devList, s)
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			network, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_TCP_NETWORK))
@@ -267,6 +273,8 @@ func main() {
 				uiutil.MessageBoxError(err.Error())
 			}
 		}
+
+		instDetail.SetDevInput(devList)
 
 		// TODO: init CAN devices
 
@@ -353,11 +361,9 @@ func main() {
 		}()
 	})
 
-	detail := instree.NewInstructionDetail(InstructionMap)
-
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
-	inputLayout.AddWidget(detail.GroupBox, 0, 0, 0)
+	inputLayout.AddWidget(instDetail.GroupBox, 0, 0, 0)
 	inputLayout.AddWidget(input, 1, 0, 0)
 	inputLayout.AddWidget(runButton, 4, 0, 0)
 	inputGroup.SetLayout(inputLayout)
@@ -372,7 +378,7 @@ func main() {
 
 	insTab := widgets.NewQWidget(nil, 0)
 	insTabLayout := widgets.NewQGridLayout2()
-	insTabLayout.AddWidget3(instree.NewInsTree(detail, runButton, input), 0, 0, 2, 1, 0)
+	insTabLayout.AddWidget3(instree.NewInsTree(instDetail, runButton, input), 0, 0, 2, 1, 0)
 	insTabLayout.AddWidget3(inputGroup, 0, 1, 1, 1, 0)
 	insTabLayout.AddWidget3(outputGroup, 1, 1, 1, 1, 0)
 

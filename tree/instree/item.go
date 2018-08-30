@@ -29,6 +29,7 @@ type InstructionDetail struct {
 	lineInput       *widgets.QLineEdit
 	typeInput       *widgets.QComboBox
 	instInput       *widgets.QComboBox
+	devInput        *widgets.QComboBox
 	argsInput       *widgets.QLineEdit
 	waveformGroup   *widgets.QGroupBox
 	saveButton      *widgets.QPushButton
@@ -39,6 +40,7 @@ func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *Instructi
 	typeLabel := widgets.NewQLabel2("Type", nil, 0)
 	titleLabel := widgets.NewQLabel2("Title", nil, 0)
 	instLabel := widgets.NewQLabel2("Instruction", nil, 0)
+	devLabel := widgets.NewQLabel2("Device", nil, 0)
 	argsLabel := widgets.NewQLabel2("Arguments", nil, 0)
 
 	d := InstructionDetail{}
@@ -61,6 +63,7 @@ func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *Instructi
 	d.instInput.AddItems(d.instructionList)
 	d.instInput.ConnectCurrentTextChanged(d.onInstructionChanged)
 
+	d.devInput = widgets.NewQComboBox(nil)
 	d.argsInput = widgets.NewQLineEdit(nil)
 
 	// waveform group
@@ -169,12 +172,14 @@ func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *Instructi
 	layout.AddWidget(d.typeInput, 1, 1, 0)
 	layout.AddWidget(instLabel, 2, 0, 0)
 	layout.AddWidget(d.instInput, 2, 1, 0)
-	layout.AddWidget(argsLabel, 3, 0, 0)
-	layout.AddWidget(d.argsInput, 3, 1, 0)
-	layout.AddWidget3(d.lineInput, 4, 0, 1, 2, 0)
-	layout.AddWidget3(d.waveformGroup, 5, 0, 1, 2, 0)
+	layout.AddWidget(devLabel, 3, 0, 0)
+	layout.AddWidget(d.devInput, 3, 1, 0)
+	layout.AddWidget(argsLabel, 4, 0, 0)
+	layout.AddWidget(d.argsInput, 4, 1, 0)
+	layout.AddWidget3(d.lineInput, 5, 0, 1, 2, 0)
+	layout.AddWidget3(d.waveformGroup, 6, 0, 1, 2, 0)
 
-	layout.AddWidget3(d.saveButton, 6, 0, 1, 2, 0)
+	layout.AddWidget3(d.saveButton, 7, 0, 1, 2, 0)
 	d.GroupBox.SetLayout(layout)
 	return &d
 }
@@ -261,6 +266,11 @@ func (d *InstructionDetail) SetInstInput() {
 func (d *InstructionDetail) GetArgumentsFromLine() string {
 	instruction := d.GetInstructionFromLine()
 	return strings.Trim(d.Line(), fmt.Sprintf("%s ", instruction))
+}
+
+func (d *InstructionDetail) SetDevInput(items []string) {
+	d.devInput.Clear()
+	d.devInput.AddItems(items)
 }
 
 func (d *InstructionDetail) SetArgsInput() {
