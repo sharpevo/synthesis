@@ -235,12 +235,15 @@ func main() {
 				devtree.ComposeVarName(base, devtree.PRT_SRL_STOP))
 			parity, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_SRL_PARITY))
+			deviceCode, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_CODE))
 			err = initSerialDevice(
 				fmt.Sprintf("%v", name.Value),
 				fmt.Sprintf("%v", baud.Value),
 				fmt.Sprintf("%v", character.Value),
 				fmt.Sprintf("%v", stop.Value),
 				fmt.Sprintf("%v", parity.Value),
+				fmt.Sprintf("%v", deviceCode.Value),
 			)
 			if err != nil {
 				uiutil.MessageBoxError(err.Error())
@@ -403,39 +406,24 @@ func initSerialDevice(
 	baud string,
 	character string,
 	stop string,
-	parity string) (err error) {
-
-	var deviceAddress byte
-	deviceAddress = 0x01
-	if alientek.Instance(string(deviceAddress)) != nil {
+	parity string,
+	deviceCode string,
+) (err error) {
+	if alientek.Instance(deviceCode) != nil {
+		log.Printf("Device %q has been initialized\n", deviceCode)
 		return
 	}
-
-	baudInt, err := strconv.Atoi(baud)
-	if err != nil {
-		return
-	}
-	characterInt, err := strconv.Atoi(character)
-	if err != nil {
-		return
-	}
-	stopInt, err := strconv.Atoi(stop)
-	if err != nil {
-		return
-	}
-	//parity, err := strconv.Atoi(character)
-	//if err != nil {
-	//return
-	//}
-
-	alientek.NewDao(
+	_, err = alientek.NewDao(
 		device,
-		baudInt,
-		characterInt,
-		stopInt,
-		-1,
-		deviceAddress,
+		baud,
+		character,
+		stop,
+		parity,
+		deviceCode,
 	)
+	if err != nil {
+		return err
+	}
 
 	switch runtime.GOOS {
 	case "windows":
@@ -499,7 +487,8 @@ func initSerialDevice(
 }
 
 func initTCPDevice(network string, address string, secondString string) (err error) {
-	if ricoh_g5.Instance("") != nil {
+	if ricoh_g5.Instance(address) != nil {
+		log.Printf("Device %q has been initialized\n", address)
 		return
 	}
 	secondInt, err := strconv.Atoi(secondString)
