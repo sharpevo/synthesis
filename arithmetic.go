@@ -79,7 +79,7 @@ func (i *InstructionArithmetic) GetInt64(
 	case int64:
 		return int64(v), nil
 	default:
-		return 0, fmt.Errorf("invalid float %v", v)
+		return 0, fmt.Errorf("invalid int %v", v)
 	}
 }
 
