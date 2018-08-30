@@ -187,71 +187,6 @@ func main() {
 	input.SetPlainText(CMD_CF)
 	input.SetVisible(false)
 
-	// tcp group
-
-	printerGroup := widgets.NewQGroupBox2("Printer", nil)
-
-	printerNetworkLabel := widgets.NewQLabel2("Network:", nil, 0)
-	printerAddressLabel := widgets.NewQLabel2("Address:", nil, 0)
-	printerTimeoutLabel := widgets.NewQLabel2("Timeout:", nil, 0)
-
-	printerNetworkInput := widgets.NewQLineEdit(nil)
-	printerNetworkInput.SetPlaceholderText("tcp, tcp4, tcp6")
-	printerNetworkInput.SetText("tcp")
-	printerAddressInput := widgets.NewQLineEdit(nil)
-	printerAddressInput.SetPlaceholderText("localhost:3000")
-	printerAddressInput.SetText("192.168.100.215:21005")
-	printerTimeoutInput := widgets.NewQLineEdit(nil)
-	printerTimeoutInput.SetPlaceholderText("10")
-	printerTimeoutInput.SetText("10")
-
-	printerLayout := widgets.NewQGridLayout2()
-	printerLayout.AddWidget(printerNetworkLabel, 0, 0, 0)
-	printerLayout.AddWidget(printerNetworkInput, 0, 1, 0)
-	printerLayout.AddWidget(printerAddressLabel, 1, 0, 0)
-	printerLayout.AddWidget(printerAddressInput, 1, 1, 0)
-	printerLayout.AddWidget(printerTimeoutLabel, 2, 0, 0)
-	printerLayout.AddWidget(printerTimeoutInput, 2, 1, 0)
-
-	printerGroup.SetLayout(printerLayout)
-
-	// serial group
-
-	serialGroup := widgets.NewQGroupBox2("Serial port", nil)
-
-	serialDeviceLabel := widgets.NewQLabel2("Device name:", nil, 0)
-	serialBaudLabel := widgets.NewQLabel2("Baud rate:", nil, 0)
-	serialCharacterLabel := widgets.NewQLabel2("Character bits:", nil, 0)
-	serialStopLabel := widgets.NewQLabel2("Stop bits:", nil, 0)
-	serialParityLabel := widgets.NewQLabel2("Parity:", nil, 0)
-
-	serialDeviceInput := widgets.NewQLineEdit(nil)
-	serialDeviceInput.SetPlaceholderText("COM1, /dev/ttyUSB0...")
-	serialDeviceInput.SetText("/dev/ttyUSB0")
-	serialBaudInput := widgets.NewQLineEdit(nil)
-	serialBaudInput.SetText("9600")
-	serialCharacterInput := widgets.NewQLineEdit(nil)
-	serialCharacterInput.SetText("8")
-	serialStopInput := widgets.NewQLineEdit(nil)
-	serialStopInput.SetText("1")
-	serialParityInput := widgets.NewQLineEdit(nil)
-	serialParityInput.SetText("n")
-	serialParityInput.SetPlaceholderText("'n' means 'disable'")
-
-	serialLayout := widgets.NewQGridLayout2()
-	serialLayout.AddWidget(serialDeviceLabel, 0, 0, 0)
-	serialLayout.AddWidget(serialDeviceInput, 0, 1, 0)
-	serialLayout.AddWidget(serialBaudLabel, 1, 0, 0)
-	serialLayout.AddWidget(serialBaudInput, 1, 1, 0)
-	serialLayout.AddWidget(serialCharacterLabel, 2, 0, 0)
-	serialLayout.AddWidget(serialCharacterInput, 2, 1, 0)
-	serialLayout.AddWidget(serialStopLabel, 3, 0, 0)
-	serialLayout.AddWidget(serialStopInput, 3, 1, 0)
-	serialLayout.AddWidget(serialParityLabel, 4, 0, 0)
-	serialLayout.AddWidget(serialParityInput, 4, 1, 0)
-
-	serialGroup.SetLayout(serialLayout)
-
 	// result group
 
 	result := widgets.NewQTextEdit(nil)
@@ -421,8 +356,6 @@ func main() {
 	inputLayout := widgets.NewQGridLayout2()
 	inputLayout.AddWidget(detail.GroupBox, 0, 0, 0)
 	inputLayout.AddWidget(input, 1, 0, 0)
-	inputLayout.AddWidget(printerGroup, 2, 0, 0)
-	inputLayout.AddWidget(serialGroup, 3, 0, 0)
 	inputLayout.AddWidget(runButton, 4, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
