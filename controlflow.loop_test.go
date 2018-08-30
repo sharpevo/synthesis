@@ -32,7 +32,7 @@ func TestInstructionControlFlowLoopExecute(t *testing.T) {
 			t.Fatal(err)
 		}
 		expectedCount := count - index - 1
-		if varCount.Value.(int64) != int64(expectedCount) {
+		if expectedCount > 1 && varCount.Value.(int64) != int64(expectedCount) {
 			t.Errorf(
 				"\nEXPECT: %v\nGET: %v\n",
 				expectedCount,
