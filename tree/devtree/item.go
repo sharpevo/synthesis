@@ -19,6 +19,7 @@ const (
 	PRT_TCP_NETWORK = "NETWORK"
 	PRT_TCP_ADDRESS = "ADDRESS"
 
+	PRT_SRL_CODE      = "DEVICE_CODE"
 	PRT_SRL_NAME      = "DEVICE_NAME"
 	PRT_SRL_BAUD      = "BAUD_RATE"
 	PRT_SRL_CHARACTER = "CHARACTER_BITS"
@@ -167,6 +168,7 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 			PRT_SRL_CHARACTER,
 			PRT_SRL_BAUD,
 			PRT_SRL_NAME,
+			PRT_SRL_CODE,
 		} {
 			seen := false
 			for i := 0; i < connItem.ChildCount(); i++ {
