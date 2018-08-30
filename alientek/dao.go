@@ -1,10 +1,12 @@
 package alientek
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"posam/dao"
 	"posam/protocol/serial"
+	"strconv"
 	//"posam/protocol/serialport"
 	"posam/util/concurrentmap"
 )
@@ -23,27 +25,49 @@ type Dao struct {
 
 func NewDao(
 	name string,
-	baud int,
-	databits int,
-	stopbits int,
-	parity int,
-	addressbyte byte,
-) (*Dao, error) {
+	baud string,
+	character string,
+	stop string,
+	parity string,
+	deviceCode string,
+) (dao *Dao, err error) {
+
+	baudInt, err := strconv.Atoi(baud)
+	if err != nil {
+		return dao, err
+	}
+	characterInt, err := strconv.Atoi(character)
+	if err != nil {
+		return dao, err
+	}
+	stopInt, err := strconv.Atoi(stop)
+	if err != nil {
+		return dao, err
+	}
+	parityInt, err := strconv.Atoi(parity)
+	if err != nil {
+		return dao, err
+	}
+	codeBytes, err := hex.DecodeString(deviceCode)
+	if err != nil {
+		return dao, err
+	}
+
 	serialClient, err := serial.NewClient(
 		name,
-		baud,
-		databits,
-		stopbits,
-		parity,
+		baudInt,
+		characterInt,
+		stopInt,
+		parityInt,
 	)
 	if err != nil {
 		return nil, err
 	}
-	dao := &Dao{
-		AddressByte:  addressbyte,
+	dao = &Dao{
+		AddressByte:  codeBytes[0],
 		SerialClient: serialClient,
 	}
-	err = dao.SetID(string(addressbyte))
+	err = dao.SetID(deviceCode)
 	if err != nil {
 		return dao, err
 	}
