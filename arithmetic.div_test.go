@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-func TestInstructionDivisionFloat64Execute(t *testing.T) {
-	i := instruction.InstructionDivisionFloat64{}
+func TestInstructionDivisionExecuteFolat64(t *testing.T) {
+	i := instruction.InstructionDivision{}
 	i.Env = interpreter.NewStack()
 	var1, _ := vrb.NewVariable("var1", "11.11")
 	var2, _ := vrb.NewVariable("var2", "22.22")
@@ -55,4 +55,41 @@ func TestInstructionDivisionFloat64Execute(t *testing.T) {
 		)
 	}
 
+}
+
+func TestInstructionDivisionExecuteInt64(t *testing.T) {
+	i := instruction.InstructionDivision{}
+	i.Env = interpreter.NewStack()
+	var1, _ := vrb.NewVariable("var1", "88")
+	var2, _ := vrb.NewVariable("var2", "22")
+	i.Env.Set(var1)
+	i.Env.Set(var2)
+
+	i.Execute(var1.Name, var2.Name)
+	if v, _ := i.Env.Get(var1.Name); v.Value.(int64) != 4 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			4,
+			v.Value,
+		)
+	}
+
+	i.Execute(var1.Name, "2")
+	if v, _ := i.Env.Get(var1.Name); v.Value.(int64) != 2 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			2,
+			v.Value,
+		)
+	}
+
+	// return quotition without partition
+	i.Execute(var1.Name, "5")
+	if v, _ := i.Env.Get(var1.Name); v.Value.(int64) != 0 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			0,
+			v.Value,
+		)
+	}
 }
