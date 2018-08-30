@@ -51,7 +51,12 @@ func send(
 		return resp, err
 	}
 
-	if _, err = alientek.Instance(string(0x01)).SerialClient.Send(data, sentBytes, doneBytes); err != nil {
+	devInstance := alientek.Instance("01")
+	if devInstance == nil {
+		return resp, fmt.Errorf("invalid device %q", "01")
+	}
+
+	if _, err = devInstance.SerialClient.Send(data, sentBytes, doneBytes); err != nil {
 		return resp, err
 	}
 
