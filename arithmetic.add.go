@@ -18,7 +18,6 @@ func (i *InstructionAddition) Execute(args ...string) (resp interface{}, err err
 	if err != nil {
 		return resp, err
 	}
-
 	switch variable.Type {
 	case vrb.FLOAT:
 		v1 := v1v.(*big.Float)
@@ -35,6 +34,5 @@ func (i *InstructionAddition) Execute(args ...string) (resp interface{}, err err
 	default:
 		return "", fmt.Errorf("invalid variable type")
 	}
-
 	return resp, err
 }
