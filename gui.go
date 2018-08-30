@@ -143,6 +143,12 @@ func main() {
 
 	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
 	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
+
+	InstructionMap.Set("ADD", instruction.InstructionAddition{})
+	InstructionMap.Set("SUB", instruction.InstructionSubtraction{})
+	InstructionMap.Set("DIV", instruction.InstructionDivision{})
+	InstructionMap.Set("MUL", instruction.InstructionMultiplication{})
+
 	InstructionMap.Set("CMPVAR", instruction.InstructionVariableCompare{})
 	InstructionMap.Set("ERRGOTO", instruction.InstructionControlFlowErrGoto{})
 	InstructionMap.Set("EQGOTO", instruction.InstructionControlFlowEqualGoto{})
