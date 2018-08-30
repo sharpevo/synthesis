@@ -80,9 +80,15 @@ func (t *DeviceTree) customContextMenuRequested(p *core.QPoint) {
 	if t.ContextMenu == nil {
 		t.ContextMenu = widgets.NewQMenu(t)
 		menuAdd := t.ContextMenu.AddAction("Add child")
-		menuAdd.ConnectTriggered(func(checked bool) { t.AddItem(p, NewDeviceItem("New item", "value")) })
+		menuAdd.ConnectTriggered(func(checked bool) {
+			t.AddItem(p, NewDeviceItem("New item", "value"))
+			t.Save()
+		})
 		menuRemove := t.ContextMenu.AddAction("Remove node")
-		menuRemove.ConnectTriggered(func(checked bool) { t.RemoveItem(p) })
+		menuRemove.ConnectTriggered(func(checked bool) {
+			t.RemoveItem(p)
+			t.Save()
+		})
 	}
 	t.ContextMenu.Exec2(t.MapToGlobal(p), nil)
 }
