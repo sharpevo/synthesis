@@ -75,6 +75,69 @@ func TestParseObjects(t *testing.T) {
 
 }
 
+func TestParseOperandsInt(t *testing.T) {
+	var variable *vrb.Variable
+	var v1 interface{}
+	var v2 interface{}
+	var err error
+
+	i := instruction.InstructionArithmetic{}
+	i.Env = interpreter.NewStack()
+	var1, _ := vrb.NewVariable("var1", "11")
+	var2, _ := vrb.NewVariable("var2", "22")
+	var3, _ := vrb.NewVariable("var3", "string")
+	i.Env.Set(var1)
+	i.Env.Set(var2)
+	i.Env.Set(var3)
+
+	variable, v1, v2, err = i.ParseOperands(var1.Name, var2.Name)
+	if v1.(int64) != 11 || v2.(int64) != 22 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			"11 and 22",
+			fmt.Sprintf("%v and %v", v1, v2),
+		)
+	}
+
+	variable, v1, v2, err = i.ParseOperands(var1.Name, "33")
+	if v1.(int64) != 11 || v2.(int64) != 33 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			"11 and 33",
+			fmt.Sprintf("%v and %v", v1, v2),
+		)
+	}
+
+	variable, v1, v2, err = i.ParseOperands(var1.Name, var3.Name)
+	if !strings.Contains(err.Error(), "invalid syntax") {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			"invalid syntax",
+			err.Error(),
+		)
+	}
+
+	variable, v1, v2, err = i.ParseOperands(var3.Name, "33")
+	if !strings.Contains(err.Error(), "invalid variable type") {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			"Invalid type of variable",
+			err.Error(),
+		)
+	}
+
+	variable, v1, v2, err = i.ParseOperands("invalid", "33")
+	if !strings.Contains(err.Error(), "Invalid variable") {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			"Invalid variable",
+			err.Error(),
+		)
+	}
+	fmt.Println(variable)
+
+}
+
 func TestGetBigFloat64(t *testing.T) {
 	var v *big.Float
 	var err error
@@ -134,6 +197,70 @@ func TestGetBigFloat64(t *testing.T) {
 			"\nEXPECT: %v\nGET: %v\n",
 			"0",
 			v.String(),
+		)
+	}
+}
+
+func TestGetInt64(t *testing.T) {
+	var v int64
+	var err error
+
+	arithmetic := instruction.InstructionArithmetic{}
+	arithmetic.Env = interpreter.NewStack()
+
+	nonIntVar, _ := vrb.NewVariable("nonint", "none int")
+	v, err = arithmetic.GetInt64(nonIntVar)
+	if err == nil {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			"not match error",
+			err,
+		)
+	}
+
+	variable, _ := vrb.NewVariable("testname", "10")
+	arithmetic.Env.Set(variable)
+	varVariable, _ := arithmetic.Env.Get(variable.Name)
+
+	v, err = arithmetic.GetInt64(varVariable)
+	if err != nil || v != 10 {
+		t.Log(err)
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			10,
+			v,
+		)
+	}
+
+	varIntString := "11"
+	v, err = arithmetic.GetInt64(varIntString)
+	if err != nil || v != 11 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			12,
+			v,
+		)
+	}
+
+	varInt64 := int64(14)
+	v, err = arithmetic.GetInt64(varInt64)
+	if err != nil || v != 14 {
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			14,
+			v,
+		)
+	}
+
+	varInvalidString := "test"
+	v, err = arithmetic.GetInt64(varInvalidString)
+	if !strings.Contains(err.Error(), "invalid syntax") ||
+		v != 0 {
+		t.Logf(err.Error())
+		t.Errorf(
+			"\nEXPECT: %v\nGET: %v\n",
+			0,
+			v,
 		)
 	}
 }
