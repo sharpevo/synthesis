@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-func TestInstructionAdditionFloat64Execute(t *testing.T) {
-	i := instruction.InstructionAdditionFloat64{}
+func TestInstructionAdditionExecuteFloat64(t *testing.T) {
+	i := instruction.InstructionAddition{}
 	i.Env = interpreter.NewStack()
 	var1, _ := vrb.NewVariable("var1", "12.34")
 	var2, _ := vrb.NewVariable("var2", "43.21")
@@ -35,8 +35,8 @@ func TestInstructionAdditionFloat64Execute(t *testing.T) {
 	}
 }
 
-func TestInstructionAdditionFloat64ExecuteInt(t *testing.T) {
-	i := instruction.InstructionAdditionFloat64{}
+func TestInstructionAdditionExecuteInt64(t *testing.T) {
+	i := instruction.InstructionAddition{}
 	i.Env = interpreter.NewStack()
 	var1, _ := vrb.NewVariable("var1", "11")
 	var2, _ := vrb.NewVariable("var2", "22")

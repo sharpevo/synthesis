@@ -6,11 +6,11 @@ import (
 	"posam/interpreter/vrb"
 )
 
-type InstructionAdditionFloat64 struct {
+type InstructionAddition struct {
 	InstructionArithmetic
 }
 
-func (i *InstructionAdditionFloat64) Execute(args ...string) (resp interface{}, err error) {
+func (i *InstructionAddition) Execute(args ...string) (resp interface{}, err error) {
 	if len(args) < 2 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
