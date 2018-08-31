@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"log"
 	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 )
@@ -45,6 +46,7 @@ func (s *Stack) Set(variable *vrb.Variable) *vrb.Variable {
 	// TODO: global variable creation
 	cmap := s.cmaps[0]
 	result := cmap.Set(variable.Name, variable)
+	log.Printf("Set stack: %s = %v\n", variable.Name, variable.Value)
 	return result.(*vrb.Variable)
 }
 
