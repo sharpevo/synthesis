@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -14,9 +13,12 @@ import (
 	"time"
 
 	"github.com/therecipe/qt/widgets"
-	"posam/gui/tree"
+	"posam/gui/tree/devtree"
+	"posam/gui/tree/instree"
+	"posam/gui/uiutil"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 )
 
 const (
@@ -142,6 +144,12 @@ func main() {
 
 	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
 	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
+
+	InstructionMap.Set("ADD", instruction.InstructionAddition{})
+	InstructionMap.Set("SUB", instruction.InstructionSubtraction{})
+	InstructionMap.Set("DIV", instruction.InstructionDivision{})
+	InstructionMap.Set("MUL", instruction.InstructionMultiplication{})
+
 	InstructionMap.Set("CMPVAR", instruction.InstructionVariableCompare{})
 	InstructionMap.Set("ERRGOTO", instruction.InstructionControlFlowErrGoto{})
 	InstructionMap.Set("EQGOTO", instruction.InstructionControlFlowEqualGoto{})
@@ -163,8 +171,8 @@ func main() {
 	window.SetMinimumSize2(500, 400)
 	window.SetWindowTitle("POSaM Control Software by iGeneTech")
 
-	widget := widgets.NewQWidget(nil, 0)
-	window.SetCentralWidget(widget)
+	tabWidget := widgets.NewQTabWidget(nil)
+	window.SetCentralWidget(tabWidget)
 
 	msgBox := NewQMessageBoxWithCustomSlot(nil)
 
@@ -180,75 +188,12 @@ func main() {
 	input.SetPlainText(CMD_CF)
 	input.SetVisible(false)
 
-	// tcp group
-
-	printerGroup := widgets.NewQGroupBox2("Printer", nil)
-
-	printerNetworkLabel := widgets.NewQLabel2("Network:", nil, 0)
-	printerAddressLabel := widgets.NewQLabel2("Address:", nil, 0)
-	printerTimeoutLabel := widgets.NewQLabel2("Timeout:", nil, 0)
-
-	printerNetworkInput := widgets.NewQLineEdit(nil)
-	printerNetworkInput.SetPlaceholderText("tcp, tcp4, tcp6")
-	printerNetworkInput.SetText("tcp")
-	printerAddressInput := widgets.NewQLineEdit(nil)
-	printerAddressInput.SetPlaceholderText("localhost:3000")
-	printerAddressInput.SetText("192.168.100.215:21005")
-	printerTimeoutInput := widgets.NewQLineEdit(nil)
-	printerTimeoutInput.SetPlaceholderText("10")
-	printerTimeoutInput.SetText("10")
-
-	printerLayout := widgets.NewQGridLayout2()
-	printerLayout.AddWidget(printerNetworkLabel, 0, 0, 0)
-	printerLayout.AddWidget(printerNetworkInput, 0, 1, 0)
-	printerLayout.AddWidget(printerAddressLabel, 1, 0, 0)
-	printerLayout.AddWidget(printerAddressInput, 1, 1, 0)
-	printerLayout.AddWidget(printerTimeoutLabel, 2, 0, 0)
-	printerLayout.AddWidget(printerTimeoutInput, 2, 1, 0)
-
-	printerGroup.SetLayout(printerLayout)
-
-	// serial group
-
-	serialGroup := widgets.NewQGroupBox2("Serial port", nil)
-
-	serialDeviceLabel := widgets.NewQLabel2("Device name:", nil, 0)
-	serialBaudLabel := widgets.NewQLabel2("Baud rate:", nil, 0)
-	serialCharacterLabel := widgets.NewQLabel2("Character bits:", nil, 0)
-	serialStopLabel := widgets.NewQLabel2("Stop bits:", nil, 0)
-	serialParityLabel := widgets.NewQLabel2("Parity:", nil, 0)
-
-	serialDeviceInput := widgets.NewQLineEdit(nil)
-	serialDeviceInput.SetPlaceholderText("COM1, /dev/ttyUSB0...")
-	serialDeviceInput.SetText("/dev/ttyUSB0")
-	serialBaudInput := widgets.NewQLineEdit(nil)
-	serialBaudInput.SetText("9600")
-	serialCharacterInput := widgets.NewQLineEdit(nil)
-	serialCharacterInput.SetText("8")
-	serialStopInput := widgets.NewQLineEdit(nil)
-	serialStopInput.SetText("1")
-	serialParityInput := widgets.NewQLineEdit(nil)
-	serialParityInput.SetText("n")
-	serialParityInput.SetPlaceholderText("'n' means 'disable'")
-
-	serialLayout := widgets.NewQGridLayout2()
-	serialLayout.AddWidget(serialDeviceLabel, 0, 0, 0)
-	serialLayout.AddWidget(serialDeviceInput, 0, 1, 0)
-	serialLayout.AddWidget(serialBaudLabel, 1, 0, 0)
-	serialLayout.AddWidget(serialBaudInput, 1, 1, 0)
-	serialLayout.AddWidget(serialCharacterLabel, 2, 0, 0)
-	serialLayout.AddWidget(serialCharacterInput, 2, 1, 0)
-	serialLayout.AddWidget(serialStopLabel, 3, 0, 0)
-	serialLayout.AddWidget(serialStopInput, 3, 1, 0)
-	serialLayout.AddWidget(serialParityLabel, 4, 0, 0)
-	serialLayout.AddWidget(serialParityInput, 4, 1, 0)
-
-	serialGroup.SetLayout(serialLayout)
+	instDetail := instree.NewInstructionDetail(InstructionMap)
+	instDetail.SetDevInput(devtree.ParseConnList())
 
 	// result group
 
 	result := widgets.NewQTextEdit(nil)
-	//result := widgets.NewQTextBrowser(nil)
 	result.SetReadOnly(true)
 	result.SetStyleSheet("QTextEdit { background-color: #e6e6e6}")
 
@@ -264,8 +209,6 @@ func main() {
 	terminatecc := make(chan chan interface{}, 1)
 	defer close(terminatecc)
 
-	stack := interpreter.NewStack()
-
 	runButton := widgets.NewQPushButton2("RUN", nil)
 	runButton.SetVisible(false)
 	runButton.ConnectClicked(func(bool) {
@@ -275,25 +218,66 @@ func main() {
 		}
 		suspButton.SetEnabled(true)
 
-		err := initSerialDevice(
-			serialDeviceInput.Text(),
-			serialBaudInput.Text(),
-			serialCharacterInput.Text(),
-			serialStopInput.Text(),
-			serialParityInput.Text(),
-		)
-		if err != nil {
-			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+		stack := interpreter.NewStack()
+
+		devtree.ParseDeviceConf()
+		for k, v := range devtree.ConfMap {
+			variable, err := vrb.NewVariable(k, v)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+				return
+			}
+			stack.Set(variable)
 		}
 
-		err = initPrinter(
-			printerNetworkInput.Text(),
-			printerAddressInput.Text(),
-			printerTimeoutInput.Text(),
-		)
-		if err != nil {
-			widgets.QMessageBox_Information(nil, "Error", err.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_SRL] {
+			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
+			name, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_NAME))
+			baud, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_BAUD))
+			character, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_CHARACTER))
+			stop, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_STOP))
+			parity, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_PARITY))
+			deviceCode, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_SRL_CODE))
+			err := initSerialDevice(
+				fmt.Sprintf("%v", name.Value),
+				fmt.Sprintf("%v", baud.Value),
+				fmt.Sprintf("%v", character.Value),
+				fmt.Sprintf("%v", stop.Value),
+				fmt.Sprintf("%v", parity.Value),
+				fmt.Sprintf("%v", deviceCode.Value),
+			)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+			}
 		}
+
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_TCP] {
+			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
+			network, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_TCP_NETWORK))
+			address, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_TCP_ADDRESS))
+			timeout, _ := stack.Get(
+				devtree.ComposeVarName(base, devtree.PRT_TCP_TIMEOUT))
+			err := initTCPDevice(
+				fmt.Sprintf("%v", network.Value),
+				fmt.Sprintf("%v", address.Value),
+				fmt.Sprintf("%v", timeout.Value),
+			)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+			}
+		}
+
+		instDetail.SetDevInput(devtree.GetConnList())
+
+		// TODO: init CAN devices
 
 		result.SetText("RUNNING")
 
@@ -378,14 +362,10 @@ func main() {
 		}()
 	})
 
-	detail := tree.NewInstructionDetail(InstructionMap)
-
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
-	inputLayout.AddWidget(detail.GroupBox, 0, 0, 0)
+	inputLayout.AddWidget(instDetail.GroupBox, 0, 0, 0)
 	inputLayout.AddWidget(input, 1, 0, 0)
-	inputLayout.AddWidget(printerGroup, 2, 0, 0)
-	inputLayout.AddWidget(serialGroup, 3, 0, 0)
 	inputLayout.AddWidget(runButton, 4, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
@@ -397,47 +377,24 @@ func main() {
 	outputLayout.AddWidget(resuButton, 1, 1, 0)
 	outputGroup.SetLayout(outputLayout)
 
-	treeGroup := widgets.NewQGroupBox2("Graphical Programming", nil)
-	treeLayout := widgets.NewQGridLayout2()
-	treeWidget := tree.NewTree(detail, runButton, input)
-	treeLayout.AddWidget3(treeWidget, 0, 0, 1, 2, 0)
+	insTab := widgets.NewQWidget(nil, 0)
+	insTabLayout := widgets.NewQGridLayout2()
+	insTabLayout.AddWidget3(instree.NewInsTree(instDetail, runButton, input), 0, 0, 2, 1, 0)
+	insTabLayout.AddWidget3(inputGroup, 0, 1, 1, 1, 0)
+	insTabLayout.AddWidget3(outputGroup, 1, 1, 1, 1, 0)
 
-	treeExportButton := widgets.NewQPushButton2("EXPORT", nil)
-	treeExportButton.ConnectClicked(func(bool) { treeWidget.ExportAll() })
-	treeLayout.AddWidget(treeExportButton, 1, 0, 0)
+	insTabLayout.SetColumnStretch(0, 1)
+	insTabLayout.SetColumnStretch(1, 1)
 
-	treeImportButton := widgets.NewQPushButton2("IMPORT", nil)
-	treeImportButton.ConnectClicked(func(bool) { treeWidget.Import() })
-	treeLayout.AddWidget(treeImportButton, 1, 1, 0)
+	insTab.SetLayout(insTabLayout)
+	tabWidget.AddTab(insTab, "Instructions")
 
-	treeGenerateButton := widgets.NewQPushButton2("RUN", nil)
-	treeGenerateButton.ConnectClicked(func(bool) {
-		filePath, err := treeWidget.Generate()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		instBytes, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		input.SetPlainText(string(instBytes))
-		runButton.Click()
-	})
-	treeLayout.AddWidget3(treeGenerateButton, 2, 0, 1, 2, 0)
+	devTab := widgets.NewQWidget(nil, 0)
+	devTabLayout := widgets.NewQGridLayout2()
+	devTabLayout.AddWidget(devtree.NewDevTree(instDetail), 0, 0, 0)
+	devTab.SetLayout(devTabLayout)
 
-	treeGroup.SetLayout(treeLayout)
-
-	layout := widgets.NewQGridLayout2()
-	layout.AddWidget3(treeGroup, 0, 0, 2, 1, 0)
-	layout.AddWidget3(inputGroup, 0, 1, 1, 1, 0)
-	layout.AddWidget3(outputGroup, 1, 1, 1, 1, 0)
-
-	layout.SetColumnStretch(0, 1)
-	layout.SetColumnStretch(1, 1)
-	widget.SetLayout(layout)
-
+	tabWidget.AddTab(devTab, "Devices")
 	window.Show()
 	app.Exec()
 }
@@ -456,39 +413,24 @@ func initSerialDevice(
 	baud string,
 	character string,
 	stop string,
-	parity string) (err error) {
-
-	var deviceAddress byte
-	deviceAddress = 0x01
-	if alientek.Instance(string(deviceAddress)) != nil {
+	parity string,
+	deviceCode string,
+) (err error) {
+	if alientek.Instance(deviceCode) != nil {
+		log.Printf("Device %q has been initialized\n", deviceCode)
 		return
 	}
-
-	baudInt, err := strconv.Atoi(baud)
-	if err != nil {
-		return
-	}
-	characterInt, err := strconv.Atoi(character)
-	if err != nil {
-		return
-	}
-	stopInt, err := strconv.Atoi(stop)
-	if err != nil {
-		return
-	}
-	//parity, err := strconv.Atoi(character)
-	//if err != nil {
-	//return
-	//}
-
-	alientek.NewDao(
+	_, err = alientek.NewDao(
 		device,
-		baudInt,
-		characterInt,
-		stopInt,
-		-1,
-		deviceAddress,
+		baud,
+		character,
+		stop,
+		parity,
+		deviceCode,
 	)
+	if err != nil {
+		return err
+	}
 
 	switch runtime.GOOS {
 	case "windows":
@@ -551,8 +493,9 @@ func initSerialDevice(
 	return
 }
 
-func initPrinter(network string, address string, secondString string) (err error) {
-	if ricoh_g5.Instance("") != nil {
+func initTCPDevice(network string, address string, secondString string) (err error) {
+	if ricoh_g5.Instance(address) != nil {
+		log.Printf("Device %q has been initialized\n", address)
 		return
 	}
 	secondInt, err := strconv.Atoi(secondString)
