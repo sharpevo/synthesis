@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 )
 
 type VariableType int
@@ -102,7 +103,13 @@ func newVariable(name string, input string) (*Variable, error) {
 	return variable, nil
 }
 
+const QUOTE = "\""
+
 func ParseValue(input string) (interface{}, VariableType, error) {
+	if strings.HasPrefix(input, QUOTE) && strings.HasSuffix(input, QUOTE) {
+		trimed := strings.Trim(input, QUOTE)
+		return trimed, STRING, nil
+	}
 	if output, err := strconv.ParseInt(input, 0, 64); err == nil {
 		return output, INT, nil
 	}
