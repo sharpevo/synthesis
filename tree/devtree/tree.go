@@ -4,16 +4,19 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"posam/gui/tree"
+	"posam/gui/tree/instree"
 	"posam/gui/uiutil"
 )
 
 type DeviceTree struct {
 	tree.Tree
-	detail *DeviceDetail
+	detail     *DeviceDetail
+	instDetail *instree.InstructionDetail
 }
 
 func NewTree(
 	detail *DeviceDetail,
+	instDetail *instree.InstructionDetail,
 ) *DeviceTree {
 
 	treeWidget := &DeviceTree{
@@ -22,6 +25,7 @@ func NewTree(
 			nil,
 		},
 		detail,
+		instDetail,
 	}
 	treeWidget.SetWindowTitle("Devices")
 	treeWidget.SetContextMenuPolicy(core.Qt__CustomContextMenu)
@@ -100,8 +104,7 @@ func (t *DeviceTree) Save() error {
 	if err != nil {
 		return err
 	}
-	//uiutil.MessageBoxInfo(fmt.Sprintf(
-	//"Configuration is saved as %q", DEVICE_CONF_FILE))
+	t.instDetail.SetDevInput(ParseConnList())
 	return nil
 }
 

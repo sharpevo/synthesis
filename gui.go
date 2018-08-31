@@ -18,6 +18,7 @@ import (
 	"posam/gui/uiutil"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 )
 
 const (
@@ -188,6 +189,7 @@ func main() {
 	input.SetVisible(false)
 
 	instDetail := instree.NewInstructionDetail(InstructionMap)
+	instDetail.SetDevInput(devtree.ParseConnList())
 
 	// result group
 
@@ -217,18 +219,18 @@ func main() {
 		suspButton.SetEnabled(true)
 
 		stack := interpreter.NewStack()
-		err := devtree.InitStack(stack)
-		log.Printf("Initiating serial devices: %v\n", devtree.ConnSRLVarNameList)
-		log.Printf("Initiating TCP devices: %v\n", devtree.ConnTCPVarNameList)
-		log.Printf("Initiating CAN devices: %v\n", devtree.ConnCANVarNameList)
-		if err != nil {
-			log.Println(err)
+
+		devtree.ParseDeviceConf()
+		for k, v := range devtree.ConfMap {
+			variable, err := vrb.NewVariable(k, v)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+				return
+			}
+			stack.Set(variable)
 		}
 
-		devList := []string{}
-
-		for _, s := range devtree.ConnSRLVarNameList {
-			devList = append(devList, s)
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_SRL] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			name, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_SRL_NAME))
@@ -242,7 +244,7 @@ func main() {
 				devtree.ComposeVarName(base, devtree.PRT_SRL_PARITY))
 			deviceCode, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_SRL_CODE))
-			err = initSerialDevice(
+			err := initSerialDevice(
 				fmt.Sprintf("%v", name.Value),
 				fmt.Sprintf("%v", baud.Value),
 				fmt.Sprintf("%v", character.Value),
@@ -255,8 +257,7 @@ func main() {
 			}
 		}
 
-		for _, s := range devtree.ConnTCPVarNameList {
-			devList = append(devList, s)
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_TCP] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			network, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_TCP_NETWORK))
@@ -264,7 +265,7 @@ func main() {
 				devtree.ComposeVarName(base, devtree.PRT_TCP_ADDRESS))
 			timeout, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_TCP_TIMEOUT))
-			err = initTCPDevice(
+			err := initTCPDevice(
 				fmt.Sprintf("%v", network.Value),
 				fmt.Sprintf("%v", address.Value),
 				fmt.Sprintf("%v", timeout.Value),
@@ -274,7 +275,7 @@ func main() {
 			}
 		}
 
-		instDetail.SetDevInput(devList)
+		instDetail.SetDevInput(devtree.GetConnList())
 
 		// TODO: init CAN devices
 
@@ -390,7 +391,7 @@ func main() {
 
 	devTab := widgets.NewQWidget(nil, 0)
 	devTabLayout := widgets.NewQGridLayout2()
-	devTabLayout.AddWidget(devtree.NewDevTree(), 0, 0, 0)
+	devTabLayout.AddWidget(devtree.NewDevTree(instDetail), 0, 0, 0)
 	devTab.SetLayout(devTabLayout)
 
 	tabWidget.AddTab(devTab, "Devices")

@@ -2,24 +2,16 @@ package devtree
 
 import (
 	"fmt"
-	//"io/ioutil"
-	//"os"
-	//"path/filepath"
-	"posam/gui/tree"
-	//"strings"
-	//"time"
 	"path"
-	"posam/interpreter"
-	"posam/interpreter/vrb"
+	"posam/gui/tree"
 )
 
 const (
 	DEVICE_CONF_FILE = "devices.bin"
 )
 
-var ConnSRLVarNameList []string
-var ConnTCPVarNameList []string
-var ConnCANVarNameList []string
+var ConfMap map[string]string
+var ConnMap map[string][]string
 
 type Node struct {
 	tree.Node
@@ -28,54 +20,63 @@ type Node struct {
 	Children []Node
 }
 
-func InitStack(stack *interpreter.Stack) error {
+func ParseDeviceConf() {
+	ConfMap = make(map[string]string)
+	ConnMap = make(map[string][]string)
 	node := new(Node)
-	ConnSRLVarNameList = []string{}
-	ConnTCPVarNameList = []string{}
-	ConnCANVarNameList = []string{}
 	err := tree.ImportNode(node, DEVICE_CONF_FILE)
 	if err != nil {
-		return err
+		fmt.Println(err)
 	}
 	cpath := path.Join("/", node.Title)
 	for _, v := range node.Children {
-		err = setVar(cpath, v, stack)
+		err = parseDeviceConf(cpath, v)
 	}
-	return nil
+	//fmt.Println(ConfMap)
+	//fmt.Println(ConnMap)
 }
 
-func setVar(ppath string, node Node, stack *interpreter.Stack) error {
+func parseDeviceConf(ppath string, node Node) error {
 	cpath := path.Join(ppath, node.Title)
-	if isConnNode(node) {
-		switch node.Type {
-		case DEV_TYPE_TCP:
-			ConnTCPVarNameList = append(ConnTCPVarNameList, cpath)
-			break
-		case DEV_TYPE_SRL:
-			ConnSRLVarNameList = append(ConnSRLVarNameList, cpath)
-			break
-		case DEV_TYPE_CAN:
-			ConnCANVarNameList = append(ConnCANVarNameList, cpath)
-			break
-		default:
-			return fmt.Errorf("invalid node type %q", node.Type)
+	ConfMap[cpath] = node.Data
+	if isAvailableNode(node) {
+		if node.Type == "" {
+			node.Type = DEV_TYPE_UNK
+		}
+		ConnMap[node.Type] = append(ConnMap[node.Type], cpath)
+	}
+	for _, v := range node.Children {
+		err := parseDeviceConf(cpath, v)
+		if err != nil {
+			return err
 		}
 	}
-	variable, err := vrb.NewVariable(cpath, node.Data)
-	if err != nil {
-		return err
-	}
-	stack.Set(variable)
-	for _, v := range node.Children {
-		err = setVar(cpath, v, stack)
-	}
 	return nil
 }
 
-func isConnNode(node Node) bool {
-	return node.Enabled && node.Type != DEV_TYPE_UNK
+func isAvailableNode(node Node) bool {
+	return node.Type == DEV_TYPE_UNK || node.Enabled
 }
 
 func ComposeVarName(args ...string) string {
 	return path.Join(args...)
+}
+
+func ParseConnList() []string {
+	ParseDeviceConf()
+	return GetConnList()
+}
+
+func GetConnList() []string {
+	l := []string{}
+	for _, v := range []string{
+		DEV_TYPE_SRL,
+		DEV_TYPE_TCP,
+		DEV_TYPE_CAN,
+	} {
+		for _, s := range ConnMap[v] {
+			l = append(l, s)
+		}
+	}
+	return l
 }

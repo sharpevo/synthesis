@@ -2,15 +2,16 @@ package devtree
 
 import (
 	"github.com/therecipe/qt/widgets"
+	"posam/gui/tree/instree"
 )
 
-func NewDevTree() *widgets.QGroupBox {
+func NewDevTree(instDetail *instree.InstructionDetail) *widgets.QGroupBox {
 
 	detail := NewDeviceDetail()
 
 	treeGroup := widgets.NewQGroupBox2("Referenced configurations of devices", nil)
 	treeLayout := widgets.NewQGridLayout2()
-	treeWidget := NewTree(detail)
+	treeWidget := NewTree(detail, instDetail)
 	treeLayout.AddWidget(treeWidget, 0, 0, 0)
 	treeLayout.AddWidget3(detail.GroupBox, 0, 1, 2, 1, 0)
 

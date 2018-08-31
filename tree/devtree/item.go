@@ -1,7 +1,6 @@
 package devtree
 
 import (
-	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"posam/gui/tree"
@@ -100,7 +99,6 @@ func (d *DeviceDetail) saveDeviceDetail() {
 		tree.DataRole(),
 		core.NewQVariant25(variantMap),
 	)
-	fmt.Println(d.treeItem)
 }
 
 func (d *DeviceDetail) Refresh(item *widgets.QTreeWidgetItem) {
