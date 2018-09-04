@@ -26,7 +26,6 @@ type InstructionDetail struct {
 	instructionMap map[string][]string
 	GroupBox       *widgets.QGroupBox
 	titleInput     *widgets.QLineEdit
-	lineInput      *widgets.QLineEdit
 	typeInput      *widgets.QComboBox
 	instInput      *widgets.QComboBox
 	devInput       *widgets.QComboBox
@@ -47,11 +46,7 @@ func NewInstructionDetail(instructionDaoMap map[string]interpreter.InstructionMa
 	d.typeInput = widgets.NewQComboBox(nil)
 	d.typeInput.AddItems([]string{TYPE_INS, TYPE_SET})
 	d.typeInput.ConnectCurrentTextChanged(d.onInstructionTypeChanged)
-
 	d.titleInput = widgets.NewQLineEdit(nil)
-	d.lineInput = widgets.NewQLineEdit(nil)
-	d.lineInput.SetVisible(false)
-
 	d.instInput = widgets.NewQComboBox(nil)
 	d.instructionMap = make(map[string][]string)
 	for name, instructionMap := range instructionDaoMap {
@@ -179,10 +174,9 @@ func NewInstructionDetail(instructionDaoMap map[string]interpreter.InstructionMa
 	layout.AddWidget(d.instInput, 3, 1, 0)
 	layout.AddWidget(argsLabel, 4, 0, 0)
 	layout.AddWidget(d.argsInput, 4, 1, 0)
-	layout.AddWidget3(d.lineInput, 5, 0, 1, 2, 0)
-	layout.AddWidget3(d.waveformGroup, 6, 0, 1, 2, 0)
+	layout.AddWidget3(d.waveformGroup, 5, 0, 1, 2, 0)
 
-	layout.AddWidget3(d.saveButton, 7, 0, 1, 2, 0)
+	layout.AddWidget3(d.saveButton, 6, 0, 1, 2, 0)
 	d.GroupBox.SetLayout(layout)
 	return &d
 }
@@ -191,19 +185,12 @@ func (d *InstructionDetail) saveInstruction() {
 	if d.treeItem == nil {
 		return
 	}
-
-	d.SetLineInput()
-
 	d.treeItem.SetText(0, d.titleInput.Text())
-	tree.SetTreeItemData(d.treeItem, d.lineInput.Text())
-
 }
 
 func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
-	line := tree.GetTreeItemData(item)
 	d.treeItem = item
 	d.titleInput.SetText(item.Text(0))
-	d.lineInput.SetText(line)
 	d.SetTypeInput()
 	d.SetInstInput()
 	d.SetArgsInput()
@@ -238,10 +225,6 @@ func (d *InstructionDetail) onDeviceChanged(selected string) {
 			int(core.Qt__UserRole)).ToString()])
 }
 
-func (d *InstructionDetail) Line() string {
-	return d.lineInput.Text()
-}
-
 func (d *InstructionDetail) SetTypeInput() {
 	if strings.HasPrefix(d.lineInput.Text(), INST_SET_SYNC) ||
 		strings.HasPrefix(d.lineInput.Text(), INST_SET_ASYN) {
@@ -251,19 +234,7 @@ func (d *InstructionDetail) SetTypeInput() {
 	}
 }
 
-func (d *InstructionDetail) GetInstructionFromLine() string {
-	list := strings.Split(d.Line(), " ")
-	return list[0]
-}
-
 func (d *InstructionDetail) SetInstInput() {
-	instruction := d.GetInstructionFromLine()
-	for _, v := range d.instructionList {
-		if instruction == v {
-			d.instInput.SetCurrentText(instruction)
-			return
-		}
-	}
 	if instruction == INST_SET_SYNC {
 		d.instInput.SetCurrentText(INST_SET_SYNC)
 		return
@@ -274,9 +245,6 @@ func (d *InstructionDetail) SetInstInput() {
 	}
 }
 
-func (d *InstructionDetail) GetArgumentsFromLine() string {
-	instruction := d.GetInstructionFromLine()
-	return strings.Trim(d.Line(), fmt.Sprintf("%s ", instruction))
 }
 
 func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
@@ -292,9 +260,6 @@ func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
 }
 
 func (d *InstructionDetail) SetArgsInput() {
-	d.argsInput.SetText(d.GetArgumentsFromLine())
 }
 
-func (d *InstructionDetail) SetLineInput() {
-	d.lineInput.SetText(fmt.Sprintf("%s %s", d.instInput.CurrentText(), d.argsInput.Text()))
 }
