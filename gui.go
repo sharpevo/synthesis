@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"posam/dao"
 	"posam/dao/alientek"
 	"posam/dao/ricoh_g5"
 	"runtime"
@@ -122,37 +123,11 @@ type QMessageBoxWithCustomSlot struct {
 	_ func(message string) `slot:showMessageBoxSlot`
 }
 
+func init() {
+	buildInstructionMap()
+}
+
 func main() {
-
-	InstructionMap.Set("PRINT", InstructionPrint{})
-	InstructionMap.Set("SLEEP", instruction.InstructionSleep{})
-	InstructionMap.Set("IMPORT", instruction.InstructionImport{})
-	InstructionMap.Set("ASYNC", instruction.InstructionAsync{})
-	InstructionMap.Set("LED", instruction.InstructionLed{})
-	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
-
-	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
-	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
-
-	InstructionMap.Set("ADD", instruction.InstructionAddition{})
-	InstructionMap.Set("SUB", instruction.InstructionSubtraction{})
-	InstructionMap.Set("DIV", instruction.InstructionDivision{})
-	InstructionMap.Set("MUL", instruction.InstructionMultiplication{})
-
-	InstructionMap.Set("CMPVAR", instruction.InstructionVariableCompare{})
-	InstructionMap.Set("ERRGOTO", instruction.InstructionControlFlowErrGoto{})
-	InstructionMap.Set("EQGOTO", instruction.InstructionControlFlowEqualGoto{})
-	InstructionMap.Set("NEGOTO", instruction.InstructionControlFlowNotEqualGoto{})
-	InstructionMap.Set("GTGOTO", instruction.InstructionControlFlowGreaterThanGoto{})
-	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
-	InstructionMap.Set("LOOP", instruction.InstructionControlFlowLoop{})
-	InstructionMap.Set("RETURN", instruction.InstructionControlFlowReturn{})
-	InstructionMap.Set("GOTO", instruction.InstructionControlFlowGoto{})
-
-	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
-	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
-	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
-	InstructionMap.Set("WAVEFORM", instruction.InstructionPrinterHeadWaveform{})
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
@@ -503,4 +478,17 @@ func initTCPDevice(network string, address string, secondString string) (err err
 		return fmt.Errorf("printer is not ready")
 	}
 	return nil
+}
+
+func buildInstructionMap() {
+	for _, d := range []interpreter.InstructionMapt{
+		dao.InstructionMap,
+		ricoh_g5.InstructionMap,
+		alientek.InstructionMap,
+	} {
+		for k, v := range d {
+			fmt.Println(k)
+			InstructionMap[k] = v
+		}
+	}
 }
