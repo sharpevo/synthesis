@@ -192,6 +192,7 @@ func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	d.treeItem = item
 	d.titleInput.SetText(item.Text(0))
 	d.SetTypeInput()
+	d.SetDevInput()
 	d.SetInstInput()
 	d.SetArgsInput()
 	d.saveButton.SetEnabled(true)
@@ -245,6 +246,8 @@ func (d *InstructionDetail) SetInstInput() {
 	}
 }
 
+func (d *InstructionDetail) SetDevInput() {
+	d.devInput.SetCurrentText(d.Device())
 }
 
 func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
