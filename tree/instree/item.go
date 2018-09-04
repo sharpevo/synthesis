@@ -186,6 +186,16 @@ func (d *InstructionDetail) saveInstruction() {
 		return
 	}
 	d.treeItem.SetText(0, d.titleInput.Text())
+	variantMap := MakeVariantMap(
+		d.devInput.CurrentText(),
+		d.instInput.CurrentText(),
+		d.argsInput.Text(),
+	)
+	d.treeItem.SetData(
+		0,
+		tree.DataRole(),
+		core.NewQVariant25(variantMap),
+	)
 }
 
 func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
@@ -227,8 +237,8 @@ func (d *InstructionDetail) onDeviceChanged(selected string) {
 }
 
 func (d *InstructionDetail) SetTypeInput() {
-	if strings.HasPrefix(d.lineInput.Text(), INST_SET_SYNC) ||
-		strings.HasPrefix(d.lineInput.Text(), INST_SET_ASYN) {
+	if d.Instruction() == INST_SET_SYNC ||
+		d.Instruction() == INST_SET_ASYN {
 		d.typeInput.SetCurrentText(TYPE_SET)
 	} else {
 		d.typeInput.SetCurrentText(TYPE_INS)
@@ -236,14 +246,15 @@ func (d *InstructionDetail) SetTypeInput() {
 }
 
 func (d *InstructionDetail) SetInstInput() {
-	if instruction == INST_SET_SYNC {
+	if d.Instruction() == INST_SET_SYNC {
 		d.instInput.SetCurrentText(INST_SET_SYNC)
 		return
 	}
-	if instruction == INST_SET_ASYN {
+	if d.Instruction() == INST_SET_ASYN {
 		d.instInput.SetCurrentText(INST_SET_ASYN)
 		return
 	}
+	d.instInput.SetCurrentText(d.Instruction())
 }
 
 func (d *InstructionDetail) SetDevInput() {
@@ -263,6 +274,46 @@ func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
 }
 
 func (d *InstructionDetail) SetArgsInput() {
+	d.argsInput.SetText(d.Arguments())
 }
 
+func (d *InstructionDetail) Device() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.Device()
+}
+
+func (d *InstructionDetail) Instruction() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.Instruction()
+}
+
+func (d *InstructionDetail) Arguments() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.Arguments()
+}
+
+type VariantMap map[string]*core.QVariant
+
+func MakeVariantMap(
+	deviceText string,
+	instructionText string,
+	argumentText string,
+) VariantMap {
+	variantMap := make(VariantMap)
+	variantMap["device"] = core.NewQVariant17(deviceText)
+	variantMap["instruction"] = core.NewQVariant17(instructionText)
+	variantMap["arguments"] = core.NewQVariant17(argumentText)
+	return variantMap
+}
+
+func (v VariantMap) Device() string {
+	return v["device"].ToString()
+}
+
+func (v VariantMap) Instruction() string {
+	return v["instruction"].ToString()
+}
+
+func (v VariantMap) Arguments() string {
+	return v["arguments"].ToString()
 }
