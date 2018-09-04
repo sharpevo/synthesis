@@ -193,10 +193,15 @@ func (t *InstructionTree) Import(filePath string) error {
 
 func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 	item := widgets.NewQTreeWidgetItem2([]string{node.Title}, 0)
+	variantMap := MakeVariantMap(
+		node.DevicePath,
+		node.Instruction,
+		node.Arguments,
+	)
 	item.SetData(
 		0,
 		tree.DataRole(),
-		core.NewQVariant17(node.Data),
+		core.NewQVariant25(variantMap),
 	)
 	for i := 0; i < len(node.Children); i++ {
 		item.AddChild(t.ImportNode(node.Children[i]))
@@ -218,7 +223,10 @@ func (t *InstructionTree) Export(filePath string) error {
 func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 	node := Node{}
 	node.Title = root.Text(0)
-	node.Data = tree.GetTreeItemData(root)
+	variantMap := VariantMap(root.Data(0, tree.DataRole()).ToMap())
+	node.DevicePath = variantMap.Device()
+	node.Instruction = variantMap.Instruction()
+	node.Arguments = variantMap.Arguments()
 	for i := 0; i < root.ChildCount(); i++ {
 		node.Children = append(node.Children, t.ExportNode(root.Child(i)))
 	}
