@@ -70,8 +70,8 @@ func ParseConnList() []string {
 func GetConnList() []string {
 	l := []string{}
 	for _, v := range []string{
-		DEV_TYPE_SRL,
-		DEV_TYPE_TCP,
+		DEV_TYPE_ALT,
+		DEV_TYPE_RCG,
 		DEV_TYPE_CAN,
 	} {
 		for _, s := range ConnMap[v] {

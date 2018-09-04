@@ -8,9 +8,9 @@ import (
 
 const (
 	DEV_TYPE_UNK = "UNKNOWN"
-	DEV_TYPE_TCP = "TCP"
-	DEV_TYPE_CAN = "CAN"
-	DEV_TYPE_SRL = "SERIAL"
+	DEV_TYPE_ALT = "ALIENTEK"
+	DEV_TYPE_RCG = "RICOH_G5"
+	DEV_TYPE_CAN = "IGENETECH_CAN"
 
 	PRT_CONN = "CONN"
 
@@ -51,8 +51,8 @@ func NewDeviceDetail() *DeviceDetail {
 	d.typeInput = widgets.NewQComboBox(nil)
 	d.typeInput.AddItems([]string{
 		DEV_TYPE_UNK,
-		DEV_TYPE_SRL,
-		DEV_TYPE_TCP,
+		DEV_TYPE_ALT,
+		DEV_TYPE_RCG,
 		DEV_TYPE_CAN,
 	})
 	d.typeInput.ConnectCurrentTextChanged(d.onDeviceTypeChanged)
@@ -141,7 +141,7 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 	}
 
 	switch selected {
-	case DEV_TYPE_TCP:
+	case DEV_TYPE_RCG:
 		for _, title := range []string{
 			PRT_TCP_TIMEOUT,
 			PRT_TCP_ADDRESS,
@@ -159,7 +159,7 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 				connItem.InsertChild(0, item)
 			}
 		}
-	case DEV_TYPE_SRL:
+	case DEV_TYPE_ALT:
 		for _, title := range []string{
 			PRT_SRL_PARITY,
 			PRT_SRL_STOP,

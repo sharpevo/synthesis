@@ -194,7 +194,7 @@ func main() {
 			stack.Set(variable)
 		}
 
-		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_SRL] {
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_ALT] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			name, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_SRL_NAME))
@@ -221,7 +221,7 @@ func main() {
 			}
 		}
 
-		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_TCP] {
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_RCG] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			network, _ := stack.Get(
 				devtree.ComposeVarName(base, devtree.PRT_TCP_NETWORK))
