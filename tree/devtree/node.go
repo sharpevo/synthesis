@@ -78,5 +78,6 @@ func GetConnList() []string {
 			l = append(l, s)
 		}
 	}
+	l = append(l, DEV_TYPE_UNK)
 	return l
 }
