@@ -117,8 +117,12 @@ func shouldBeInstructionSet(instruction string) bool {
 		instruction == INST_SET_ASYN
 }
 
-func (n *Node) ArgumentList() []string {
-	return strings.Split(n.Arguments, " ")
+func (n *Node) ArgumentList() (result []string) {
+	if n.Arguments == "" {
+		return result
+	}
+	result = strings.Split(n.Arguments, " ")
+	return
 }
 
 func (n *Node) Type() (string, error) {
