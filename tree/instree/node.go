@@ -118,22 +118,19 @@ func shouldBeInstructionSet(instruction string) bool {
 }
 
 func (n *Node) ArgumentList() []string {
-	return strings.Split(n.Arguments, " ")[1:]
+	return strings.Split(n.Arguments, " ")
 }
 
 func (n *Node) Type() (string, error) {
-	dataList := strings.Split(strings.Trim(n.Data, "\" "), " ")
-	instruction := dataList[0]
-	argumentList := dataList[1:]
 
-	if shouldBeInstructionSet(instruction) {
+	if shouldBeInstructionSet(n.Instruction) {
 		if len(n.Children) == 0 {
 			return "", fmt.Errorf(
 				"instruction set %q has no instructions",
 				n.Title,
 			)
 		}
-		switch len(argumentList) {
+		switch len(n.ArgumentList()) {
 		case 0:
 			return TYPE_SET_ONCE, nil
 		case 1:
