@@ -247,10 +247,14 @@ func (d *InstructionDetail) SetTypeInput() {
 
 func (d *InstructionDetail) SetInstInput() {
 	if d.Instruction() == INST_SET_SYNC {
+		d.instInput.Clear()
+		d.instInput.AddItems([]string{INST_SET_SYNC, INST_SET_ASYN})
 		d.instInput.SetCurrentText(INST_SET_SYNC)
 		return
 	}
 	if d.Instruction() == INST_SET_ASYN {
+		d.instInput.Clear()
+		d.instInput.AddItems([]string{INST_SET_SYNC, INST_SET_ASYN})
 		d.instInput.SetCurrentText(INST_SET_ASYN)
 		return
 	}
