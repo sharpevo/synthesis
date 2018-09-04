@@ -259,6 +259,10 @@ func (d *InstructionDetail) SetInstInput() {
 
 func (d *InstructionDetail) SetDevInput() {
 	d.devInput.SetCurrentText(d.Device())
+	d.instInput.Clear()
+	d.instInput.AddItems(
+		d.instructionMap[d.devInput.CurrentData(
+			int(core.Qt__UserRole)).ToString()])
 }
 
 func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
