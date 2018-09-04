@@ -2,9 +2,14 @@ package instruction
 
 import (
 	"fmt"
+	"posam/dao"
 	"strconv"
 	"time"
 )
+
+func init() {
+	dao.InstructionMap.Set("SLEEP", InstructionSleep{})
+}
 
 type InstructionSleep struct {
 	Instruction

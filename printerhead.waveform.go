@@ -5,6 +5,10 @@ import (
 	"posam/dao/ricoh_g5"
 )
 
+func init() {
+	ricoh_g5.InstructionMap.Set("WAVEFORM", InstructionPrinterHeadWaveform{})
+}
+
 type InstructionPrinterHeadWaveform struct {
 	Instruction
 }

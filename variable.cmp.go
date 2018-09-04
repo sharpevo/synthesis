@@ -2,8 +2,13 @@ package instruction
 
 import (
 	"fmt"
+	"posam/dao"
 	"posam/interpreter/vrb"
 )
+
+func init() {
+	dao.InstructionMap.Set("CMPVAR", InstructionVariableCompare{})
+}
 
 type InstructionVariableCompare struct {
 	Instruction

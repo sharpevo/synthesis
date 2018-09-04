@@ -6,6 +6,10 @@ import (
 	"posam/dao/alientek"
 )
 
+func init() {
+	alientek.InstructionMap.Set("SENDSERIAL", InstructionSendSerial{})
+}
+
 type InstructionSendSerial struct {
 	Instruction
 }

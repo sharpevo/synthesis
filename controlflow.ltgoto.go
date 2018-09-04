@@ -2,9 +2,14 @@ package instruction
 
 import (
 	"fmt"
+	"posam/dao"
 	"posam/interpreter/vrb"
 	"strconv"
 )
+
+func init() {
+	dao.InstructionMap.Set("LTGOTO", InstructionControlFlowLessThanGoto{})
+}
 
 type InstructionControlFlowLessThanGoto struct {
 	InstructionControlFlowGoto

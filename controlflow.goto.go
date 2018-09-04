@@ -2,8 +2,13 @@ package instruction
 
 import (
 	"fmt"
+	"posam/dao"
 	"strconv"
 )
+
+func init() {
+	dao.InstructionMap.Set("GOTO", InstructionControlFlowGoto{})
+}
 
 type InstructionControlFlowGoto struct {
 	Instruction

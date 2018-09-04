@@ -2,9 +2,14 @@ package instruction
 
 import (
 	"fmt"
+	"posam/dao"
 	"posam/interpreter/vrb"
 	"strconv"
 )
+
+func init() {
+	dao.InstructionMap.Set("EQGOTO", InstructionControlFlowEqualGoto{})
+}
 
 type InstructionControlFlowEqualGoto struct {
 	InstructionControlFlowGoto

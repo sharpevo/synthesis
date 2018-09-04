@@ -4,6 +4,10 @@ import (
 	"posam/dao/ricoh_g5"
 )
 
+func init() {
+	ricoh_g5.InstructionMap.Set("PRINTERSTATUS", InstructionPrinterHeadPrinterStatus{})
+}
+
 type InstructionPrinterHeadPrinterStatus struct {
 	Instruction
 }

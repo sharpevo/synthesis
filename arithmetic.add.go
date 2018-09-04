@@ -3,8 +3,13 @@ package instruction
 import (
 	"fmt"
 	"math/big"
+	"posam/dao"
 	"posam/interpreter/vrb"
 )
+
+func init() {
+	dao.InstructionMap.Set("ADD", InstructionAddition{})
+}
 
 type InstructionAddition struct {
 	InstructionArithmetic

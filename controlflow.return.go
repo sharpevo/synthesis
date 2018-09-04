@@ -2,7 +2,12 @@ package instruction
 
 import (
 	"fmt"
+	"posam/dao"
 )
+
+func init() {
+	dao.InstructionMap.Set("RETURN", InstructionControlFlowReturn{})
+}
 
 type InstructionControlFlowReturn struct {
 	InstructionControlFlowGoto

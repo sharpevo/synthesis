@@ -2,9 +2,14 @@ package instruction
 
 import (
 	"fmt"
+	"posam/dao"
 	"posam/interpreter/vrb"
 	"strings"
 )
+
+func init() {
+	dao.InstructionMap.Set("SETVAR", InstructionVariableSet{})
+}
 
 type InstructionVariableSet struct {
 	Instruction
