@@ -22,20 +22,20 @@ const (
 )
 
 type InstructionDetail struct {
-	treeItem        *widgets.QTreeWidgetItem
-	instructionList []string
-	GroupBox        *widgets.QGroupBox
-	titleInput      *widgets.QLineEdit
-	lineInput       *widgets.QLineEdit
-	typeInput       *widgets.QComboBox
-	instInput       *widgets.QComboBox
-	devInput        *widgets.QComboBox
-	argsInput       *widgets.QLineEdit
-	waveformGroup   *widgets.QGroupBox
-	saveButton      *widgets.QPushButton
+	treeItem       *widgets.QTreeWidgetItem
+	instructionMap map[string][]string
+	GroupBox       *widgets.QGroupBox
+	titleInput     *widgets.QLineEdit
+	lineInput      *widgets.QLineEdit
+	typeInput      *widgets.QComboBox
+	instInput      *widgets.QComboBox
+	devInput       *widgets.QComboBox
+	argsInput      *widgets.QLineEdit
+	waveformGroup  *widgets.QGroupBox
+	saveButton     *widgets.QPushButton
 }
 
-func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *InstructionDetail {
+func NewInstructionDetail(instructionDaoMap map[string]interpreter.InstructionMapt) *InstructionDetail {
 
 	typeLabel := widgets.NewQLabel2("Type", nil, 0)
 	titleLabel := widgets.NewQLabel2("Title", nil, 0)
@@ -53,14 +53,16 @@ func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *Instructi
 	d.lineInput.SetVisible(false)
 
 	d.instInput = widgets.NewQComboBox(nil)
-	for k, _ := range instructionMap {
-		if k != INST_SET_SYNC &&
-			k != INST_SET_ASYN {
-			d.instructionList = append(d.instructionList, k)
+	d.instructionMap = make(map[string][]string)
+	for name, instructionMap := range instructionDaoMap {
+		for k, _ := range instructionMap {
+			if k != INST_SET_SYNC &&
+				k != INST_SET_ASYN {
+				d.instructionMap[name] = append(d.instructionMap[name], k)
+			}
 		}
+		sort.Sort(sort.StringSlice(d.instructionMap[name]))
 	}
-	sort.Sort(sort.StringSlice(d.instructionList))
-	d.instInput.AddItems(d.instructionList)
 	d.instInput.ConnectCurrentTextChanged(d.onInstructionChanged)
 
 	d.devInput = widgets.NewQComboBox(nil)
