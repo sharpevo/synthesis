@@ -233,8 +233,9 @@ func (d *InstructionDetail) onInstructionChanged(selected string) {
 
 func (d *InstructionDetail) onDeviceChanged(selected string) {
 	d.instInput.Clear()
-	fmt.Println(d.instructionMap[selected])
-	d.instInput.AddItems(d.instructionMap[selected])
+	d.instInput.AddItems(
+		d.instructionMap[d.devInput.CurrentData(
+			int(core.Qt__UserRole)).ToString()])
 }
 
 func (d *InstructionDetail) Line() string {
@@ -278,9 +279,16 @@ func (d *InstructionDetail) GetArgumentsFromLine() string {
 	return strings.Trim(d.Line(), fmt.Sprintf("%s ", instruction))
 }
 
-func (d *InstructionDetail) SetDevInput(items []string) {
+func (d *InstructionDetail) SetDevInput(itemMap map[string]string) {
 	d.devInput.Clear()
-	d.devInput.AddItems(items)
+	l := []string{}
+	for k := range itemMap {
+		l = append(l, k)
+	}
+	sort.Sort(sort.StringSlice(l))
+	for _, k := range l {
+		d.devInput.AddItem(k, core.NewQVariant17(itemMap[k]))
+	}
 }
 
 func (d *InstructionDetail) SetArgsInput() {

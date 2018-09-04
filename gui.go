@@ -245,7 +245,7 @@ func main() {
 			}
 		}
 
-		instDetail.SetDevInput(devtree.GetConnList())
+		instDetail.SetDevInput(devtree.GetConnMap())
 
 		// TODO: init CAN devices
 
