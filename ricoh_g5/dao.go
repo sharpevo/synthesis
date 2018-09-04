@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"log"
 	"posam/dao"
+	"posam/interpreter"
 	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 )
 
+var InstructionMap interpreter.InstructionMapt
+
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
+	InstructionMap = make(interpreter.InstructionMapt)
 	ResetInstance()
 }
 

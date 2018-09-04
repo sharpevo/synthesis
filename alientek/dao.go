@@ -8,12 +8,16 @@ import (
 	"posam/protocol/serial"
 	"strconv"
 	//"posam/protocol/serialport"
+	"posam/interpreter"
 	"posam/util/concurrentmap"
 )
+
+var InstructionMap interpreter.InstructionMapt
 
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
+	InstructionMap = make(interpreter.InstructionMapt)
 	ResetInstance()
 }
 
