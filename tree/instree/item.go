@@ -66,6 +66,7 @@ func NewInstructionDetail(instructionDaoMap map[string]interpreter.InstructionMa
 	d.instInput.ConnectCurrentTextChanged(d.onInstructionChanged)
 
 	d.devInput = widgets.NewQComboBox(nil)
+	d.devInput.ConnectCurrentTextChanged(d.onDeviceChanged)
 	d.argsInput = widgets.NewQLineEdit(nil)
 
 	// waveform group
@@ -214,9 +215,10 @@ func (d *InstructionDetail) onInstructionTypeChanged(selected string) {
 	case TYPE_SET:
 		d.instInput.Clear()
 		d.instInput.AddItems([]string{INST_SET_SYNC, INST_SET_ASYN})
+		d.devInput.SetEnabled(false)
 	default:
 		d.instInput.Clear()
-		d.instInput.AddItems(d.instructionList)
+		d.devInput.SetEnabled(true)
 	}
 }
 
@@ -227,6 +229,12 @@ func (d *InstructionDetail) onInstructionChanged(selected string) {
 	default:
 		d.waveformGroup.SetVisible(false)
 	}
+}
+
+func (d *InstructionDetail) onDeviceChanged(selected string) {
+	d.instInput.Clear()
+	fmt.Println(d.instructionMap[selected])
+	d.instInput.AddItems(d.instructionMap[selected])
 }
 
 func (d *InstructionDetail) Line() string {
