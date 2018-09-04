@@ -46,7 +46,7 @@ func (n *Node) Generate() (string, error) {
 		}
 		switch nodeType {
 		case TYPE_INS:
-			file.WriteString(fmt.Sprintf("%s\n", child.Data))
+			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction, child.Arguments))
 			break
 		case TYPE_SET_ONCE:
 			setPath, err := child.Generate()
