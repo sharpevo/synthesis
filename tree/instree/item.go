@@ -279,7 +279,7 @@ func (d *InstructionDetail) GetArgumentsFromLine() string {
 	return strings.Trim(d.Line(), fmt.Sprintf("%s ", instruction))
 }
 
-func (d *InstructionDetail) SetDevInput(itemMap map[string]string) {
+func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
 	d.devInput.Clear()
 	l := []string{}
 	for k := range itemMap {

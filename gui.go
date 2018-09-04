@@ -159,7 +159,7 @@ func main() {
 	input.SetVisible(false)
 
 	instDetail := instree.NewInstructionDetail(InstructionDaoMap)
-	instDetail.SetDevInput(devtree.ParseConnList())
+	instDetail.InitDevInput(devtree.ParseConnList())
 
 	// result group
 
@@ -245,7 +245,7 @@ func main() {
 			}
 		}
 
-		instDetail.SetDevInput(devtree.GetConnMap())
+		instDetail.InitDevInput(devtree.GetConnMap())
 
 		// TODO: init CAN devices
 
