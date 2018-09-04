@@ -117,6 +117,7 @@ PRINT never executed`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
+var InstructionDaoMap = make(map[string]interpreter.InstructionMapt)
 
 type QMessageBoxWithCustomSlot struct {
 	widgets.QMessageBox
@@ -124,6 +125,11 @@ type QMessageBoxWithCustomSlot struct {
 }
 
 func init() {
+
+	InstructionDaoMap[devtree.DEV_TYPE_UNK] = dao.InstructionMap
+	InstructionDaoMap[devtree.DEV_TYPE_ALT] = alientek.InstructionMap
+	InstructionDaoMap[devtree.DEV_TYPE_RCG] = ricoh_g5.InstructionMap
+	// TODO: CAN
 	buildInstructionMap()
 }
 
@@ -152,7 +158,7 @@ func main() {
 	input.SetPlainText(CMD_CF)
 	input.SetVisible(false)
 
-	instDetail := instree.NewInstructionDetail(InstructionMap)
+	instDetail := instree.NewInstructionDetail(InstructionDaoMap)
 	instDetail.SetDevInput(devtree.ParseConnList())
 
 	// result group
@@ -481,12 +487,8 @@ func initTCPDevice(network string, address string, secondString string) (err err
 }
 
 func buildInstructionMap() {
-	for _, d := range []interpreter.InstructionMapt{
-		dao.InstructionMap,
-		ricoh_g5.InstructionMap,
-		alientek.InstructionMap,
-	} {
-		for k, v := range d {
+	for _, instructionMap := range InstructionDaoMap {
+		for k, v := range instructionMap {
 			fmt.Println(k)
 			InstructionMap[k] = v
 		}
