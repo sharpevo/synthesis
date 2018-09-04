@@ -117,17 +117,6 @@ PRINT never executed`
 
 var InstructionMap = make(interpreter.InstructionMapt)
 
-type InstructionPrint struct {
-	instruction.Instruction
-}
-
-var Print InstructionPrint
-
-func (c *InstructionPrint) Execute(args ...string) (interface{}, error) {
-	message := strings.Join(args, " ")
-	return "Print: " + message, nil
-}
-
 type QMessageBoxWithCustomSlot struct {
 	widgets.QMessageBox
 	_ func(message string) `slot:showMessageBoxSlot`
