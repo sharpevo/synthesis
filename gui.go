@@ -17,7 +17,7 @@ import (
 	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
 	"posam/gui/uiutil"
-	"posam/instruction"
+	_ "posam/instruction"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
 )
