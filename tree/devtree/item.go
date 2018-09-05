@@ -16,17 +16,6 @@ const (
 	DEV_TYPE_CAN = "IGENETECH_CAN"
 
 	PRT_CONN = "CONN"
-
-	PRT_TCP_TIMEOUT = "TIMEOUT"
-	PRT_TCP_NETWORK = "NETWORK"
-	PRT_TCP_ADDRESS = "ADDRESS"
-
-	PRT_SRL_CODE      = "DEVICE_CODE"
-	PRT_SRL_NAME      = "DEVICE_NAME"
-	PRT_SRL_BAUD      = "BAUD_RATE"
-	PRT_SRL_CHARACTER = "CHARACTER_BITS"
-	PRT_SRL_STOP      = "STOP_BITS"
-	PRT_SRL_PARITY    = "PARITY"
 )
 
 type DeviceDetail struct {
@@ -140,11 +129,7 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 
 	switch selected {
 	case DEV_TYPE_RCG:
-		for _, title := range []string{
-			PRT_TCP_TIMEOUT,
-			PRT_TCP_ADDRESS,
-			PRT_TCP_NETWORK,
-		} {
+		for _, title := range ricoh_g5.CONN_ATTRIBUTES {
 			seen := false
 			for i := 0; i < connItem.ChildCount(); i++ {
 				if item := connItem.Child(i); title == item.Text(0) {
@@ -158,14 +143,7 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 			}
 		}
 	case DEV_TYPE_ALT:
-		for _, title := range []string{
-			PRT_SRL_PARITY,
-			PRT_SRL_STOP,
-			PRT_SRL_CHARACTER,
-			PRT_SRL_BAUD,
-			PRT_SRL_NAME,
-			PRT_SRL_CODE,
-		} {
+		for _, title := range alientek.CONN_ATTRIBUTES {
 			seen := false
 			for i := 0; i < connItem.ChildCount(); i++ {
 				if item := connItem.Child(i); title == item.Text(0) {

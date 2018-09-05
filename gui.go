@@ -203,17 +203,17 @@ func main() {
 		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_ALT] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			name, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_NAME))
+				devtree.ComposeVarName(base, alientek.DEVICE_NAME))
 			baud, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_BAUD))
+				devtree.ComposeVarName(base, alientek.BAUD_RATE))
 			character, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_CHARACTER))
+				devtree.ComposeVarName(base, alientek.CHARACTER_BITS))
 			stop, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_STOP))
+				devtree.ComposeVarName(base, alientek.STOP_BITS))
 			parity, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_PARITY))
+				devtree.ComposeVarName(base, alientek.PARITY))
 			deviceCode, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_CODE))
+				devtree.ComposeVarName(base, alientek.DEVICE_CODE))
 			err := initSerialDevice(
 				fmt.Sprintf("%v", name.Value),
 				fmt.Sprintf("%v", baud.Value),
@@ -230,11 +230,11 @@ func main() {
 		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_RCG] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			network, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_TCP_NETWORK))
+				devtree.ComposeVarName(base, ricoh_g5.NETWORK))
 			address, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_TCP_ADDRESS))
+				devtree.ComposeVarName(base, ricoh_g5.ADDRESS))
 			timeout, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_TCP_TIMEOUT))
+				devtree.ComposeVarName(base, ricoh_g5.TIMEOUT))
 			err := initTCPDevice(
 				fmt.Sprintf("%v", network.Value),
 				fmt.Sprintf("%v", address.Value),
