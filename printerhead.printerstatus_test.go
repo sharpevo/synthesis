@@ -6,6 +6,7 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"strings"
 	"testing"
 )
@@ -52,6 +53,8 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 
 	i := instruction.InstructionPrinterHeadPrinterStatus{}
 	i.Env = interpreter.NewStack()
+	deviceVar, _ := vrb.NewVariable(ServerAddress, ServerAddress)
+	i.Env.Set(deviceVar)
 
 	go func() {
 		<-readyc
