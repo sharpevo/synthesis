@@ -3,13 +3,16 @@ package devtree
 import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"posam/dao"
+	"posam/dao/alientek"
+	"posam/dao/ricoh_g5"
 	"posam/gui/tree"
 )
 
 const (
-	DEV_TYPE_UNK = "UNKNOWN"
-	DEV_TYPE_ALT = "ALIENTEK"
-	DEV_TYPE_RCG = "RICOH_G5"
+	DEV_TYPE_UNK = dao.NAME
+	DEV_TYPE_ALT = alientek.NAME
+	DEV_TYPE_RCG = ricoh_g5.NAME
 	DEV_TYPE_CAN = "IGENETECH_CAN"
 
 	PRT_CONN = "CONN"
