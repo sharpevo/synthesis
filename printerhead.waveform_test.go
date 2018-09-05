@@ -7,6 +7,7 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"strings"
 	"testing"
 )
@@ -28,7 +29,7 @@ func TestInstructionPrinterHeadWaveformExecute(t *testing.T) {
 	}{
 		{
 			args: []string{
-				"var1",
+				ServerAddress,
 				"0",
 				"1",
 				"10.24",
@@ -70,7 +71,7 @@ func TestInstructionPrinterHeadWaveformExecute(t *testing.T) {
 		},
 		{
 			args: []string{
-				"var1",
+				ServerAddress,
 				"1",
 				"2",
 				"11.22",
@@ -95,6 +96,8 @@ func TestInstructionPrinterHeadWaveformExecute(t *testing.T) {
 
 	i := instruction.InstructionPrinterHeadWaveform{}
 	i.Env = interpreter.NewStack()
+	deviceVar, _ := vrb.NewVariable(ServerAddress, ServerAddress)
+	i.Env.Set(deviceVar)
 
 	l, err := net.Listen(ServerNetwork, ServerAddress)
 	if err != nil {
@@ -104,7 +107,7 @@ func TestInstructionPrinterHeadWaveformExecute(t *testing.T) {
 	go func() {
 		<-readyc
 		for _, test := range testList {
-			resp, err := i.Execute(test.args...)
+			_, err := i.Execute(test.args...)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
 					fmt.Printf("error occured as expected %s", err)
@@ -120,17 +123,6 @@ func TestInstructionPrinterHeadWaveformExecute(t *testing.T) {
 					panic(err)
 				}
 			}
-			v, _ := i.Env.Get(test.args[0])
-			actual := v.Value
-			// save to the stack
-			if !bytes.Equal(actual.([]byte), resp.([]byte)) {
-				t.Errorf(
-					"\nEXPECT: '%s'\nGET:    '%x'\n",
-					resp,
-					actual,
-				)
-			}
-			fmt.Printf("%#v\n", v)
 		}
 		completec <- true
 	}()

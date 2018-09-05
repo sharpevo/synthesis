@@ -1,6 +1,7 @@
 package instruction
 
 import (
+	"fmt"
 	"posam/dao/ricoh_g5"
 )
 
@@ -13,16 +14,22 @@ type InstructionPrinterHeadPrinterStatus struct {
 }
 
 func (i *InstructionPrinterHeadPrinterStatus) Execute(args ...string) (resp interface{}, err error) {
-	if len(args) == 1 {
-		variable, _ := i.ParseVariable(args[0])
-		resp, err = ricoh_g5.Instance("").QueryPrinterStatus()
-		variable.Value = resp
-		if err != nil {
-			return variable.Value, err
-		}
-	} else {
-		resp, err = ricoh_g5.Instance("").QueryPrinterStatus()
-		return
+	if len(args) < 1 {
+		return resp, fmt.Errorf("not enough arguments")
+	}
+	variable, found := i.Env.Get(args[0])
+	if !found {
+		return resp, fmt.Errorf("device %q is not defined", args[0])
+	}
+	address := variable.Value.(string)
+	fmt.Printf("%q\n", address)
+	instance := ricoh_g5.Instance(address)
+	if instance == nil {
+		return resp, fmt.Errorf("device %q is not initialized", args[0])
+	}
+	resp, err = instance.QueryPrinterStatus()
+	if err != nil {
+		return resp, err
 	}
 	return
 }

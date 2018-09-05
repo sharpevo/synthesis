@@ -6,6 +6,7 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"strings"
 	"testing"
 )
@@ -26,7 +27,7 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 		errString       string
 	}{
 		{
-			args: []string{"var1"},
+			args: []string{ServerAddress},
 			expectedRequest: []byte{
 				0x02, 0x00, 0x00, 0x00,
 			},
@@ -36,7 +37,7 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 			},
 		},
 		{
-			args: []string{"var1"},
+			args: []string{ServerAddress},
 			expectedRequest: []byte{
 				0x02, 0x00, 0x00, 0x00,
 			},
@@ -52,11 +53,13 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 
 	i := instruction.InstructionPrinterHeadPrinterStatus{}
 	i.Env = interpreter.NewStack()
+	deviceVar, _ := vrb.NewVariable(ServerAddress, ServerAddress)
+	i.Env.Set(deviceVar)
 
 	go func() {
 		<-readyc
 		for _, test := range testList {
-			resp, err := i.Execute(test.args...)
+			_, err := i.Execute(test.args...)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
 					t.Logf("error occured as expected %s", err)
@@ -70,16 +73,6 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 					// panic if change errString to "foo"
 					panic(err)
 				}
-			}
-			v, _ := i.Env.Get(test.args[0])
-			actual := v.Value
-			// save to the stack
-			if !bytes.Equal(actual.([]byte), resp.([]byte)) {
-				t.Errorf(
-					"\nEXPECT: '%s'\nGET:    '%x'\n",
-					resp,
-					actual,
-				)
 			}
 		}
 		completec <- true
