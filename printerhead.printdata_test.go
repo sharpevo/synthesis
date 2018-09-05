@@ -2,7 +2,6 @@ package instruction_test
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
@@ -28,7 +27,7 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 	}{
 		{
 			args: []string{
-				"var1",
+				ServerAddress,
 				"2",
 				"32",
 				"3",
@@ -48,7 +47,7 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 		},
 		{
 			args: []string{
-				"var1",
+				ServerAddress,
 				"1",
 				"1280",
 				"6",
@@ -79,7 +78,7 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 	go func() {
 		<-readyc
 		for _, test := range testList {
-			resp, err := i.Execute(test.args...)
+			_, err := i.Execute(test.args...)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
 					t.Logf("error occured as expected %s", err)
@@ -93,17 +92,6 @@ func TestInstructionPrinterHeadPrintDataExecute(t *testing.T) {
 					panic(err)
 				}
 			}
-			v, _ := i.Env.Get(test.args[0])
-			actual := v.Value
-			// save to the stack
-			if !bytes.Equal(actual.([]byte), resp.([]byte)) {
-				t.Errorf(
-					"\nEXPECT: '%s'\nGET:    '%x'\n",
-					resp,
-					actual,
-				)
-			}
-			fmt.Printf("%#v\n", v)
 		}
 		completec <- true
 	}()

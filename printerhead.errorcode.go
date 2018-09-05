@@ -14,13 +14,11 @@ type InstructionPrinterHeadErrorCode struct {
 }
 
 func (i *InstructionPrinterHeadErrorCode) Execute(args ...string) (resp interface{}, err error) {
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-
-	variable, _ := i.ParseVariable(args[0])
-	resp, err = ricoh_g5.Instance("").QueryErrorCode()
-	variable.Value = resp
+	address := args[0]
+	resp, err = ricoh_g5.Instance(address).QueryErrorCode()
 	if err != nil {
 		return resp, err
 	}

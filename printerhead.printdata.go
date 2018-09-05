@@ -17,18 +17,16 @@ func (i *InstructionPrinterHeadPrintData) Execute(args ...string) (resp interfac
 	if len(args) != 5 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-
-	variable, _ := i.ParseVariable(args[0])
+	address := args[0]
 	bitsPerPixel := args[1]
 	width := args[2]
 	lineBufferSize := args[3]
 	lineBuffer := args[4]
-	resp, err = ricoh_g5.Instance("").PrintData(
+	resp, err = ricoh_g5.Instance(address).PrintData(
 		bitsPerPixel, width, lineBufferSize, lineBuffer,
 	)
-	variable.Value = resp
 	if err != nil {
-		return variable.Value, err
+		return resp, err
 	}
 	return
 }

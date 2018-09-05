@@ -15,24 +15,26 @@ type InstructionSendSerial struct {
 }
 
 func (c *InstructionSendSerial) Execute(args ...string) (resp interface{}, err error) {
-	if len(args) < 2 {
+	if len(args) < 3 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
 
-	instruction := args[0]
-	doneResp := args[1]
+	name := args[0]
+	instruction := args[1]
+	doneResp := args[2]
 	sentResp := ""
-	if len(args) == 3 {
-		sentResp = args[2]
+	if len(args) == 4 {
+		sentResp = args[3]
 	}
 
-	output, err := send(instruction, sentResp, doneResp)
+	output, err := send(name, instruction, sentResp, doneResp)
 
 	resp = output
 	return
 }
 
 func send(
+	name string,
 	instruction string,
 	sentResp string,
 	doneResp string) (resp string, err error) {
@@ -55,7 +57,7 @@ func send(
 		return resp, err
 	}
 
-	devInstance := alientek.Instance("01")
+	devInstance := alientek.Instance(name)
 	if devInstance == nil {
 		return resp, fmt.Errorf("invalid device %q", "01")
 	}

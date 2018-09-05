@@ -26,7 +26,7 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 		errString       string
 	}{
 		{
-			args: []string{"var1"},
+			args: []string{ServerAddress},
 			expectedRequest: []byte{
 				0x02, 0x00, 0x00, 0x00,
 			},
@@ -36,7 +36,7 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 			},
 		},
 		{
-			args: []string{"var1"},
+			args: []string{ServerAddress},
 			expectedRequest: []byte{
 				0x02, 0x00, 0x00, 0x00,
 			},
@@ -56,7 +56,7 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 	go func() {
 		<-readyc
 		for _, test := range testList {
-			resp, err := i.Execute(test.args...)
+			_, err := i.Execute(test.args...)
 			if err != nil {
 				if test.errString != "" && strings.Contains(err.Error(), test.errString) {
 					t.Logf("error occured as expected %s", err)
@@ -70,16 +70,6 @@ func TestInstructionPrinterHeadPrinterStatusExecute(t *testing.T) {
 					// panic if change errString to "foo"
 					panic(err)
 				}
-			}
-			v, _ := i.Env.Get(test.args[0])
-			actual := v.Value
-			// save to the stack
-			if !bytes.Equal(actual.([]byte), resp.([]byte)) {
-				t.Errorf(
-					"\nEXPECT: '%s'\nGET:    '%x'\n",
-					resp,
-					actual,
-				)
 			}
 		}
 		completec <- true
