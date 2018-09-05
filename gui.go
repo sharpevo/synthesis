@@ -476,13 +476,6 @@ func initTCPDevice(network string, address string, secondString string) (err err
 	if err != nil {
 		return err
 	}
-
-	i := instruction.InstructionPrinterHeadPrinterStatus{}
-	_, err = i.Execute()
-	if err != nil {
-		log.Println(err)
-		return fmt.Errorf("printer is not ready")
-	}
 	return nil
 }
 
