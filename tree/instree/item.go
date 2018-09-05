@@ -188,6 +188,8 @@ func (d *InstructionDetail) saveInstruction() {
 	d.treeItem.SetText(0, d.titleInput.Text())
 	variantMap := MakeVariantMap(
 		d.devInput.CurrentText(),
+		d.devInput.CurrentData(
+			int(core.Qt__UserRole)).ToString(),
 		d.instInput.CurrentText(),
 		d.argsInput.Text(),
 	)
@@ -290,6 +292,11 @@ func (d *InstructionDetail) Device() string {
 	return variantMap.Device()
 }
 
+func (d *InstructionDetail) DeviceType() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.DeviceType()
+}
+
 func (d *InstructionDetail) Instruction() string {
 	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
 	return variantMap.Instruction()
@@ -304,11 +311,13 @@ type VariantMap map[string]*core.QVariant
 
 func MakeVariantMap(
 	deviceText string,
+	deviceType string,
 	instructionText string,
 	argumentText string,
 ) VariantMap {
 	variantMap := make(VariantMap)
 	variantMap["device"] = core.NewQVariant17(deviceText)
+	variantMap["deviceType"] = core.NewQVariant17(deviceType)
 	variantMap["instruction"] = core.NewQVariant17(instructionText)
 	variantMap["arguments"] = core.NewQVariant17(argumentText)
 	return variantMap
@@ -316,6 +325,10 @@ func MakeVariantMap(
 
 func (v VariantMap) Device() string {
 	return v["device"].ToString()
+}
+
+func (v VariantMap) DeviceType() string {
+	return v["deviceType"].ToString()
 }
 
 func (v VariantMap) Instruction() string {

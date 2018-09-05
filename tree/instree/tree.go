@@ -195,6 +195,7 @@ func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 	item := widgets.NewQTreeWidgetItem2([]string{node.Title}, 0)
 	variantMap := MakeVariantMap(
 		node.DevicePath,
+		node.DeviceType,
 		node.Instruction,
 		node.Arguments,
 	)
@@ -225,6 +226,7 @@ func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 	node.Title = root.Text(0)
 	variantMap := VariantMap(root.Data(0, tree.DataRole()).ToMap())
 	node.DevicePath = variantMap.Device()
+	node.DeviceType = variantMap.DeviceType()
 	node.Instruction = variantMap.Instruction()
 	node.Arguments = variantMap.Arguments()
 	for i := 0; i < root.ChildCount(); i++ {

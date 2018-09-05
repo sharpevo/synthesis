@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"posam/dao/alientek"
+	"posam/dao/ricoh_g5"
 	"posam/gui/tree"
 	"strings"
 	"time"
@@ -13,6 +16,7 @@ import (
 type Node struct {
 	tree.Node
 	DevicePath  string
+	DeviceType  string
 	Instruction string
 	Arguments   string
 	Children    []Node
@@ -46,7 +50,23 @@ func (n *Node) Generate() (string, error) {
 		}
 		switch nodeType {
 		case TYPE_INS:
-			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction, child.Arguments))
+			arguments := child.Arguments
+			switch child.DeviceType {
+			case ricoh_g5.NAME:
+				arguments = fmt.Sprintf(
+					"%s %s",
+					path.Join(child.DevicePath, "CONN", ricoh_g5.IDNAME),
+					arguments,
+				)
+			case alientek.NAME:
+				arguments = fmt.Sprintf(
+					"%s %s",
+					path.Join(child.DevicePath, "CONN", alientek.IDNAME),
+					arguments,
+				)
+			}
+			fmt.Println(child.DeviceType, arguments)
+			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction, arguments))
 			break
 		case TYPE_SET_ONCE:
 			setPath, err := child.Generate()
