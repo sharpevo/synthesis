@@ -17,8 +17,16 @@ func (i *InstructionPrinterHeadErrorCode) Execute(args ...string) (resp interfac
 	if len(args) < 1 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	address := args[0]
-	resp, err = ricoh_g5.Instance(address).QueryErrorCode()
+	variable, found := i.Env.Get(args[0])
+	if !found {
+		return resp, fmt.Errorf("device %q is not defined", args[0])
+	}
+	address := variable.Value.(string)
+	instance := ricoh_g5.Instance(address)
+	if instance == nil {
+		return resp, fmt.Errorf("device %q is not initialized", args[0])
+	}
+	resp, err = instance.QueryErrorCode()
 	if err != nil {
 		return resp, err
 	}
