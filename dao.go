@@ -10,6 +10,8 @@ import (
 	"strconv"
 )
 
+const NAME = "UNKNOWN"
+
 var InstructionMap interpreter.InstructionMapt
 
 func init() {

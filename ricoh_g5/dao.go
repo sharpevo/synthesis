@@ -10,6 +10,20 @@ import (
 	"posam/util/concurrentmap"
 )
 
+const (
+	NAME    = "RICOH_G5"
+	NETWORK = "NETWORK"
+	ADDRESS = "ADDRESS"
+	TIMEOUT = "TIMEOUT"
+	IDNAME  = ADDRESS
+)
+
+var CONN_ATTRIBUTES = []string{
+	NETWORK,
+	ADDRESS,
+	TIMEOUT,
+}
+
 var InstructionMap interpreter.InstructionMapt
 
 var deviceMap *concurrentmap.ConcurrentMap
