@@ -17,13 +17,22 @@ func (i *InstructionPrinterHeadWaveform) Execute(args ...string) (resp interface
 	if len(args) < 18 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	address := args[0]
+	variable, found := i.Env.Get(args[0])
+	if !found {
+		return resp, fmt.Errorf("device %q is not defined", args[0])
+	}
+	address := variable.Value.(string)
+
 	headBoardIndex := args[1]
 	rowIndexOfHeadBoard := args[2]
 	voltagePercentage := args[3]
 	segmentCount := args[4]
 	segmentArgumentList := args[5:]
-	resp, err = ricoh_g5.Instance(address).SendWaveform(
+	instance := ricoh_g5.Instance(address)
+	if instance == nil {
+		return resp, fmt.Errorf("device %q is not initialized", args[0])
+	}
+	resp, err = instance.SendWaveform(
 		headBoardIndex,
 		rowIndexOfHeadBoard,
 		voltagePercentage,

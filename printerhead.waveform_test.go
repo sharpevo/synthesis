@@ -7,6 +7,7 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/instruction"
 	"posam/interpreter"
+	"posam/interpreter/vrb"
 	"strings"
 	"testing"
 )
@@ -95,6 +96,8 @@ func TestInstructionPrinterHeadWaveformExecute(t *testing.T) {
 
 	i := instruction.InstructionPrinterHeadWaveform{}
 	i.Env = interpreter.NewStack()
+	deviceVar, _ := vrb.NewVariable(ServerAddress, ServerAddress)
+	i.Env.Set(deviceVar)
 
 	l, err := net.Listen(ServerNetwork, ServerAddress)
 	if err != nil {
