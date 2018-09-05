@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"posam/dao/alientek"
+	"posam/dao/ricoh_g5"
 	"posam/gui/tree"
 	"strings"
 	"time"
@@ -12,7 +15,11 @@ import (
 
 type Node struct {
 	tree.Node
-	Children []Node
+	DevicePath  string
+	DeviceType  string
+	Instruction string
+	Arguments   string
+	Children    []Node
 }
 
 func (n *Node) Generate() (string, error) {
@@ -43,7 +50,23 @@ func (n *Node) Generate() (string, error) {
 		}
 		switch nodeType {
 		case TYPE_INS:
-			file.WriteString(fmt.Sprintf("%s\n", child.Data))
+			arguments := child.Arguments
+			switch child.DeviceType {
+			case ricoh_g5.NAME:
+				arguments = fmt.Sprintf(
+					"%s %s",
+					path.Join(child.DevicePath, "CONN", ricoh_g5.IDNAME),
+					arguments,
+				)
+			case alientek.NAME:
+				arguments = fmt.Sprintf(
+					"%s %s",
+					path.Join(child.DevicePath, "CONN", alientek.IDNAME),
+					arguments,
+				)
+			}
+			fmt.Println(child.DeviceType, arguments)
+			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction, arguments))
 			break
 		case TYPE_SET_ONCE:
 			setPath, err := child.Generate()
@@ -51,7 +74,7 @@ func (n *Node) Generate() (string, error) {
 				return filePath, err
 			}
 			file.WriteString(fmt.Sprintf(
-				"%s %s\n", child.Instruction(), setPath))
+				"%s %s\n", child.Instruction, setPath))
 			break
 		case TYPE_SET_LOOP:
 			setPath, err := child.Generate()
@@ -59,9 +82,9 @@ func (n *Node) Generate() (string, error) {
 				return filePath, err
 			}
 			file.WriteString(
-				fmt.Sprintf("%s %s\n", child.Instruction(), setPath))
+				fmt.Sprintf("%s %s\n", child.Instruction, setPath))
 			file.WriteString(
-				fmt.Sprintf("LOOP %d %s\n", offset, child.Arguments()[0]))
+				fmt.Sprintf("LOOP %d %s\n", offset, child.ArgumentList()[0]))
 			offset += 1
 			break
 		case TYPE_SET_COND:
@@ -69,9 +92,9 @@ func (n *Node) Generate() (string, error) {
 			if err != nil {
 				return filePath, err
 			}
-			var1 := child.Arguments()[0]
-			opsb := child.Arguments()[1]
-			var2 := child.Arguments()[2]
+			var1 := child.ArgumentList()[0]
+			opsb := child.ArgumentList()[1]
+			var2 := child.ArgumentList()[2]
 			var opst string
 			switch opsb {
 			case ">":
@@ -100,7 +123,7 @@ func (n *Node) Generate() (string, error) {
 			file.WriteString(
 				fmt.Sprintf("GOTO %d\n", offset+4))
 			file.WriteString(
-				fmt.Sprintf("%s %s\n", child.Instruction(), setPath))
+				fmt.Sprintf("%s %s\n", child.Instruction, setPath))
 			offset += 3
 			break
 		}
@@ -114,27 +137,24 @@ func shouldBeInstructionSet(instruction string) bool {
 		instruction == INST_SET_ASYN
 }
 
-func (n *Node) Instruction() string {
-	return strings.Split(n.Data, " ")[0]
-}
-
-func (n *Node) Arguments() []string {
-	return strings.Split(n.Data, " ")[1:]
+func (n *Node) ArgumentList() (result []string) {
+	if n.Arguments == "" {
+		return result
+	}
+	result = strings.Split(n.Arguments, " ")
+	return
 }
 
 func (n *Node) Type() (string, error) {
-	dataList := strings.Split(strings.Trim(n.Data, "\" "), " ")
-	instruction := dataList[0]
-	argumentList := dataList[1:]
 
-	if shouldBeInstructionSet(instruction) {
+	if shouldBeInstructionSet(n.Instruction) {
 		if len(n.Children) == 0 {
 			return "", fmt.Errorf(
 				"instruction set %q has no instructions",
 				n.Title,
 			)
 		}
-		switch len(argumentList) {
+		switch len(n.ArgumentList()) {
 		case 0:
 			return TYPE_SET_ONCE, nil
 		case 1:

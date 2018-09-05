@@ -3,27 +3,19 @@ package devtree
 import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"posam/dao"
+	"posam/dao/alientek"
+	"posam/dao/ricoh_g5"
 	"posam/gui/tree"
 )
 
 const (
-	DEV_TYPE_UNK = "UNKNOWN"
-	DEV_TYPE_TCP = "TCP"
-	DEV_TYPE_CAN = "CAN"
-	DEV_TYPE_SRL = "SERIAL"
+	DEV_TYPE_UNK = dao.NAME
+	DEV_TYPE_ALT = alientek.NAME
+	DEV_TYPE_RCG = ricoh_g5.NAME
+	DEV_TYPE_CAN = "IGENETECH_CAN"
 
 	PRT_CONN = "CONN"
-
-	PRT_TCP_TIMEOUT = "TIMEOUT"
-	PRT_TCP_NETWORK = "NETWORK"
-	PRT_TCP_ADDRESS = "ADDRESS"
-
-	PRT_SRL_CODE      = "DEVICE_CODE"
-	PRT_SRL_NAME      = "DEVICE_NAME"
-	PRT_SRL_BAUD      = "BAUD_RATE"
-	PRT_SRL_CHARACTER = "CHARACTER_BITS"
-	PRT_SRL_STOP      = "STOP_BITS"
-	PRT_SRL_PARITY    = "PARITY"
 )
 
 type DeviceDetail struct {
@@ -51,8 +43,8 @@ func NewDeviceDetail() *DeviceDetail {
 	d.typeInput = widgets.NewQComboBox(nil)
 	d.typeInput.AddItems([]string{
 		DEV_TYPE_UNK,
-		DEV_TYPE_SRL,
-		DEV_TYPE_TCP,
+		DEV_TYPE_ALT,
+		DEV_TYPE_RCG,
 		DEV_TYPE_CAN,
 	})
 	d.typeInput.ConnectCurrentTextChanged(d.onDeviceTypeChanged)
@@ -115,11 +107,6 @@ func (d *DeviceDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	if variantMap.Enabled() {
 		d.enabledInput.SetCheckState(core.Qt__Checked)
 	}
-	if item.ChildCount() == 0 {
-		d.typeInput.SetEnabled(false)
-	} else {
-		d.typeInput.SetEnabled(true)
-	}
 }
 
 func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
@@ -141,12 +128,8 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 	}
 
 	switch selected {
-	case DEV_TYPE_TCP:
-		for _, title := range []string{
-			PRT_TCP_TIMEOUT,
-			PRT_TCP_ADDRESS,
-			PRT_TCP_NETWORK,
-		} {
+	case DEV_TYPE_RCG:
+		for _, title := range ricoh_g5.CONN_ATTRIBUTES {
 			seen := false
 			for i := 0; i < connItem.ChildCount(); i++ {
 				if item := connItem.Child(i); title == item.Text(0) {
@@ -159,15 +142,8 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 				connItem.InsertChild(0, item)
 			}
 		}
-	case DEV_TYPE_SRL:
-		for _, title := range []string{
-			PRT_SRL_PARITY,
-			PRT_SRL_STOP,
-			PRT_SRL_CHARACTER,
-			PRT_SRL_BAUD,
-			PRT_SRL_NAME,
-			PRT_SRL_CODE,
-		} {
+	case DEV_TYPE_ALT:
+		for _, title := range alientek.CONN_ATTRIBUTES {
 			seen := false
 			for i := 0; i < connItem.ChildCount(); i++ {
 				if item := connItem.Child(i); title == item.Text(0) {

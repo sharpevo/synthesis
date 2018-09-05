@@ -104,7 +104,7 @@ func (t *DeviceTree) Save() error {
 	if err != nil {
 		return err
 	}
-	t.instDetail.SetDevInput(ParseConnList())
+	t.instDetail.InitDevInput(ParseConnList())
 	return nil
 }
 

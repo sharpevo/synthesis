@@ -22,20 +22,19 @@ const (
 )
 
 type InstructionDetail struct {
-	treeItem        *widgets.QTreeWidgetItem
-	instructionList []string
-	GroupBox        *widgets.QGroupBox
-	titleInput      *widgets.QLineEdit
-	lineInput       *widgets.QLineEdit
-	typeInput       *widgets.QComboBox
-	instInput       *widgets.QComboBox
-	devInput        *widgets.QComboBox
-	argsInput       *widgets.QLineEdit
-	waveformGroup   *widgets.QGroupBox
-	saveButton      *widgets.QPushButton
+	treeItem       *widgets.QTreeWidgetItem
+	instructionMap map[string][]string
+	GroupBox       *widgets.QGroupBox
+	titleInput     *widgets.QLineEdit
+	typeInput      *widgets.QComboBox
+	instInput      *widgets.QComboBox
+	devInput       *widgets.QComboBox
+	argsInput      *widgets.QLineEdit
+	waveformGroup  *widgets.QGroupBox
+	saveButton     *widgets.QPushButton
 }
 
-func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *InstructionDetail {
+func NewInstructionDetail(instructionDaoMap map[string]interpreter.InstructionMapt) *InstructionDetail {
 
 	typeLabel := widgets.NewQLabel2("Type", nil, 0)
 	titleLabel := widgets.NewQLabel2("Title", nil, 0)
@@ -47,23 +46,22 @@ func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *Instructi
 	d.typeInput = widgets.NewQComboBox(nil)
 	d.typeInput.AddItems([]string{TYPE_INS, TYPE_SET})
 	d.typeInput.ConnectCurrentTextChanged(d.onInstructionTypeChanged)
-
 	d.titleInput = widgets.NewQLineEdit(nil)
-	d.lineInput = widgets.NewQLineEdit(nil)
-	d.lineInput.SetVisible(false)
-
 	d.instInput = widgets.NewQComboBox(nil)
-	for k, _ := range instructionMap {
-		if k != INST_SET_SYNC &&
-			k != INST_SET_ASYN {
-			d.instructionList = append(d.instructionList, k)
+	d.instructionMap = make(map[string][]string)
+	for name, instructionMap := range instructionDaoMap {
+		for k, _ := range instructionMap {
+			if k != INST_SET_SYNC &&
+				k != INST_SET_ASYN {
+				d.instructionMap[name] = append(d.instructionMap[name], k)
+			}
 		}
+		sort.Sort(sort.StringSlice(d.instructionMap[name]))
 	}
-	sort.Sort(sort.StringSlice(d.instructionList))
-	d.instInput.AddItems(d.instructionList)
 	d.instInput.ConnectCurrentTextChanged(d.onInstructionChanged)
 
 	d.devInput = widgets.NewQComboBox(nil)
+	d.devInput.ConnectCurrentTextChanged(d.onDeviceChanged)
 	d.argsInput = widgets.NewQLineEdit(nil)
 
 	// waveform group
@@ -170,16 +168,15 @@ func NewInstructionDetail(instructionMap interpreter.InstructionMapt) *Instructi
 	layout.AddWidget(d.titleInput, 0, 1, 0)
 	layout.AddWidget(typeLabel, 1, 0, 0)
 	layout.AddWidget(d.typeInput, 1, 1, 0)
-	layout.AddWidget(instLabel, 2, 0, 0)
-	layout.AddWidget(d.instInput, 2, 1, 0)
-	layout.AddWidget(devLabel, 3, 0, 0)
-	layout.AddWidget(d.devInput, 3, 1, 0)
+	layout.AddWidget(devLabel, 2, 0, 0)
+	layout.AddWidget(d.devInput, 2, 1, 0)
+	layout.AddWidget(instLabel, 3, 0, 0)
+	layout.AddWidget(d.instInput, 3, 1, 0)
 	layout.AddWidget(argsLabel, 4, 0, 0)
 	layout.AddWidget(d.argsInput, 4, 1, 0)
-	layout.AddWidget3(d.lineInput, 5, 0, 1, 2, 0)
-	layout.AddWidget3(d.waveformGroup, 6, 0, 1, 2, 0)
+	layout.AddWidget3(d.waveformGroup, 5, 0, 1, 2, 0)
 
-	layout.AddWidget3(d.saveButton, 7, 0, 1, 2, 0)
+	layout.AddWidget3(d.saveButton, 6, 0, 1, 2, 0)
 	d.GroupBox.SetLayout(layout)
 	return &d
 }
@@ -188,20 +185,26 @@ func (d *InstructionDetail) saveInstruction() {
 	if d.treeItem == nil {
 		return
 	}
-
-	d.SetLineInput()
-
 	d.treeItem.SetText(0, d.titleInput.Text())
-	tree.SetTreeItemData(d.treeItem, d.lineInput.Text())
-
+	variantMap := MakeVariantMap(
+		d.devInput.CurrentText(),
+		d.devInput.CurrentData(
+			int(core.Qt__UserRole)).ToString(),
+		d.instInput.CurrentText(),
+		d.argsInput.Text(),
+	)
+	d.treeItem.SetData(
+		0,
+		tree.DataRole(),
+		core.NewQVariant25(variantMap),
+	)
 }
 
 func (d *InstructionDetail) Refresh(item *widgets.QTreeWidgetItem) {
-	line := tree.GetTreeItemData(item)
 	d.treeItem = item
 	d.titleInput.SetText(item.Text(0))
-	d.lineInput.SetText(line)
 	d.SetTypeInput()
+	d.SetDevInput()
 	d.SetInstInput()
 	d.SetArgsInput()
 	d.saveButton.SetEnabled(true)
@@ -212,9 +215,10 @@ func (d *InstructionDetail) onInstructionTypeChanged(selected string) {
 	case TYPE_SET:
 		d.instInput.Clear()
 		d.instInput.AddItems([]string{INST_SET_SYNC, INST_SET_ASYN})
+		d.devInput.SetEnabled(false)
 	default:
 		d.instInput.Clear()
-		d.instInput.AddItems(d.instructionList)
+		d.devInput.SetEnabled(true)
 	}
 }
 
@@ -227,56 +231,110 @@ func (d *InstructionDetail) onInstructionChanged(selected string) {
 	}
 }
 
-func (d *InstructionDetail) Line() string {
-	return d.lineInput.Text()
+func (d *InstructionDetail) onDeviceChanged(selected string) {
+	d.instInput.Clear()
+	d.instInput.AddItems(
+		d.instructionMap[d.devInput.CurrentData(
+			int(core.Qt__UserRole)).ToString()])
 }
 
 func (d *InstructionDetail) SetTypeInput() {
-	if strings.HasPrefix(d.lineInput.Text(), INST_SET_SYNC) ||
-		strings.HasPrefix(d.lineInput.Text(), INST_SET_ASYN) {
+	if d.Instruction() == INST_SET_SYNC ||
+		d.Instruction() == INST_SET_ASYN {
 		d.typeInput.SetCurrentText(TYPE_SET)
 	} else {
 		d.typeInput.SetCurrentText(TYPE_INS)
 	}
 }
 
-func (d *InstructionDetail) GetInstructionFromLine() string {
-	list := strings.Split(d.Line(), " ")
-	return list[0]
-}
-
 func (d *InstructionDetail) SetInstInput() {
-	instruction := d.GetInstructionFromLine()
-	for _, v := range d.instructionList {
-		if instruction == v {
-			d.instInput.SetCurrentText(instruction)
-			return
-		}
-	}
-	if instruction == INST_SET_SYNC {
+	if d.Instruction() == INST_SET_SYNC {
+		d.instInput.Clear()
+		d.instInput.AddItems([]string{INST_SET_SYNC, INST_SET_ASYN})
 		d.instInput.SetCurrentText(INST_SET_SYNC)
 		return
 	}
-	if instruction == INST_SET_ASYN {
+	if d.Instruction() == INST_SET_ASYN {
+		d.instInput.Clear()
+		d.instInput.AddItems([]string{INST_SET_SYNC, INST_SET_ASYN})
 		d.instInput.SetCurrentText(INST_SET_ASYN)
 		return
 	}
+	d.instInput.SetCurrentText(d.Instruction())
 }
 
-func (d *InstructionDetail) GetArgumentsFromLine() string {
-	instruction := d.GetInstructionFromLine()
-	return strings.Trim(d.Line(), fmt.Sprintf("%s ", instruction))
+func (d *InstructionDetail) SetDevInput() {
+	d.devInput.SetCurrentText(d.Device())
+	d.instInput.Clear()
+	d.instInput.AddItems(
+		d.instructionMap[d.devInput.CurrentData(
+			int(core.Qt__UserRole)).ToString()])
 }
 
-func (d *InstructionDetail) SetDevInput(items []string) {
+func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
 	d.devInput.Clear()
-	d.devInput.AddItems(items)
+	l := []string{}
+	for k := range itemMap {
+		l = append(l, k)
+	}
+	sort.Sort(sort.StringSlice(l))
+	for _, k := range l {
+		d.devInput.AddItem(k, core.NewQVariant17(itemMap[k]))
+	}
 }
 
 func (d *InstructionDetail) SetArgsInput() {
-	d.argsInput.SetText(d.GetArgumentsFromLine())
+	d.argsInput.SetText(d.Arguments())
 }
 
-func (d *InstructionDetail) SetLineInput() {
-	d.lineInput.SetText(fmt.Sprintf("%s %s", d.instInput.CurrentText(), d.argsInput.Text()))
+func (d *InstructionDetail) Device() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.Device()
+}
+
+func (d *InstructionDetail) DeviceType() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.DeviceType()
+}
+
+func (d *InstructionDetail) Instruction() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.Instruction()
+}
+
+func (d *InstructionDetail) Arguments() string {
+	variantMap := VariantMap(d.treeItem.Data(0, tree.DataRole()).ToMap())
+	return variantMap.Arguments()
+}
+
+type VariantMap map[string]*core.QVariant
+
+func MakeVariantMap(
+	deviceText string,
+	deviceType string,
+	instructionText string,
+	argumentText string,
+) VariantMap {
+	variantMap := make(VariantMap)
+	variantMap["device"] = core.NewQVariant17(deviceText)
+	variantMap["deviceType"] = core.NewQVariant17(deviceType)
+	variantMap["instruction"] = core.NewQVariant17(instructionText)
+	variantMap["arguments"] = core.NewQVariant17(argumentText)
+	return variantMap
+}
+
+func (v VariantMap) Device() string {
+	return v["device"].ToString()
+}
+
+func (v VariantMap) DeviceType() string {
+	return v["deviceType"].ToString()
+}
+
+func (v VariantMap) Instruction() string {
+	return v["instruction"].ToString()
+}
+
+func (v VariantMap) Arguments() string {
+	return v["arguments"].ToString()
 }

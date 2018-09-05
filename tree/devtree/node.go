@@ -62,21 +62,22 @@ func ComposeVarName(args ...string) string {
 	return path.Join(args...)
 }
 
-func ParseConnList() []string {
+func ParseConnList() map[string]string {
 	ParseDeviceConf()
-	return GetConnList()
+	return GetConnMap()
 }
 
-func GetConnList() []string {
-	l := []string{}
+func GetConnMap() map[string]string {
+	m := make(map[string]string)
+	m[DEV_TYPE_UNK] = DEV_TYPE_UNK
 	for _, v := range []string{
-		DEV_TYPE_SRL,
-		DEV_TYPE_TCP,
+		DEV_TYPE_ALT,
+		DEV_TYPE_RCG,
 		DEV_TYPE_CAN,
 	} {
 		for _, s := range ConnMap[v] {
-			l = append(l, s)
+			m[s] = v
 		}
 	}
-	return l
+	return m
 }

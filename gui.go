@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"posam/dao"
 	"posam/dao/alientek"
 	"posam/dao/ricoh_g5"
 	"runtime"
@@ -16,7 +17,7 @@ import (
 	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
 	"posam/gui/uiutil"
-	"posam/instruction"
+	_ "posam/instruction"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
 )
@@ -116,54 +117,23 @@ PRINT never executed`
 )
 
 var InstructionMap = make(interpreter.InstructionMapt)
-
-type InstructionPrint struct {
-	instruction.Instruction
-}
-
-var Print InstructionPrint
-
-func (c *InstructionPrint) Execute(args ...string) (interface{}, error) {
-	message := strings.Join(args, " ")
-	return "Print: " + message, nil
-}
+var InstructionDaoMap = make(map[string]interpreter.InstructionMapt)
 
 type QMessageBoxWithCustomSlot struct {
 	widgets.QMessageBox
 	_ func(message string) `slot:showMessageBoxSlot`
 }
 
+func init() {
+
+	InstructionDaoMap[devtree.DEV_TYPE_UNK] = dao.InstructionMap
+	InstructionDaoMap[devtree.DEV_TYPE_ALT] = alientek.InstructionMap
+	InstructionDaoMap[devtree.DEV_TYPE_RCG] = ricoh_g5.InstructionMap
+	// TODO: CAN
+	buildInstructionMap()
+}
+
 func main() {
-
-	InstructionMap.Set("PRINT", InstructionPrint{})
-	InstructionMap.Set("SLEEP", instruction.InstructionSleep{})
-	InstructionMap.Set("IMPORT", instruction.InstructionImport{})
-	InstructionMap.Set("ASYNC", instruction.InstructionAsync{})
-	InstructionMap.Set("LED", instruction.InstructionLed{})
-	InstructionMap.Set("SENDSERIAL", instruction.InstructionSendSerial{})
-
-	InstructionMap.Set("GETVAR", instruction.InstructionVariableGet{})
-	InstructionMap.Set("SETVAR", instruction.InstructionVariableSet{})
-
-	InstructionMap.Set("ADD", instruction.InstructionAddition{})
-	InstructionMap.Set("SUB", instruction.InstructionSubtraction{})
-	InstructionMap.Set("DIV", instruction.InstructionDivision{})
-	InstructionMap.Set("MUL", instruction.InstructionMultiplication{})
-
-	InstructionMap.Set("CMPVAR", instruction.InstructionVariableCompare{})
-	InstructionMap.Set("ERRGOTO", instruction.InstructionControlFlowErrGoto{})
-	InstructionMap.Set("EQGOTO", instruction.InstructionControlFlowEqualGoto{})
-	InstructionMap.Set("NEGOTO", instruction.InstructionControlFlowNotEqualGoto{})
-	InstructionMap.Set("GTGOTO", instruction.InstructionControlFlowGreaterThanGoto{})
-	InstructionMap.Set("LTGOTO", instruction.InstructionControlFlowLessThanGoto{})
-	InstructionMap.Set("LOOP", instruction.InstructionControlFlowLoop{})
-	InstructionMap.Set("RETURN", instruction.InstructionControlFlowReturn{})
-	InstructionMap.Set("GOTO", instruction.InstructionControlFlowGoto{})
-
-	InstructionMap.Set("ERRORCODE", instruction.InstructionPrinterHeadErrorCode{})
-	InstructionMap.Set("PRINTERSTATUS", instruction.InstructionPrinterHeadPrinterStatus{})
-	InstructionMap.Set("PRINTDATA", instruction.InstructionPrinterHeadPrintData{})
-	InstructionMap.Set("WAVEFORM", instruction.InstructionPrinterHeadWaveform{})
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 
@@ -188,8 +158,8 @@ func main() {
 	input.SetPlainText(CMD_CF)
 	input.SetVisible(false)
 
-	instDetail := instree.NewInstructionDetail(InstructionMap)
-	instDetail.SetDevInput(devtree.ParseConnList())
+	instDetail := instree.NewInstructionDetail(InstructionDaoMap)
+	instDetail.InitDevInput(devtree.ParseConnList())
 
 	// result group
 
@@ -230,20 +200,20 @@ func main() {
 			stack.Set(variable)
 		}
 
-		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_SRL] {
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_ALT] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			name, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_NAME))
+				devtree.ComposeVarName(base, alientek.DEVICE_NAME))
 			baud, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_BAUD))
+				devtree.ComposeVarName(base, alientek.BAUD_RATE))
 			character, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_CHARACTER))
+				devtree.ComposeVarName(base, alientek.CHARACTER_BITS))
 			stop, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_STOP))
+				devtree.ComposeVarName(base, alientek.STOP_BITS))
 			parity, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_PARITY))
+				devtree.ComposeVarName(base, alientek.PARITY))
 			deviceCode, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_SRL_CODE))
+				devtree.ComposeVarName(base, alientek.DEVICE_CODE))
 			err := initSerialDevice(
 				fmt.Sprintf("%v", name.Value),
 				fmt.Sprintf("%v", baud.Value),
@@ -257,14 +227,14 @@ func main() {
 			}
 		}
 
-		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_TCP] {
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_RCG] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
 			network, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_TCP_NETWORK))
+				devtree.ComposeVarName(base, ricoh_g5.NETWORK))
 			address, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_TCP_ADDRESS))
+				devtree.ComposeVarName(base, ricoh_g5.ADDRESS))
 			timeout, _ := stack.Get(
-				devtree.ComposeVarName(base, devtree.PRT_TCP_TIMEOUT))
+				devtree.ComposeVarName(base, ricoh_g5.TIMEOUT))
 			err := initTCPDevice(
 				fmt.Sprintf("%v", network.Value),
 				fmt.Sprintf("%v", address.Value),
@@ -275,7 +245,7 @@ func main() {
 			}
 		}
 
-		instDetail.SetDevInput(devtree.GetConnList())
+		instDetail.InitDevInput(devtree.GetConnMap())
 
 		// TODO: init CAN devices
 
@@ -506,12 +476,14 @@ func initTCPDevice(network string, address string, secondString string) (err err
 	if err != nil {
 		return err
 	}
-
-	i := instruction.InstructionPrinterHeadPrinterStatus{}
-	_, err = i.Execute()
-	if err != nil {
-		log.Println(err)
-		return fmt.Errorf("printer is not ready")
-	}
 	return nil
+}
+
+func buildInstructionMap() {
+	for _, instructionMap := range InstructionDaoMap {
+		for k, v := range instructionMap {
+			fmt.Println(k)
+			InstructionMap[k] = v
+		}
+	}
 }
