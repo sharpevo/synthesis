@@ -6,8 +6,17 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"posam/interpreter"
 	"strconv"
 )
+
+const NAME = "UNKNOWN"
+
+var InstructionMap interpreter.InstructionMapt
+
+func init() {
+	InstructionMap = make(interpreter.InstructionMapt)
+}
 
 type Frame struct {
 	Address   byte

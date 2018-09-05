@@ -8,12 +8,36 @@ import (
 	"posam/protocol/serial"
 	"strconv"
 	//"posam/protocol/serialport"
+	"posam/interpreter"
 	"posam/util/concurrentmap"
 )
+
+const (
+	NAME           = "ALIENTEK"
+	DEVICE_CODE    = "DEVICE_CODE"
+	DEVICE_NAME    = "DEVICE_NAME"
+	BAUD_RATE      = "BAUD_RATE"
+	CHARACTER_BITS = "CHARACTER_BITS"
+	STOP_BITS      = "STOP_BITS"
+	PARITY         = "PARITY"
+	IDNAME         = DEVICE_CODE
+)
+
+var CONN_ATTRIBUTES = []string{
+	DEVICE_CODE,
+	DEVICE_NAME,
+	BAUD_RATE,
+	CHARACTER_BITS,
+	STOP_BITS,
+	PARITY,
+}
+
+var InstructionMap interpreter.InstructionMapt
 
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
+	InstructionMap = make(interpreter.InstructionMapt)
 	ResetInstance()
 }
 
