@@ -58,6 +58,11 @@ type Client struct {
 
 	ChannelDescriptor int
 	RequestQueue      *blockingqueue.BlockingQueue
+
+	PosX float64
+	PosY float64
+	SpdX float64
+	SpdY float64
 }
 
 func NewClient(
@@ -215,6 +220,9 @@ func (c *Client) launch() {
 			continue
 		}
 		req.Responsec <- Response{Error: nil}
+		if err := c.UpdateMotionStatus(); err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -615,4 +623,24 @@ func parseRelArgs(
 			fmt.Errorf("failed to convert add %v", addi)
 	}
 	return pos, spd, acc, add, mmt, ref, nil
+}
+
+func (c *Client) UpdateMotionStatus() (err error) {
+	if err = tml.SelectAxis(c.AxisXID); err != nil {
+		return err
+	}
+	posx, err := tml.GetLongVariable("APOS")
+	if err != nil {
+		return err
+	}
+	c.PosX = tml.ParsePosition(posx)
+	if err = tml.SelectAxis(c.AxisYID); err != nil {
+		return err
+	}
+	posy, err := tml.GetLongVariable("APOS")
+	if err != nil {
+		return err
+	}
+	c.PosY = tml.ParsePosition(posy)
+	return nil
 }
