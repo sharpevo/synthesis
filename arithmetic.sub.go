@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	dao.InstructionMap.Set("DIV", InstructionSubtraction{})
+	dao.InstructionMap.Set("SUB", InstructionSubtraction{})
 }
 
 type InstructionSubtraction struct {
