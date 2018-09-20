@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"posam/dao"
 	"posam/dao/alientek"
+	"posam/dao/aoztech"
 	"posam/dao/ricoh_g5"
 	"runtime"
 	"strconv"
@@ -129,6 +130,7 @@ func init() {
 	InstructionDaoMap[devtree.DEV_TYPE_UNK] = dao.InstructionMap
 	InstructionDaoMap[devtree.DEV_TYPE_ALT] = alientek.InstructionMap
 	InstructionDaoMap[devtree.DEV_TYPE_RCG] = ricoh_g5.InstructionMap
+	InstructionDaoMap[devtree.DEV_TYPE_AOZ] = aoztech.InstructionMap
 	// TODO: CAN
 	buildInstructionMap()
 }
@@ -239,6 +241,33 @@ func main() {
 				fmt.Sprintf("%v", network.Value),
 				fmt.Sprintf("%v", address.Value),
 				fmt.Sprintf("%v", timeout.Value),
+			)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+			}
+		}
+
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_AOZ] {
+			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
+			name, _ := stack.Get(
+				devtree.ComposeVarName(base, aoztech.DEVICE_NAME))
+			baud, _ := stack.Get(
+				devtree.ComposeVarName(base, aoztech.BAUD_RATE))
+			axisXID, _ := stack.Get(
+				devtree.ComposeVarName(base, aoztech.AXIS_X_ID))
+			axisXSetupFile, _ := stack.Get(
+				devtree.ComposeVarName(base, aoztech.AXIS_X_SETUP_FILE))
+			axisYID, _ := stack.Get(
+				devtree.ComposeVarName(base, aoztech.AXIS_Y_ID))
+			axisYSetupFile, _ := stack.Get(
+				devtree.ComposeVarName(base, aoztech.AXIS_Y_SETUP_FILE))
+			err := initAozDevice(
+				fmt.Sprintf("%v", name.Value),
+				fmt.Sprintf("%v", baud.Value),
+				fmt.Sprintf("%v", axisXID.Value),
+				fmt.Sprintf("%v", axisXSetupFile.Value),
+				fmt.Sprintf("%v", axisYID.Value),
+				fmt.Sprintf("%v", axisYSetupFile.Value),
 			)
 			if err != nil {
 				uiutil.MessageBoxError(err.Error())
@@ -477,6 +506,32 @@ func initTCPDevice(network string, address string, secondString string) (err err
 		return err
 	}
 	return nil
+}
+
+func initAozDevice(
+	name string,
+	baud string,
+	axisXID string,
+	axisXSetupFile string,
+	axisYID string,
+	axisYSetupFile string,
+) (err error) {
+	if aoztech.Instance(name) != nil {
+		log.Printf("Device %q has been initialized\n", name)
+		return
+	}
+	_, err = aoztech.NewDao(
+		name,
+		baud,
+		axisXID,
+		axisXSetupFile,
+		axisYID,
+		axisYSetupFile,
+	)
+	if err != nil {
+		return err
+	}
+	return
 }
 
 func buildInstructionMap() {

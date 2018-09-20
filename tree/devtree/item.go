@@ -5,6 +5,7 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"posam/dao"
 	"posam/dao/alientek"
+	"posam/dao/aoztech"
 	"posam/dao/ricoh_g5"
 	"posam/gui/tree"
 )
@@ -13,6 +14,7 @@ const (
 	DEV_TYPE_UNK = dao.NAME
 	DEV_TYPE_ALT = alientek.NAME
 	DEV_TYPE_RCG = ricoh_g5.NAME
+	DEV_TYPE_AOZ = aoztech.NAME
 	DEV_TYPE_CAN = "IGENETECH_CAN"
 
 	PRT_CONN = "CONN"
@@ -45,6 +47,7 @@ func NewDeviceDetail() *DeviceDetail {
 		DEV_TYPE_UNK,
 		DEV_TYPE_ALT,
 		DEV_TYPE_RCG,
+		DEV_TYPE_AOZ,
 		DEV_TYPE_CAN,
 	})
 	d.typeInput.ConnectCurrentTextChanged(d.onDeviceTypeChanged)
@@ -144,6 +147,20 @@ func (d *DeviceDetail) onDeviceTypeChanged(selected string) {
 		}
 	case DEV_TYPE_ALT:
 		for _, title := range alientek.CONN_ATTRIBUTES {
+			seen := false
+			for i := 0; i < connItem.ChildCount(); i++ {
+				if item := connItem.Child(i); title == item.Text(0) {
+					seen = true
+					break
+				}
+			}
+			if !seen {
+				item := NewDeviceConnItem(title)
+				connItem.InsertChild(0, item)
+			}
+		}
+	case DEV_TYPE_AOZ:
+		for _, title := range aoztech.CONN_ATTRIBUTES {
 			seen := false
 			for i := 0; i < connItem.ChildCount(); i++ {
 				if item := connItem.Child(i); title == item.Text(0) {
