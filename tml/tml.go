@@ -172,150 +172,9 @@ func (c *Client) connect() (err error) {
 		return fmt.Errorf("failed to enable power on axes: x(%d) / y(%d)", statusx, statusy)
 	}
 
-	///////////////////
-
-	//descriptor, err := tml.OpenChannel(c.Name, commType, hostId, c.BaudRate)
-	//if err != nil {
-	//log.Println(err)
-	//return err
-	//}
-	//c.ChannelDescriptor = descriptor
-
-	//// axis x
-
-	//idxSetup, err := tml.LoadSetup(c.AxisXSetupFile)
-	//if err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.SetupAxis(c.AxisXID, idxSetup); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.SelectAxis(c.AxisXID); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.DriveInitialisation(); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.Power(true); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//// axis y
-
-	//idxSetup, err = tml.LoadSetup(c.AxisYSetupFile)
-	//if err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.SetupAxis(c.AxisYID, idxSetup); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.SelectAxis(c.AxisYID); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.DriveInitialisation(); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err := tml.SetEventOnMotionComplete(false); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//if err = tml.Power(true); err != nil {
-	//log.Println(err)
-	//return err
-	//}
-
-	//var status int
-	//log.Println("checking status...")
-	//for i := 0; i < 10; i++ {
-	//time.Sleep(1 * time.Second)
-	//err = tml.ReadStatus(3, &status)
-	//if err != nil {
-	//log.Println(err)
-	//return
-	//}
-	//status = status & 1 >> 15
-	//if status == 0 {
-	//break
-	//}
-	//}
-	//if status != 0 {
-	//return fmt.Errorf("motor is not ready")
-	//}
-
 	log.Printf("motor %q is ready", c.Name)
 	return nil
 }
-
-//func (c *Client) execute(req *Request) error {
-//switch req.Function {
-//case "MoveAbsolute":
-////channel := req.Arguments[0]
-//axisID := req.Arguments[1].(int)
-//pos := req.Arguments[2].(float64)
-//speed := req.Arguments[3].(float64)
-//accel := req.Arguments[4].(float64)
-//log.Printf("moving to %d:%d absolutely", axisID, pos)
-////if err := tml.SelectChannel(channel); err != nil {
-////return err
-////}
-//if err := tml.SelectAxis(axisID); err != nil {
-//msg, _ := tml.GetLastErrorText()
-//return fmt.Errorf("%s: %s", err.Error(), msg)
-//}
-//if err := tml.MoveAbsolute(pos, speed, accel, 1, 1); err != nil {
-//msg, _ := tml.GetLastErrorText()
-//return fmt.Errorf("%s: %s", err.Error(), msg)
-//}
-//if err := tml.SetEventOnMotionComplete(false); err != nil {
-//msg, _ := tml.GetLastErrorText()
-//return fmt.Errorf("%s: %s", err.Error(), msg)
-//}
-//return nil
-//case "MoveRelative":
-////channel := req.Arguments[0]
-//axisID := req.Arguments[1].(int)
-//pos := req.Arguments[2].(float64)
-//speed := req.Arguments[3].(float64)
-//accel := req.Arguments[4].(float64)
-//log.Printf("moving to %d:%d relatively", axisID, pos)
-////if err := tml.SelectChannel(channel); err != nil {
-////return err
-////}
-//if err := tml.SelectAxis(axisID); err != nil {
-//msg, _ := tml.GetLastErrorText()
-//return fmt.Errorf("%s: %s", err.Error(), msg)
-//}
-//if err := tml.MoveRelative(pos, speed, accel, true, 1, 1); err != nil {
-//msg, _ := tml.GetLastErrorText()
-//return fmt.Errorf("%s: %s", err.Error(), msg)
-//}
-//if err := tml.SetEventOnMotionComplete(false); err != nil {
-//msg, _ := tml.GetLastErrorText()
-//return fmt.Errorf("%s: %s", err.Error(), msg)
-//}
-//return nil
-//}
-//return nil
-
-//}
 
 type Request struct {
 	//AxisID    int
@@ -358,32 +217,6 @@ func (c *Client) launch() {
 		req.Responsec <- Response{Error: nil}
 	}
 }
-
-//func (c *Client) isAxisReady(axisID int) (bool, error) {
-//isCompleted := false
-//if err := tml.SelectAxis(axisID); err != nil {
-//return isCompleted, err
-//}
-//if err := tml.CheckEvent(&isCompleted); err != nil {
-//log.Println(err)
-//return isCompleted, err
-//}
-//return isCompleted, nil
-//}
-
-//func (c *Client) checkAxisReady(axisID int) error {
-//for i := 0; i < 10; i++ {
-//isCompleted, err := c.isAxisReady(axisID)
-//if err != nil {
-//return err
-//}
-//if isCompleted {
-//return nil
-//}
-//time.Sleep(2 * time.Second)
-//}
-//return fmt.Errorf("completion checking timout at axis %d", axisID)
-//}
 
 func (c *Client) MoveAbsoluteByAxis(
 	aidi interface{},
@@ -490,26 +323,6 @@ func (c *Client) MoveAbsByAxis(
 	return nil
 }
 
-//func (c *Client) moveAbsolute(
-//channel int,
-//axisID int,
-//pos float64,
-//speed float64,
-//accel float64,
-//) error {
-//log.Printf("moving to %d:%d absolutely", axisID, pos)
-//if err := tml.SelectChannel(channel); err != nil {
-//return err
-//}
-//if err := tml.SelectAxis(axisID); err != nil {
-//return err
-//}
-//if err := tml.MoveAbsolute(pos, speed, accel, 1, 1); err != nil {
-//return err
-//}
-//return nil
-//}
-
 func (c *Client) MoveRelByAxis(
 	axisID int,
 	pos float64,
@@ -541,26 +354,6 @@ func (c *Client) MoveRelByAxis(
 	}
 	return nil
 }
-
-//func (c *Client) moveRelative(
-//channel int,
-//axisID int,
-//pos float64,
-//speed float64,
-//accel float64,
-//) error {
-//log.Printf("moving to %d:%d relatively", axisID, pos)
-//if err := tml.SelectChannel(channel); err != nil {
-//return err
-//}
-//if err := tml.SelectAxis(axisID); err != nil {
-//return err
-//}
-//if err := tml.MoveRelative(pos, speed, accel, true, 1, 1); err != nil {
-//return err
-//}
-//return nil
-//}
 
 func (c *Client) MoveRelative(
 	posxi interface{},
