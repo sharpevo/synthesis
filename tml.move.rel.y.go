@@ -5,14 +5,17 @@ import (
 )
 
 func init() {
-	aoztech.InstructionMap.Set("MOVEY", InstructionTMLMoveY{})
+	aoztech.InstructionMap.Set("MOVERELY", InstructionTMLMoveRelY{})
 }
 
-type InstructionTMLMoveY struct {
+type InstructionTMLMoveRelY struct {
 	InstructionTMLMove
 }
 
-func (i *InstructionTMLMoveY) Execute(args ...string) (resp interface{}, err error) {
+func (i *InstructionTMLMoveRelY) Execute(args ...string) (
+	resp interface{},
+	err error,
+) {
 	instance, pos, speed, accel, err := i.Initialize(args...)
 	if err != nil {
 		return resp, err

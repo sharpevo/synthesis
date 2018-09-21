@@ -3,11 +3,10 @@ package instruction
 import (
 	"fmt"
 	"posam/dao/aoztech"
-	"strconv"
 )
 
 type InstructionTMLMove struct {
-	Instruction
+	InstructionTML
 }
 
 func (i *InstructionTMLMove) Initialize(args ...string) (
@@ -21,16 +20,9 @@ func (i *InstructionTMLMove) Initialize(args ...string) (
 		return instance, pos, speed, accel,
 			fmt.Errorf("not enough arguments")
 	}
-	variable, found := i.Env.Get(args[0])
-	if !found {
-		return instance, pos, speed, accel,
-			fmt.Errorf("device %q is not defined", args[0])
-	}
-	deviceName := variable.Value.(string)
-	instance = aoztech.Instance(deviceName)
-	if instance == nil {
-		return instance, pos, speed, accel,
-			fmt.Errorf("device %q is not initialized", args[0])
+	instance, err = i.ParseDevice(args[0])
+	if err != nil {
+		return instance, pos, speed, accel, err
 	}
 	pos, err = i.ParseFloat(args[1])
 	if err != nil {
@@ -72,16 +64,9 @@ func (i *InstructionTMLMove) InitializeDual(args ...string) (
 		return instance, posx, posy, speed, accel,
 			fmt.Errorf("not enough arguments")
 	}
-	variable, found := i.Env.Get(args[0])
-	if !found {
-		return instance, posx, posy, speed, accel,
-			fmt.Errorf("device %q is not defined", args[0])
-	}
-	deviceName := variable.Value.(string)
-	instance = aoztech.Instance(deviceName)
-	if instance == nil {
-		return instance, posx, posy, speed, accel,
-			fmt.Errorf("device %q is not initialized", args[0])
+	instance, err = i.ParseDevice(args[0])
+	if err != nil {
+		return instance, posx, posy, speed, accel, err
 	}
 	posx, err = i.ParseFloat(args[1])
 	if err != nil {
@@ -102,23 +87,40 @@ func (i *InstructionTMLMove) InitializeDual(args ...string) (
 	return
 }
 
-func (i *InstructionTMLMove) ParseFloat(input string) (output float64, err error) {
-	outputVar, found := i.Env.Get(input)
-	if !found {
-		output, err = strconv.ParseFloat(input, 64)
-		if err != nil {
-			return output, err
-		}
-	} else {
-		output, err = strconv.ParseFloat(fmt.Sprintf("%v", outputVar.Value), 64)
-		if err != nil {
-			return output,
-				fmt.Errorf(
-					"failed to parse variable %q to float: %s",
-					input,
-					err.Error(),
-				)
-		}
-	}
-	return output, nil
-}
+//func (i *InstructionTMLMove) ParseFloat(input string) (output float64, err error) {
+//outputVar, found := i.Env.Get(input)
+//if !found {
+//output, err = strconv.ParseFloat(input, 64)
+//if err != nil {
+//return output, err
+//}
+//} else {
+//output, err = strconv.ParseFloat(fmt.Sprintf("%v", outputVar.Value), 64)
+//if err != nil {
+//return output,
+//fmt.Errorf(
+//"failed to parse variable %q to float: %s",
+//input,
+//err.Error(),
+//)
+//}
+//}
+//return output, nil
+//}
+
+//func (i *InstructionTMLMove) ParseDevice(input string) (
+//instance *aoztech.Dao,
+//err error,
+//) {
+//variable, found := i.Env.Get(input)
+//if !found {
+//return instance,
+//fmt.Errorf("device %q is not defined", input)
+//}
+//deviceName := variable.Value.(string)
+//instance = aoztech.Instance(deviceName)
+//if instance == nil {
+//return instance,
+//fmt.Errorf("device %q is not initialized", input)
+//}
+//}

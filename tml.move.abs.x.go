@@ -5,19 +5,22 @@ import (
 )
 
 func init() {
-	aoztech.InstructionMap.Set("MOVEX", InstructionTMLMoveX{})
+	aoztech.InstructionMap.Set("MOVEABSX", InstructionTMLMoveAbsX{})
 }
 
-type InstructionTMLMoveX struct {
+type InstructionTMLMoveAbsX struct {
 	InstructionTMLMove
 }
 
-func (i *InstructionTMLMoveX) Execute(args ...string) (resp interface{}, err error) {
+func (i *InstructionTMLMoveAbsX) Execute(args ...string) (
+	resp interface{},
+	err error,
+) {
 	instance, pos, speed, accel, err := i.Initialize(args...)
 	if err != nil {
 		return resp, err
 	}
-	resp, err = instance.MoveRelByAxis(
+	resp, err = instance.MoveAbsByAxis(
 		instance.TMLClient.AxisXID,
 		pos,
 		speed,
