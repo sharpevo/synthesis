@@ -70,11 +70,21 @@ func (i *InstructionTMLMove) InitializeDual(args ...string) (
 		return instance, posx, posy, speed, accel,
 			fmt.Errorf("device %q is not initialized", args[0])
 	}
-	posx, err = strconv.ParseFloat(args[1], 64)
+	posxVar, found := i.Env.Get(args[1])
+	if !found {
+		return instance, posx, posy, speed, accel,
+			fmt.Errorf("invalid variable %q", args[1])
+	}
+	posx, err = strconv.ParseFloat(fmt.Sprintf("%v", posxVar.Value), 64)
 	if err != nil {
 		return instance, posx, posy, speed, accel, err
 	}
-	posy, err = strconv.ParseFloat(args[2], 64)
+	posyVar, found := i.Env.Get(args[2])
+	if !found {
+		return instance, posx, posy, speed, accel,
+			fmt.Errorf("invalid variable %q", args[2])
+	}
+	posy, err = strconv.ParseFloat(fmt.Sprintf("%v", posyVar.Value), 64)
 	if err != nil {
 		return instance, posx, posy, speed, accel, err
 	}
