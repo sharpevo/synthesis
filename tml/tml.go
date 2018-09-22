@@ -629,16 +629,16 @@ func (c *Client) UpdateMotionStatus() (err error) {
 	if err = tml.SelectAxis(c.AxisXID); err != nil {
 		return err
 	}
-	posx, err := tml.GetLongVariable("APOS")
-	if err != nil {
+	var posx float64
+	if err = tml.GetLongVariable("APOS", &posx); err != nil {
 		return err
 	}
 	c.PosX = tml.ParsePosition(posx)
 	if err = tml.SelectAxis(c.AxisYID); err != nil {
 		return err
 	}
-	posy, err := tml.GetLongVariable("APOS")
-	if err != nil {
+	var posy float64
+	if err = tml.GetLongVariable("APOS", &posy); err != nil {
 		return err
 	}
 	c.PosY = tml.ParsePosition(posy)
