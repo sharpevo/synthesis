@@ -119,7 +119,7 @@ func (n *Node) Generate() (string, error) {
 			default:
 				return filePath, fmt.Errorf(
 					"invalid operator in %q",
-					n.Title,
+					child.Title,
 				)
 			}
 
