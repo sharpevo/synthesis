@@ -55,7 +55,7 @@ func (i *InstructionArithmetic) GetBigFloat64(
 	case *big.Float:
 		return v, nil
 	default:
-		return big.NewFloat(0), fmt.Errorf("invalid float %v", v)
+		return big.NewFloat(0), fmt.Errorf("invalid float %v(%T)", v, v)
 	}
 }
 
