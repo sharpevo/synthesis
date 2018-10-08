@@ -219,10 +219,10 @@ func (c *Client) launch() {
 			req.Responsec <- Response{Error: erri.(error)}
 			continue
 		}
-		req.Responsec <- Response{Error: nil}
 		if err := c.UpdateMotionStatus(); err != nil {
 			log.Println(err)
 		}
+		req.Responsec <- Response{Error: nil}
 	}
 }
 
