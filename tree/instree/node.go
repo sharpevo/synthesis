@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"posam/dao/alientek"
+	"posam/dao/aoztech"
 	"posam/dao/ricoh_g5"
 	"posam/gui/tree"
 	"strings"
@@ -64,6 +65,12 @@ func (n *Node) Generate() (string, error) {
 					path.Join(child.DevicePath, "CONN", alientek.IDNAME),
 					arguments,
 				)
+			case aoztech.NAME:
+				arguments = fmt.Sprintf(
+					"%s %s",
+					path.Join(child.DevicePath, "CONN", aoztech.IDNAME),
+					arguments,
+				)
 			}
 			fmt.Println(child.DeviceType, arguments)
 			file.WriteString(fmt.Sprintf("%s %s\n", child.Instruction, arguments))
@@ -112,7 +119,7 @@ func (n *Node) Generate() (string, error) {
 			default:
 				return filePath, fmt.Errorf(
 					"invalid operator in %q",
-					n.Title,
+					child.Title,
 				)
 			}
 

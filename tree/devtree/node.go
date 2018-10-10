@@ -73,6 +73,7 @@ func GetConnMap() map[string]string {
 	for _, v := range []string{
 		DEV_TYPE_ALT,
 		DEV_TYPE_RCG,
+		DEV_TYPE_AOZ,
 		DEV_TYPE_CAN,
 	} {
 		for _, s := range ConnMap[v] {
