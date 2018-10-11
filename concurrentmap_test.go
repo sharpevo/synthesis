@@ -42,3 +42,18 @@ func TestNewConcurrentMap(t *testing.T) {
 		}
 	}
 }
+
+func TestDeleteMapEntry(t *testing.T) {
+	cmap := concurrentmap.NewConcurrentMap()
+	cmap.Set("a", 1)
+	cmap.Set("b", "2")
+	if err := cmap.Del("a"); err != nil {
+		t.Errorf(err.Error())
+	}
+	for item := range cmap.Iter() {
+		t.Log(item)
+	}
+	if err := cmap.Del("c"); err == nil {
+		t.Errorf("error expected")
+	}
+}

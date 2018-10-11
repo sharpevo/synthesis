@@ -1,6 +1,7 @@
 package concurrentmap
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -40,6 +41,16 @@ func (c *ConcurrentMap) Set(key string, value interface{}) interface{} {
 	defer c.Unlock()
 	c.m[key] = value
 	return value
+}
+
+func (c *ConcurrentMap) Del(key string) error {
+	c.Lock()
+	defer c.Unlock()
+	if _, ok := c.m[key]; !ok {
+		return fmt.Errorf("failed to delete map entry due to invalid key %s", key)
+	}
+	delete(c.m, key)
+	return nil
 }
 
 func (c *ConcurrentMap) Iter() <-chan Item {
