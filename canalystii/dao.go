@@ -1,8 +1,11 @@
 package canalystii
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"log"
+	"math"
 	"posam/interpreter"
 	"posam/protocol/usbcan"
 	"posam/util/concurrentmap"
@@ -163,16 +166,147 @@ func (d *Dao) SetID(id string) error {
 	return nil
 }
 
-func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
-	req := SensorOxygenConcUnit.Request()
-	resp, err = d.UsbcanClient.Send(
-		req.Bytes(),
-		SensorOxygenConcUnit.RecResp(),
-		SensorOxygenConcUnit.ComResp(),
+func (d *Dao) MoveRelative(
+	motorCode string,
+	speed string,
+	position string,
+) (resp interface{}, err error) {
+	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	if err != nil {
+		return resp, err
+	}
+	speedBytes, _, err := stringToUint16Bytes(speed)
+	if err != nil {
+		return resp, err
+	}
+	posBytes, directionBytes, err := positionBytes(position)
+	if err != nil {
+		return resp, err
+	}
+	req := MotorMoveRelativeUnit.Request()
+	message := req.Bytes()
+	message = append(message, motorCodeBytes...)
+	message = append(message, directionBytes...)
+	message = append(message, speedBytes...)
+	message = append(message, posBytes...)
+	data, err := d.SendAck2(
+		message,
+		MotorMoveRelativeUnit.RecResp(),
+		MotorMoveRelativeUnit.RecResp(),
 	)
 	if err != nil {
 		log.Println(err)
 		return resp, err
 	}
+	resp = binary.BigEndian.Uint16(data[3:5])
 	return resp, nil
+}
+
+func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
+	req := SensorOxygenConcUnit.Request()
+	resp, err = d.Send(req.Bytes())
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	return resp, nil
+}
+
+func (d *Dao) Send(
+	message []byte,
+) ([]byte, error) {
+	return d.UsbcanClient.Send(
+		message,
+		responseNil(),
+		0,
+		responseNil(),
+		0,
+	)
+}
+
+func (d *Dao) SendAck1(
+	message []byte,
+	recResp []byte,
+	comResp []byte,
+) ([]byte, error) {
+	return d.UsbcanClient.Send(
+		message,
+		recResp,
+		1,
+		comResp,
+		1,
+	)
+}
+
+func (d *Dao) SendAck2(
+	message []byte,
+	recResp []byte,
+	comResp []byte,
+) ([]byte, error) {
+	return d.UsbcanClient.Send(
+		message,
+		recResp,
+		2,
+		comResp,
+		2,
+	)
+}
+
+func stringToUint16Bytes(inputString string) (output []byte, isNegtive bool, err error) {
+	input, err := strconv.Atoi(inputString)
+	if err != nil {
+		return output, isNegtive, err
+	}
+	if input < 0 {
+		input = -input
+		isNegtive = true
+	}
+	if input > math.MaxUint16 {
+		return output, isNegtive, fmt.Errorf("%v overflows uint16", input)
+	}
+	var buf = new(bytes.Buffer)
+	err = binary.Write(buf, binary.BigEndian, uint16(input))
+	if err != nil {
+		return output, isNegtive, err
+	}
+	output = buf.Bytes()
+	if len(output) != 2 {
+		return output, isNegtive,
+			fmt.Errorf("unexpected length %v of bytes %v", len(output), output)
+	}
+	return output, isNegtive, err
+}
+
+func stringToUint8Bytes(inputString string) (output []byte, err error) {
+	input, err := strconv.Atoi(inputString)
+	if err != nil {
+		return output, err
+	}
+	if input > math.MaxUint8 {
+		return output, fmt.Errorf("%v overflows uint8", input)
+	}
+	var buf = new(bytes.Buffer)
+	err = binary.Write(buf, binary.BigEndian, uint8(input))
+	if err != nil {
+		return output, err
+	}
+	output = buf.Bytes()
+	if len(output) != 1 {
+		return output,
+			fmt.Errorf("unexpected length %v of bytes %v", len(output), output)
+	}
+	return output, err
+}
+
+func positionBytes(position string) ([]byte, []byte, error) {
+	direction := []byte{0x00}
+	posBytes, negtive, err := stringToUint16Bytes(position)
+	if err != nil {
+		return posBytes, direction, err
+	}
+	if negtive {
+		direction = []byte{0x01}
+	}
+	return posBytes, direction, nil
+
 }
