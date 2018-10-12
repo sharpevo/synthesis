@@ -5,6 +5,7 @@ import (
 	"log"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
+	"strconv"
 )
 
 type Instructioner interface {
