@@ -21,12 +21,14 @@ func (i *InstructionCANSensorOxygenConc) Execute(args ...string) (resp interface
 	if err != nil {
 		return resp, err
 	}
-	variable, err := i.ParseVariable(args[1])
+	variable, err := i.ParseFloat64Variable(args[1])
 	if err != nil {
 		return resp, err
 	}
 	resp, err = instance.ReadOxygenConc()
-	// TODO: calculate concentration
+	if err != nil {
+		return resp, err
+	}
 	variable.Value = resp
 	return resp, err
 }
