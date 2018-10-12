@@ -25,8 +25,12 @@ func (i *InstructionCANSystemRomRead) Execute(args ...string) (resp interface{},
 	if err != nil {
 		return resp, err
 	}
+	address, err := i.ParseInt(args[2])
+	if err != nil {
+		return resp, err
+	}
 	resp, err = instance.ReadSystemRom(
-		args[2],
+		address,
 	)
 	if err != nil {
 		return resp, err

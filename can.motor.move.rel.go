@@ -25,11 +25,27 @@ func (i *InstructionCANMotorMoveRelative) Execute(args ...string) (resp interfac
 	if err != nil {
 		return resp, err
 	}
+	motorCode, err := i.ParseInt(args[2])
+	if err != nil {
+		return resp, err
+	}
+	direction, err := i.ParseInt(args[3])
+	if err != nil {
+		return resp, err
+	}
+	speed, err := i.ParseInt(args[4])
+	if err != nil {
+		return resp, err
+	}
+	position, err := i.ParseInt(args[5])
+	if err != nil {
+		return resp, err
+	}
 	resp, err = instance.MoveRelative(
-		args[2],
-		args[3],
-		args[4],
-		args[5],
+		motorCode,
+		direction,
+		speed,
+		position,
 	)
 	if err != nil {
 		return resp, err

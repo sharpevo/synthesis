@@ -25,9 +25,17 @@ func (i *InstructionCANMotorReset) Execute(args ...string) (resp interface{}, er
 	if err != nil {
 		return resp, err
 	}
+	motorCode, err := i.ParseInt(args[2])
+	if err != nil {
+		return resp, err
+	}
+	direction, err := i.ParseInt(args[3])
+	if err != nil {
+		return resp, err
+	}
 	resp, err = instance.ResetMotor(
-		args[2],
-		args[3],
+		motorCode,
+		direction,
 	)
 	if err != nil {
 		return resp, err

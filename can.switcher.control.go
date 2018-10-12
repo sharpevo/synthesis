@@ -14,7 +14,7 @@ type InstructionCANSwitcherControl struct {
 }
 
 func (i *InstructionCANSwitcherControl) Execute(args ...string) (resp interface{}, err error) {
-	if len(args) < 4 {
+	if len(args) < 3 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
 	instance, err := i.ParseDevice(args[0])
@@ -25,9 +25,12 @@ func (i *InstructionCANSwitcherControl) Execute(args ...string) (resp interface{
 	if err != nil {
 		return resp, err
 	}
+	data, err := i.ParseInt(args[2])
+	if err != nil {
+		return resp, err
+	}
 	resp, err = instance.ControlSwitcher(
-		args[2],
-		args[3],
+		data,
 	)
 	if err != nil {
 		return resp, err

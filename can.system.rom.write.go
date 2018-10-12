@@ -25,9 +25,17 @@ func (i *InstructionCANSystemRomWrite) Execute(args ...string) (resp interface{}
 	if err != nil {
 		return resp, err
 	}
+	address, err := i.ParseInt(args[2])
+	if err != nil {
+		return resp, err
+	}
+	value, err := i.ParseInt(args[3])
+	if err != nil {
+		return resp, err
+	}
 	resp, err = instance.WriteSystemRom(
-		args[2],
-		args[3],
+		address,
+		value,
 	)
 	if err != nil {
 		return resp, err
