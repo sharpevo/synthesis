@@ -167,24 +167,24 @@ func (d *Dao) SetID(id string) error {
 }
 
 func (d *Dao) MoveRelative(
-	motorCode string,
-	direction string,
-	speed string,
-	position string,
+	motorCode int,
+	direction int,
+	speed int,
+	position int,
 ) (resp interface{}, err error) {
-	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	motorCodeBytes, err := uint8Bytes(motorCode)
 	if err != nil {
 		return resp, err
 	}
-	directionBytes, err := stringToUint8Bytes(direction)
+	directionBytes, err := uint8Bytes(direction)
 	if err != nil {
 		return resp, err
 	}
-	speedBytes, err := stringToUint16Bytes(speed)
+	speedBytes, err := uint16Bytes(speed)
 	if err != nil {
 		return resp, err
 	}
-	posBytes, err := stringToUint16Bytes(position)
+	posBytes, err := uint16Bytes(position)
 	if err != nil {
 		return resp, err
 	}
@@ -209,14 +209,14 @@ func (d *Dao) MoveRelative(
 }
 
 func (d *Dao) MoveAbsolute(
-	motorCode string,
-	position string,
+	motorCode int,
+	position int,
 ) (resp interface{}, err error) {
-	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	motorCodeBytes, err := uint8Bytes(motorCode)
 	if err != nil {
 		return resp, err
 	}
-	posBytes, err := stringToUint16Bytes(position)
+	posBytes, err := uint16Bytes(position)
 	if err != nil {
 		return resp, err
 	}
@@ -239,14 +239,14 @@ func (d *Dao) MoveAbsolute(
 }
 
 func (d *Dao) ResetMotor(
-	motorCode string,
-	direction string,
+	motorCode int,
+	direction int,
 ) (resp interface{}, err error) {
-	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	motorCodeBytes, err := uint8Bytes(motorCode)
 	if err != nil {
 		return resp, err
 	}
-	directionBytes, err := stringToUint8Bytes(direction)
+	directionBytes, err := uint8Bytes(direction)
 	if err != nil {
 		return resp, err
 	}
@@ -269,20 +269,14 @@ func (d *Dao) ResetMotor(
 }
 
 func (d *Dao) ControlSwitcher(
-	motorCode string,
-	data string,
+	data int,
 ) (resp interface{}, err error) {
-	motorCodeBytes, err := stringToUint8Bytes(motorCode)
-	if err != nil {
-		return resp, err
-	}
-	dataBytes, err := stringToUint16Bytes(data)
+	dataBytes, err := uint16Bytes(data)
 	if err != nil {
 		return resp, err
 	}
 	req := SwitcherControlUnit.Request()
 	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
 	message = append(message, dataBytes...)
 	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
 	output, err := d.Send(
@@ -297,30 +291,24 @@ func (d *Dao) ControlSwitcher(
 }
 
 func (d *Dao) ControlSwitcherAdvanced(
-	motorCode string,
-	data string,
-	speed string,
-	count string,
+	data int,
+	speed int,
+	count int,
 ) (resp interface{}, err error) {
-	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	dataBytes, err := uint16Bytes(data)
 	if err != nil {
 		return resp, err
 	}
-	dataBytes, err := stringToUint16Bytes(data)
+	speedBytes, err := uint8Bytes(speed)
 	if err != nil {
 		return resp, err
 	}
-	speedBytes, err := stringToUint8Bytes(speed)
-	if err != nil {
-		return resp, err
-	}
-	countBytes, err := stringToUint16Bytes(count)
+	countBytes, err := uint16Bytes(count)
 	if err != nil {
 		return resp, err
 	}
 	req := SwitcherControlAdvancedUnit.Request()
 	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
 	message = append(message, dataBytes...)
 	message = append(message, speedBytes...)
 	message = append(message, countBytes...)
@@ -362,14 +350,14 @@ func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 }
 
 func (d *Dao) WriteSystemRom(
-	address string,
-	value string,
+	address int,
+	value int,
 ) (resp interface{}, err error) {
-	addressBytes, err := stringToUint16Bytes(address)
+	addressBytes, err := uint16Bytes(address)
 	if err != nil {
 		return resp, err
 	}
-	valueBytes, err := stringToUint16Bytes(value)
+	valueBytes, err := uint16Bytes(value)
 	if err != nil {
 		return resp, err
 	}
@@ -391,9 +379,9 @@ func (d *Dao) WriteSystemRom(
 }
 
 func (d *Dao) ReadSystemRom(
-	address string,
+	address int,
 ) (resp interface{}, err error) {
-	addressBytes, err := stringToUint16Bytes(address)
+	addressBytes, err := uint16Bytes(address)
 	if err != nil {
 		return resp, err
 	}
@@ -480,11 +468,7 @@ func (d *Dao) SendAck6(
 	)
 }
 
-func stringToUint16Bytes(inputString string) (output []byte, err error) {
-	input, err := strconv.Atoi(inputString)
-	if err != nil {
-		return output, err
-	}
+func uint16Bytes(input int) (output []byte, err error) {
 	//if input < 0 {
 	//input = -input
 	//isNegtive = true
@@ -505,11 +489,7 @@ func stringToUint16Bytes(inputString string) (output []byte, err error) {
 	return output, err
 }
 
-func stringToUint8Bytes(inputString string) (output []byte, err error) {
-	input, err := strconv.Atoi(inputString)
-	if err != nil {
-		return output, err
-	}
+func uint8Bytes(input int) (output []byte, err error) {
 	if input > math.MaxUint8 {
 		return output, fmt.Errorf("%v overflows uint8", input)
 	}
