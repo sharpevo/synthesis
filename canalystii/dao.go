@@ -313,8 +313,10 @@ func (d *Dao) ControlSwitcherAdvanced(
 	message = append(message, speedBytes...)
 	message = append(message, countBytes...)
 	message = append(message, 0x00)
-	output, err := d.Send(
+	output, err := d.SendAck6(
 		message,
+		SwitcherControlUnit.RecResp(),
+		SwitcherControlUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
