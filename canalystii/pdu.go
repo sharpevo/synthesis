@@ -59,6 +59,14 @@ func init() {
 	// SensorHumitureUnit{{{
 	SensorHumitureRequest := dao.Request{}
 	SensorHumitureRequest.Function = 0x0C
+	SensorHumitureRequest.Arguments = []byte{
+		0x00,
+		0x00,
+		0x00,
+		0x00,
+		0x00,
+		0x00,
+	}
 	SensorHumitureUnit.SetRequest(SensorHumitureRequest)
 	SensorHumitureUnit.SetRecResp(responseNil())
 	SensorHumitureUnit.SetComResp(responseNil())
@@ -85,7 +93,7 @@ func init() {
 	SystemRomReadRequest.Function = 0xF0
 	SystemRomReadUnit.SetRequest(SystemRomReadRequest)
 	SystemRomReadUnit.SetRecResp(responseNil())
-	SystemRomReadUnit.SetComResp(responseNil())
+	SystemRomReadUnit.SetComResp(responseCompleted())
 	// }}}
 
 	// SystemRomWriteUnit{{{
@@ -93,7 +101,7 @@ func init() {
 	SystemRomWriteRequest.Function = 0xF1
 	SystemRomWriteUnit.SetRequest(SystemRomReadRequest)
 	SystemRomWriteUnit.SetRecResp(responseNil())
-	SystemRomWriteUnit.SetComResp(responseNil())
+	SystemRomWriteUnit.SetComResp(responseCompleted())
 	// }}}
 }
 

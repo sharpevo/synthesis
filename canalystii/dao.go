@@ -168,6 +168,7 @@ func (d *Dao) SetID(id string) error {
 
 func (d *Dao) MoveRelative(
 	motorCode string,
+	direction string,
 	speed string,
 	position string,
 ) (resp interface{}, err error) {
@@ -175,11 +176,15 @@ func (d *Dao) MoveRelative(
 	if err != nil {
 		return resp, err
 	}
-	speedBytes, _, err := stringToUint16Bytes(speed)
+	directionBytes, err := stringToUint8Bytes(direction)
 	if err != nil {
 		return resp, err
 	}
-	posBytes, directionBytes, err := positionBytes(position)
+	speedBytes, err := stringToUint16Bytes(speed)
+	if err != nil {
+		return resp, err
+	}
+	posBytes, err := stringToUint16Bytes(position)
 	if err != nil {
 		return resp, err
 	}
@@ -189,7 +194,8 @@ func (d *Dao) MoveRelative(
 	message = append(message, directionBytes...)
 	message = append(message, speedBytes...)
 	message = append(message, posBytes...)
-	data, err := d.SendAck2(
+	message = append(message, []byte{0x00, 0x00}...)
+	output, err := d.SendAck2(
 		message,
 		MotorMoveRelativeUnit.RecResp(),
 		MotorMoveRelativeUnit.RecResp(),
@@ -198,17 +204,212 @@ func (d *Dao) MoveRelative(
 		log.Println(err)
 		return resp, err
 	}
-	resp = binary.BigEndian.Uint16(data[3:5])
+	resp = binary.BigEndian.Uint16(output[3:5])
+	return resp, nil
+}
+
+func (d *Dao) MoveAbsolute(
+	motorCode string,
+	position string,
+) (resp interface{}, err error) {
+	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	if err != nil {
+		return resp, err
+	}
+	posBytes, err := stringToUint16Bytes(position)
+	if err != nil {
+		return resp, err
+	}
+	req := MotorMoveAbsoluteUnit.Request()
+	message := req.Bytes()
+	message = append(message, motorCodeBytes...)
+	message = append(message, posBytes...)
+	message = append(message, []byte{0x00, 0x00, 0x00}...)
+	output, err := d.SendAck2(
+		message,
+		MotorMoveAbsoluteUnit.RecResp(),
+		MotorMoveAbsoluteUnit.RecResp(),
+	)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	resp = binary.BigEndian.Uint16(output[3:5])
+	return resp, nil
+}
+
+func (d *Dao) ResetMotor(
+	motorCode string,
+	direction string,
+) (resp interface{}, err error) {
+	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	if err != nil {
+		return resp, err
+	}
+	directionBytes, err := stringToUint8Bytes(direction)
+	if err != nil {
+		return resp, err
+	}
+	req := MotorResetUnit.Request()
+	message := req.Bytes()
+	message = append(message, motorCodeBytes...)
+	message = append(message, directionBytes...)
+	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
+	output, err := d.SendAck2(
+		message,
+		MotorResetUnit.RecResp(),
+		MotorResetUnit.RecResp(),
+	)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	resp = output
+	return resp, nil
+}
+
+func (d *Dao) ControlSwitcher(
+	motorCode string,
+	data string,
+) (resp interface{}, err error) {
+	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	if err != nil {
+		return resp, err
+	}
+	dataBytes, err := stringToUint16Bytes(data)
+	if err != nil {
+		return resp, err
+	}
+	req := SwitcherControlUnit.Request()
+	message := req.Bytes()
+	message = append(message, motorCodeBytes...)
+	message = append(message, dataBytes...)
+	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
+	output, err := d.Send(
+		message,
+	)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	resp = output
+	return resp, nil
+}
+
+func (d *Dao) ControlSwitcherAdvanced(
+	motorCode string,
+	data string,
+	speed string,
+	count string,
+) (resp interface{}, err error) {
+	motorCodeBytes, err := stringToUint8Bytes(motorCode)
+	if err != nil {
+		return resp, err
+	}
+	dataBytes, err := stringToUint16Bytes(data)
+	if err != nil {
+		return resp, err
+	}
+	speedBytes, err := stringToUint8Bytes(speed)
+	if err != nil {
+		return resp, err
+	}
+	countBytes, err := stringToUint16Bytes(count)
+	if err != nil {
+		return resp, err
+	}
+	req := SwitcherControlAdvancedUnit.Request()
+	message := req.Bytes()
+	message = append(message, motorCodeBytes...)
+	message = append(message, dataBytes...)
+	message = append(message, speedBytes...)
+	message = append(message, countBytes...)
+	message = append(message, 0x00)
+	output, err := d.Send(
+		message,
+	)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	resp = output
+	return resp, nil
+}
+
+func (d *Dao) ReadHumiture() (resp interface{}, err error) {
+	req := SensorHumitureUnit.Request()
+	output, err := d.Send(req.Bytes())
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	temperature := binary.BigEndian.Uint16(output[1:3])
+	humidity := binary.BigEndian.Uint16(output[3:6])
+	resp = []float64{divideTen(temperature), divideTen(humidity)}
 	return resp, nil
 }
 
 func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 	req := SensorOxygenConcUnit.Request()
-	resp, err = d.Send(req.Bytes())
+	output, err := d.Send(req.Bytes())
 	if err != nil {
 		log.Println(err)
 		return resp, err
 	}
+	conc := binary.BigEndian.Uint16(output[3:5])
+	resp = divideTen(conc)
+	return resp, nil
+}
+
+func (d *Dao) WriteSystemRom(
+	address string,
+	value string,
+) (resp interface{}, err error) {
+	addressBytes, err := stringToUint16Bytes(address)
+	if err != nil {
+		return resp, err
+	}
+	valueBytes, err := stringToUint16Bytes(value)
+	if err != nil {
+		return resp, err
+	}
+	req := SystemRomWriteUnit.Request()
+	message := req.Bytes()
+	message = append(message, addressBytes...)
+	message = append(message, valueBytes...)
+	message = append(message, []byte{0x00, 0x00}...)
+	output, err := d.Send1(
+		message,
+		SystemRomWriteUnit.ComResp(),
+	)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	resp = output[2:4]
+	return resp, nil
+}
+
+func (d *Dao) ReadSystemRom(
+	address string,
+) (resp interface{}, err error) {
+	addressBytes, err := stringToUint16Bytes(address)
+	if err != nil {
+		return resp, err
+	}
+	req := SystemRomWriteUnit.Request()
+	message := req.Bytes()
+	message = append(message, addressBytes...)
+	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
+	output, err := d.Send1(
+		message,
+		SystemRomReadUnit.ComResp(),
+	)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	resp = output[2:4]
 	return resp, nil
 }
 
@@ -221,6 +422,19 @@ func (d *Dao) Send(
 		0,
 		responseNil(),
 		0,
+	)
+}
+
+func (d *Dao) Send1(
+	message []byte,
+	comResp []byte,
+) ([]byte, error) {
+	return d.UsbcanClient.Send(
+		message,
+		responseNil(),
+		0,
+		comResp,
+		1,
 	)
 }
 
@@ -252,29 +466,43 @@ func (d *Dao) SendAck2(
 	)
 }
 
-func stringToUint16Bytes(inputString string) (output []byte, isNegtive bool, err error) {
+func (d *Dao) SendAck6(
+	message []byte,
+	recResp []byte,
+	comResp []byte,
+) ([]byte, error) {
+	return d.UsbcanClient.Send(
+		message,
+		recResp,
+		6,
+		comResp,
+		6,
+	)
+}
+
+func stringToUint16Bytes(inputString string) (output []byte, err error) {
 	input, err := strconv.Atoi(inputString)
 	if err != nil {
-		return output, isNegtive, err
+		return output, err
 	}
-	if input < 0 {
-		input = -input
-		isNegtive = true
-	}
+	//if input < 0 {
+	//input = -input
+	//isNegtive = true
+	//}
 	if input > math.MaxUint16 {
-		return output, isNegtive, fmt.Errorf("%v overflows uint16", input)
+		return output, fmt.Errorf("%v overflows uint16", input)
 	}
 	var buf = new(bytes.Buffer)
 	err = binary.Write(buf, binary.BigEndian, uint16(input))
 	if err != nil {
-		return output, isNegtive, err
+		return output, err
 	}
 	output = buf.Bytes()
 	if len(output) != 2 {
-		return output, isNegtive,
+		return output,
 			fmt.Errorf("unexpected length %v of bytes %v", len(output), output)
 	}
-	return output, isNegtive, err
+	return output, err
 }
 
 func stringToUint8Bytes(inputString string) (output []byte, err error) {
@@ -298,15 +526,6 @@ func stringToUint8Bytes(inputString string) (output []byte, err error) {
 	return output, err
 }
 
-func positionBytes(position string) ([]byte, []byte, error) {
-	direction := []byte{0x00}
-	posBytes, negtive, err := stringToUint16Bytes(position)
-	if err != nil {
-		return posBytes, direction, err
-	}
-	if negtive {
-		direction = []byte{0x01}
-	}
-	return posBytes, direction, nil
-
+func divideTen(input uint16) float64 {
+	return float64(input) / 10.0
 }
