@@ -52,8 +52,8 @@ func init() {
 	SwitcherControlAdvancedRequest := dao.Request{}
 	SwitcherControlAdvancedRequest.Function = 0x0B
 	SwitcherControlAdvancedUnit.SetRequest(SwitcherControlAdvancedRequest)
-	SwitcherControlAdvancedUnit.SetRecResp(responseNil())
-	SwitcherControlAdvancedUnit.SetComResp(responseNil())
+	SwitcherControlAdvancedUnit.SetRecResp(responseReceived())
+	SwitcherControlAdvancedUnit.SetComResp(responseCompleted())
 	// }}}
 
 	// SensorHumitureUnit{{{
