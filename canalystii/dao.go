@@ -198,7 +198,7 @@ func (d *Dao) MoveRelative(
 	output, err := d.SendAck2(
 		message,
 		MotorMoveRelativeUnit.RecResp(),
-		MotorMoveRelativeUnit.RecResp(),
+		MotorMoveRelativeUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
@@ -228,7 +228,7 @@ func (d *Dao) MoveAbsolute(
 	output, err := d.SendAck2(
 		message,
 		MotorMoveAbsoluteUnit.RecResp(),
-		MotorMoveAbsoluteUnit.RecResp(),
+		MotorMoveAbsoluteUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
@@ -258,7 +258,7 @@ func (d *Dao) ResetMotor(
 	output, err := d.SendAck2(
 		message,
 		MotorResetUnit.RecResp(),
-		MotorResetUnit.RecResp(),
+		MotorResetUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
