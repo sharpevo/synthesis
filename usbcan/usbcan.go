@@ -64,7 +64,7 @@ func ResetInstance() {
 
 type Clienter interface {
 	connect() error
-	Send([]byte, []byte, []byte) ([]byte, error)
+	Send([]byte, []byte, int, []byte, int) ([]byte, error)
 }
 
 type Client struct {
@@ -361,7 +361,9 @@ func (c *Client) send(req *Request) {
 func (c *Client) Send(
 	message []byte,
 	recExpected []byte,
+	recIndex int,
 	comExpected []byte,
+	comIndex int,
 ) ([]byte, error) {
 	code, err := c.getInstructionCode()
 	if err != nil {
@@ -379,7 +381,7 @@ func (c *Client) Send(
 	c.RequestQueue.Push(&req)
 	if len(recExpected) > 0 {
 		resp := <-req.Responsec
-		status := resp.Message[2]
+		status := resp.Message[recIndex]
 		switch status {
 		case STATUS_CODE_RECEIVED:
 			log.Println("request received:", message)
@@ -390,7 +392,7 @@ func (c *Client) Send(
 	}
 	resp := <-req.Responsec
 	if len(comExpected) > 0 {
-		status := resp.Message[2]
+		status := resp.Message[comIndex]
 		switch status {
 		case STATUS_CODE_COMPLETED:
 			return resp.Message, nil
