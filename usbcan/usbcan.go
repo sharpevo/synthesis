@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	STATUS_CODE_RECEIVED          = 0x00
-	STATUS_CODE_EXECUTED_COMPLETE = 0x01
-	STATUS_CODE_EXECUTED_ERROR    = 0x02
-	STATUS_CODE_MOTOR_INVALID     = 0x10
-	STATUS_CODE_MAILBOX_FULL      = 0xE0
-	STATUS_CODE_MAILBOX_OVERFLOW  = 0xE1
+	STATUS_CODE_RECEIVED         = 0x00
+	STATUS_CODE_COMPLETED        = 0x01
+	STATUS_CODE_ERROR            = 0x02
+	STATUS_CODE_MOTOR_INVALID    = 0x10
+	STATUS_CODE_MAILBOX_FULL     = 0xE0
+	STATUS_CODE_MAILBOX_OVERFLOW = 0xE1
 )
 
 var deviceMap *concurrentmap.ConcurrentMap
@@ -392,9 +392,9 @@ func (c *Client) Send(
 	if len(comExpected) > 0 {
 		status := resp.Message[2]
 		switch status {
-		case STATUS_CODE_EXECUTED_COMPLETE:
+		case STATUS_CODE_COMPLETED:
 			return resp.Message, nil
-		case STATUS_CODE_EXECUTED_ERROR:
+		case STATUS_CODE_ERROR:
 			return resp.Message,
 				fmt.Errorf("unknown error when execute %#v", message)
 		default:
