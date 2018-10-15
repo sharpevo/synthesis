@@ -215,7 +215,7 @@ func (c *Client) launch() {
 	go c.receive()
 	for {
 		reqi, err := c.RequestQueue.Pop()
-		fmt.Println("processing", reqi)
+		log.Println("processing", reqi)
 		if err != nil {
 			log.Printf("canalyst client sender %v terminated\n", c.deviceKey())
 			return
@@ -230,7 +230,7 @@ func (c *Client) launch() {
 }
 
 func (c *Client) receive() {
-	fmt.Printf("listening %v...\n", c.deviceKey())
+	log.Printf("listening %v...\n", c.deviceKey())
 	for {
 		time.Sleep(100 * time.Millisecond)
 		pReceive := make([]controlcan.CanObj, controlcan.FRAME_LENGTH_OF_RECEPTION)
@@ -248,7 +248,7 @@ func (c *Client) receive() {
 		if count == 0 {
 			continue
 		}
-		fmt.Printf("data received: %#v", pReceive[:count])
+		log.Printf("data received: %#v\n", pReceive[:count])
 		for _, canObj := range pReceive[:count] {
 			resp := Response{}
 			// TODO: ? filter based on frame id
@@ -299,14 +299,14 @@ func (c *Client) findRequestByResponse(data []byte) (request *Request, err error
 	//for item := range c.RequestQueue.Iter() {
 	for item := range c.ReceptionMap.Iter() {
 		reqi := item.Value
-		fmt.Printf("parsing request: %#v", reqi)
+		log.Printf("parsing request: %#v\n", reqi)
 		req, ok := reqi.(*Request)
 		if !ok {
 			err = fmt.Errorf("invalid request: %#v", reqi)
 			log.Println(err)
 			continue
 		}
-		fmt.Printf("%v == %v\n", req.InstructionCode, instCode)
+		log.Printf("checking instruction code %v == %v\n", req.InstructionCode, instCode)
 		if req.InstructionCode == instCode {
 			request = req
 			err = nil
@@ -328,7 +328,7 @@ func (c *Client) send(req *Request) {
 	}
 	respc := req.Responsec
 	resp := Response{}
-	log.Printf("sending request %#v", req.Message)
+	log.Printf("sending request %#v\n", req.Message)
 	var data [8]byte
 	copy(data[:], req.Message)
 	pSend := controlcan.CanObj{
@@ -351,6 +351,7 @@ func (c *Client) send(req *Request) {
 		respc <- resp
 		return
 	}
+	log.Printf("request sent: %v\n", pSend)
 	return
 }
 
