@@ -53,6 +53,24 @@ func (c *ConcurrentMap) Del(key string) error {
 	return nil
 }
 
+func (c *ConcurrentMap) Replace(ori interface{}, value interface{}) (key string, err error) {
+	c.Lock()
+	defer c.Unlock()
+	for k, v := range c.m {
+		if ori == v {
+			c.m[k] = value
+			return k, nil
+		}
+	}
+	return key, fmt.Errorf("%v not existed", ori)
+}
+
+func (c *ConcurrentMap) String() string {
+	c.RLock()
+	defer c.RUnlock()
+	return fmt.Sprintf("%#v", c.m)
+}
+
 func (c *ConcurrentMap) Iter() <-chan Item {
 	itemc := make(chan Item)
 	go func() {
