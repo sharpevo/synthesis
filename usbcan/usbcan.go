@@ -249,15 +249,17 @@ func (c *Client) receive() {
 		}
 		log.Printf("data received: %#v\n", pReceive[:count])
 		for _, canObj := range pReceive[:count] {
+			data := make([]byte, len(canObj.Data))
+			copy(data, canObj.Data[:])
 			resp := Response{}
 			// TODO: ? filter based on frame id
-			req, err := c.findRequestByResponse(canObj.Data[:])
+			req, err := c.findRequestByResponse(data)
 			if err != nil {
 				log.Println(err)
 				// TODO: notification
 				continue
 			}
-			resp.Message = canObj.Data[:]
+			resp.Message = data
 			req.Responsec <- resp
 		}
 	}
