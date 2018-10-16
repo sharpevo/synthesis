@@ -148,7 +148,6 @@ func (c *Client) connect() (err error) {
 			c.DevType,
 			c.DevIndex,
 		)
-		fmt.Printf("TYPE: %T %T\n", c.DevType, int(c.DevType))
 		if err = controlcan.OpenDevice(
 			int(c.DevType),
 			int(c.DevIndex),
@@ -297,9 +296,9 @@ func (c *Client) findRequestByResponse(data []byte) (request *Request, err error
 		return request, err
 	}
 	//for item := range c.RequestQueue.Iter() {
+	log.Printf("parsing request: %s\n", c.ReceptionMap)
 	for item := range c.ReceptionMap.Iter() {
 		reqi := item.Value
-		log.Printf("parsing request: %#v\n", reqi)
 		req, ok := reqi.(*Request)
 		if !ok {
 			err = fmt.Errorf("invalid request: %#v", reqi)
@@ -453,4 +452,5 @@ func (c *Client) releaseInstructionCode(code byte) {
 		hex.EncodeToString([]byte{code}),
 		false,
 	)
+	log.Println("release instruction code: ", code)
 }
