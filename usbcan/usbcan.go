@@ -409,35 +409,25 @@ func (c *Client) Send(
 }
 
 func (c *Client) getInstructionCode() (code byte, err error) {
-	done := false
-	for item := range c.InstructionCodeMap.Iter() {
-		if done {
-			continue
+	var origin, update interface{}
+	origin = false
+	update = true
+	for {
+		log.Printf("allocating instruction code...")
+		key, err := c.InstructionCodeMap.Replace(origin, update)
+		if err == nil {
+			codeSlice, err := hex.DecodeString(key)
+			if err != nil {
+				log.Println(err)
+				return code, err
+			}
+			code = codeSlice[0]
+			return code, nil
 		}
-		occupiedi := item.Value
-		occupied, ok := occupiedi.(bool)
-		if !ok {
-			log.Printf("invalid instruction code %v\n", item.Key)
-			continue
-		}
-		if occupied {
-			continue
-		}
-		codeSlice, err := hex.DecodeString(item.Key)
-		if err != nil {
-			fmt.Println(err)
-			return code, err
-		}
-		code = codeSlice[0]
-		done = true
-		//c.occupyInstructionCode(code)
-		//return code, nil
+		log.Printf("not enough instruction code, wait 5 seconds\n")
+		time.Sleep(1000 * time.Millisecond)
 	}
-	if !done {
-		return code, fmt.Errorf("not enough instruction code")
-	}
-	c.occupyInstructionCode(code)
-	return code, nil
+	return code, fmt.Errorf("not valid instruction code")
 }
 
 func (c *Client) occupyInstructionCode(code byte) {
