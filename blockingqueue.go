@@ -32,11 +32,9 @@ func (b *BlockingQueue) Push(item interface{}) {
 	b.Lock()
 	defer b.Unlock()
 	b.itemList = append(b.itemList, item)
-	if len(b.itemList) == 1 {
-		select {
-		case b.popc <- true:
-		default:
-		}
+	select {
+	case b.popc <- true:
+	default:
 	}
 }
 
