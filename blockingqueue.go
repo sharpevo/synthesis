@@ -41,17 +41,23 @@ func (b *BlockingQueue) Push(item interface{}) {
 }
 
 func (b *BlockingQueue) Pop() (interface{}, error) {
-	if len(b.itemList) <= 0 {
-		for {
-			select {
-			case <-b.popc:
-				return b.pop()
-			case <-b.terminatec:
-				return nil, fmt.Errorf("queue terminated")
-			}
+	b.Lock()
+	defer b.Unlock()
+	for len(b.itemList) == 0 {
+		b.Unlock()
+		select { // no default case to block
+		case <-b.popc:
+			b.Lock() // another thread will wait until something unlocked
+			continue
+		case <-b.terminatec:
+			b.Lock()
+			return nil, fmt.Errorf("queue terminated")
 		}
 	}
-	return b.pop()
+	item := b.itemList[0]
+	b.itemList = b.itemList[1:]
+	fmt.Println("popping", item, b.itemList)
+	return item, nil
 }
 
 func (b *BlockingQueue) pop() (interface{}, error) {
