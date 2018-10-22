@@ -16,10 +16,11 @@ type InstructionSleep struct {
 }
 
 func (i *InstructionSleep) Execute(args ...string) (interface{}, error) {
-	seconds, err := strconv.Atoi(args[0])
+	seconds, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
 		return nil, err
 	}
-	time.Sleep(time.Duration(seconds) * time.Second)
-	return fmt.Sprintf("sleep %d seconds", seconds), nil
+	duration := time.Duration(seconds*1000) * time.Millisecond
+	time.Sleep(duration)
+	return fmt.Sprintf("sleep in %v", duration), nil
 }
