@@ -8,6 +8,7 @@ import (
 	"posam/dao"
 	"posam/dao/alientek"
 	"posam/dao/aoztech"
+	"posam/dao/canalystii"
 	"posam/dao/ricoh_g5"
 	"runtime"
 	"strconv"
@@ -131,6 +132,7 @@ func init() {
 	InstructionDaoMap[devtree.DEV_TYPE_ALT] = alientek.InstructionMap
 	InstructionDaoMap[devtree.DEV_TYPE_RCG] = ricoh_g5.InstructionMap
 	InstructionDaoMap[devtree.DEV_TYPE_AOZ] = aoztech.InstructionMap
+	InstructionDaoMap[devtree.DEV_TYPE_CAN] = canalystii.InstructionMap
 	// TODO: CAN
 	buildInstructionMap()
 }
@@ -274,6 +276,45 @@ func main() {
 				fmt.Sprintf("%v", axisYID.Value),
 				fmt.Sprintf("%v", axisYSetupFile.Value),
 				motorStatusLabel,
+			)
+			if err != nil {
+				uiutil.MessageBoxError(err.Error())
+			}
+		}
+
+		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_CAN] {
+			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
+			devType, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.DEVICE_TYPE))
+			devIndex, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.DEVICE_INDEX))
+			devID, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.FRAME_ID))
+			canIndex, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.CAN_INDEX))
+			accCode, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.ACC_CODE))
+			accMask, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.ACC_MASK))
+			filter, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.FILTER))
+			timing0, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.TIMING0))
+			timing1, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.TIMING1))
+			mode, _ := stack.Get(
+				devtree.ComposeVarName(base, canalystii.MODE))
+			err := initCANDevice(
+				fmt.Sprintf("%v", devType.Value),
+				fmt.Sprintf("%v", devIndex.Value),
+				fmt.Sprintf("%v", devID.Value),
+				fmt.Sprintf("%v", canIndex.Value),
+				fmt.Sprintf("%v", accCode.Value),
+				fmt.Sprintf("%v", accMask.Value),
+				fmt.Sprintf("%v", filter.Value),
+				fmt.Sprintf("%v", timing0.Value),
+				fmt.Sprintf("%v", timing1.Value),
+				fmt.Sprintf("%v", mode.Value),
 			)
 			if err != nil {
 				uiutil.MessageBoxError(err.Error())
@@ -551,6 +592,37 @@ func initAozDevice(
 		}
 	}()
 	return
+}
+
+func initCANDevice(
+	devType string,
+	devIndex string,
+	devID string,
+	canIndex string,
+	accCode string,
+	accMask string,
+	filter string,
+	timing0 string,
+	timing1 string,
+	mode string,
+) (err error) {
+	if instance, _ := canalystii.Instance(devID); instance != nil {
+		log.Printf("Device %q has been initialized\n", devID)
+		return
+	}
+	_, err = canalystii.NewDao(
+		devType,
+		devIndex,
+		devID,
+		canIndex,
+		accCode,
+		accMask,
+		filter,
+		timing0,
+		timing1,
+		mode,
+	)
+	return err
 }
 
 func buildInstructionMap() {

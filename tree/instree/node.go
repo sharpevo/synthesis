@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"posam/dao/alientek"
 	"posam/dao/aoztech"
+	"posam/dao/canalystii"
 	"posam/dao/ricoh_g5"
 	"posam/gui/tree"
 	"strings"
@@ -69,6 +70,12 @@ func (n *Node) Generate() (string, error) {
 				arguments = fmt.Sprintf(
 					"%s %s",
 					path.Join(child.DevicePath, "CONN", aoztech.IDNAME),
+					arguments,
+				)
+			case canalystii.NAME:
+				arguments = fmt.Sprintf(
+					"%s %s",
+					path.Join(child.DevicePath, "CONN", canalystii.IDNAME),
 					arguments,
 				)
 			}
