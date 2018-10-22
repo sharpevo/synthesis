@@ -36,8 +36,9 @@ func TestBlocking(t *testing.T) {
 		if test.c {
 			go func() {
 				time.Sleep(2 * time.Second)
-				fmt.Println("pushed again")
+				fmt.Println("pushing again")
 				q.Push(test.v)
+				fmt.Println("pushed")
 			}()
 		} else {
 			q.Push(test.v)
@@ -51,6 +52,7 @@ func TestBlocking(t *testing.T) {
 	go func() {
 		time.Sleep(4 * time.Second)
 		q.Reset()
+		fmt.Println("reset")
 	}()
 
 	for i := range [10]int{} {
