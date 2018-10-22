@@ -1,41 +1,39 @@
 package blockingqueue
 
 import (
+	"conditionvariable"
 	"fmt"
 	"sync"
 )
 
 type BlockingQueue struct {
 	sync.RWMutex
-	itemList   []interface{}
-	popc       chan interface{}
-	terminatec chan interface{}
+	itemList      []interface{}
+	pushCondition conditionvariable.ChannelCondition
+	termCondition conditionvariable.ChannelCondition
 }
 
 func NewBlockingQueue() *BlockingQueue {
 	return &BlockingQueue{
-		itemList:   []interface{}{},
-		popc:       make(chan interface{}),
-		terminatec: make(chan interface{}),
+		itemList:      []interface{}{},
+		pushCondition: conditionvariable.NewChannelCondition(),
+		termCondition: conditionvariable.NewChannelCondition(),
 	}
 }
 
 func (b *BlockingQueue) Reset() {
-	select {
-	case b.terminatec <- true:
-	default:
-	}
+	b.Lock()
+	defer b.Unlock()
 	b.itemList = []interface{}{}
+	b.termCondition.Broadcast()
 }
 
 func (b *BlockingQueue) Push(item interface{}) {
 	b.Lock()
 	defer b.Unlock()
 	b.itemList = append(b.itemList, item)
-	select {
-	case b.popc <- true:
-	default:
-	}
+	//fmt.Println("pushing", item, b.itemList)
+	b.pushCondition.Broadcast()
 }
 
 func (b *BlockingQueue) Pop() (interface{}, error) {
@@ -43,26 +41,18 @@ func (b *BlockingQueue) Pop() (interface{}, error) {
 	defer b.Unlock()
 	for len(b.itemList) == 0 {
 		b.Unlock()
-		select { // no default case to block
-		case <-b.popc:
-			b.Lock() // another thread will wait until something unlocked
+		select {
+		case <-b.pushCondition.Wait():
+			b.Lock()
 			continue
-		case <-b.terminatec:
+		case <-b.termCondition.Wait():
 			b.Lock()
 			return nil, fmt.Errorf("queue terminated")
 		}
 	}
 	item := b.itemList[0]
 	b.itemList = b.itemList[1:]
-	fmt.Println("popping", item, b.itemList)
-	return item, nil
-}
-
-func (b *BlockingQueue) pop() (interface{}, error) {
-	b.Lock()
-	defer b.Unlock()
-	item := b.itemList[0]
-	b.itemList = b.itemList[1:]
+	//fmt.Println("popping", item, b.itemList)
 	return item, nil
 }
 
