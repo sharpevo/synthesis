@@ -117,12 +117,39 @@ func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
 		menuAdd.ConnectTriggered(func(checked bool) { t.AddItem(p, NewInstructionItem("print instruction", "PRINT")) })
 		menuRemove := t.ContextMenu.AddAction("Remove node")
 		menuRemove.ConnectTriggered(func(checked bool) { t.RemoveItem(p) })
+		menuImport := t.ContextMenu.AddAction("Import as sub nodes")
+		menuImport.ConnectTriggered(func(checked bool) { t.importSubItem(p) })
 		menuExport := t.ContextMenu.AddAction("Export current node")
 		menuExport.ConnectTriggered(func(checked bool) { t.exportCurItem(p) })
 		menuRun := t.ContextMenu.AddAction("Execute single step")
 		menuRun.ConnectTriggered(func(checked bool) { t.executeItem(p) })
 	}
 	t.ContextMenu.Exec2(t.MapToGlobal(p), nil)
+}
+
+func (t *InstructionTree) importSubItem(p *core.QPoint) {
+	item := t.ItemAt(p)
+	if item.Pointer() == nil {
+		log.Println("invalid tree item")
+		return
+	}
+
+	filePath, err := uiutil.FilePath()
+	if err != nil {
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
+
+	node := new(Node)
+	if err := tree.ImportNode(node, filePath); err != nil {
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
+	for i := 0; i < len(node.Children); i++ {
+		item.AddChild(t.ImportNode(node.Children[i]))
+	}
+	item.SetExpanded(true)
+	uiutil.MessageBoxInfo("imported")
 }
 
 func (t *InstructionTree) exportCurItem(p *core.QPoint) {
