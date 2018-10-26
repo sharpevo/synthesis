@@ -117,10 +117,34 @@ func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
 		menuAdd.ConnectTriggered(func(checked bool) { t.AddItem(p, NewInstructionItem("print instruction", "PRINT")) })
 		menuRemove := t.ContextMenu.AddAction("Remove node")
 		menuRemove.ConnectTriggered(func(checked bool) { t.RemoveItem(p) })
+		menuExport := t.ContextMenu.AddAction("Export current node")
+		menuExport.ConnectTriggered(func(checked bool) { t.exportCurItem(p) })
 		menuRun := t.ContextMenu.AddAction("Execute single step")
 		menuRun.ConnectTriggered(func(checked bool) { t.executeItem(p) })
 	}
 	t.ContextMenu.Exec2(t.MapToGlobal(p), nil)
+}
+
+func (t *InstructionTree) exportCurItem(p *core.QPoint) {
+	item := t.ItemAt(p)
+	if item.Pointer() == nil {
+		log.Println("invalid tree item")
+		return
+	}
+	node := t.ExportNode(item)
+	step := new(Node)
+	step.Title = "step"
+	step.Children = append(step.Children, node)
+	filePath, err := uiutil.FilePath()
+	if err != nil {
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
+	if err := tree.ExportNode(step, filePath); err != nil {
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
+	uiutil.MessageBoxInfo(fmt.Sprintf("exported to %q", filePath))
 }
 
 func (t *InstructionTree) executeItem(p *core.QPoint) {
