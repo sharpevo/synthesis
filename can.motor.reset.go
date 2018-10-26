@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	canalystii.InstructionMap.Set("RESETMOTOR", InstructionCANMotorReset{})
+	canalystii.InstructionMap.Set("CANRESETMOTOR", InstructionCANMotorReset{})
 }
 
 type InstructionCANMotorReset struct {

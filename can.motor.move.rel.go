@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	canalystii.InstructionMap.Set("MOVEREL", InstructionCANMotorMoveRelative{})
+	canalystii.InstructionMap.Set("CANMOVEREL", InstructionCANMotorMoveRelative{})
 }
 
 type InstructionCANMotorMoveRelative struct {
