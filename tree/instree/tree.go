@@ -133,13 +133,11 @@ func (t *InstructionTree) importSubItem(p *core.QPoint) {
 		log.Println("invalid tree item")
 		return
 	}
-
 	filePath, err := uiutil.FilePath()
 	if err != nil {
 		uiutil.MessageBoxError(err.Error())
 		return
 	}
-
 	node := new(Node)
 	if err := tree.ImportNode(node, filePath); err != nil {
 		uiutil.MessageBoxError(err.Error())
