@@ -347,6 +347,8 @@ func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 		return resp, err
 	}
 	conc := binary.BigEndian.Uint16(output[3:5])
+	//conc := binary.BigEndian.Uint16(output[2:4]) // canalystii
+	//conc := binary.BigEndian.Uint16(output[1:3]) // usbcan-2c
 	resp = divideTen(conc)
 	return resp, nil
 }
