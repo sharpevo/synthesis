@@ -1,12 +1,14 @@
 package instree
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"log"
+	"os"
 	"posam/gui/tree"
 	"posam/gui/uiutil"
 )
@@ -232,6 +234,7 @@ func (t *InstructionTree) Import(filePath string) error {
 		}
 		return err
 	}
+	t.SaveImportedFilePath(filePath)
 	t.Clear()
 	for i := 0; i < len(node.Children); i++ {
 		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
@@ -282,4 +285,15 @@ func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 		node.Children = append(node.Children, t.ExportNode(root.Child(i)))
 	}
 	return node
+}
+
+func (t *InstructionTree) SaveImportedFilePath(filePath string) {
+	f, err := os.Create("config")
+	defer f.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	f.WriteString(filePath)
+	f.Sync()
 }
