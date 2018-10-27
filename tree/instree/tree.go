@@ -310,7 +310,7 @@ func (t *InstructionTree) ImportPreviousFile() {
 	if err := t.Import(filePath); err != nil {
 		uiutil.MessageBoxError(err.Error())
 	} else {
-		uiutil.MessageBoxInfo(
+		log.Println(
 			fmt.Sprintf("latest file imported: %q", filePath))
 	}
 }
