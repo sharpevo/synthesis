@@ -39,9 +39,8 @@ func NewTree(
 	treeWidget.SetContextMenuPolicy(core.Qt__CustomContextMenu)
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
 	treeWidget.ConnectItemClicked(treeWidget.customItemClicked)
-	rootNode := treeWidget.InvisibleRootItem()
-	anItem := NewInstructionItem("Hello World!", "PRINT Hello World!")
-	rootNode.AddChild(anItem)
+
+	treeWidget.ImportPreviousFile()
 
 	treeWidget.SetAcceptDrops(true)
 	treeWidget.SetDragEnabled(true)
@@ -296,4 +295,22 @@ func (t *InstructionTree) SaveImportedFilePath(filePath string) {
 	}
 	f.WriteString(filePath)
 	f.Sync()
+}
+
+func (t *InstructionTree) ImportPreviousFile() {
+	f, err := os.Open("config")
+	defer f.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	s := bufio.NewScanner(f)
+	s.Scan()
+	filePath := s.Text()
+	if err := t.Import(filePath); err != nil {
+		uiutil.MessageBoxError(err.Error())
+	} else {
+		uiutil.MessageBoxInfo(
+			fmt.Sprintf("latest file imported: %q", filePath))
+	}
 }
