@@ -1,12 +1,14 @@
 package instree
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"log"
+	"os"
 	"posam/gui/tree"
 	"posam/gui/uiutil"
 )
@@ -37,9 +39,8 @@ func NewTree(
 	treeWidget.SetContextMenuPolicy(core.Qt__CustomContextMenu)
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
 	treeWidget.ConnectItemClicked(treeWidget.customItemClicked)
-	rootNode := treeWidget.InvisibleRootItem()
-	anItem := NewInstructionItem("Hello World!", "PRINT Hello World!")
-	rootNode.AddChild(anItem)
+
+	treeWidget.ImportPreviousFile()
 
 	treeWidget.SetAcceptDrops(true)
 	treeWidget.SetDragEnabled(true)
@@ -232,6 +233,7 @@ func (t *InstructionTree) Import(filePath string) error {
 		}
 		return err
 	}
+	t.SaveImportedFilePath(filePath)
 	t.Clear()
 	for i := 0; i < len(node.Children); i++ {
 		t.InvisibleRootItem().AddChild(t.ImportNode(node.Children[i]))
@@ -282,4 +284,33 @@ func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 		node.Children = append(node.Children, t.ExportNode(root.Child(i)))
 	}
 	return node
+}
+
+func (t *InstructionTree) SaveImportedFilePath(filePath string) {
+	f, err := os.Create("config")
+	defer f.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	f.WriteString(filePath)
+	f.Sync()
+}
+
+func (t *InstructionTree) ImportPreviousFile() {
+	f, err := os.Open("config")
+	defer f.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	s := bufio.NewScanner(f)
+	s.Scan()
+	filePath := s.Text()
+	if err := t.Import(filePath); err != nil {
+		uiutil.MessageBoxError(err.Error())
+	} else {
+		log.Println(
+			fmt.Sprintf("latest file imported: %q", filePath))
+	}
 }
