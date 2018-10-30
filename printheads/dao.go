@@ -33,6 +33,7 @@ const (
 
 type Nozzle struct {
 	Index     int
+	Row       int
 	PositionX int
 	PositionY int
 }
@@ -48,7 +49,15 @@ type PrintHead struct {
 	RowA Row
 }
 
-func (n *Nozzle) Row() (int, error) {
+func NewNozzle(index int) (*Nozzle, error) {
+	n := &Nozzle{}
+	n.Index = index
+	row, err := n.ArrangeRow()
+	n.Row = row
+	return n, err
+}
+
+func (n *Nozzle) ArrangeRow() (int, error) {
 	mod := n.Index % 4
 	switch mod {
 	case 0:

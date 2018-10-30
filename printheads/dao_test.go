@@ -30,14 +30,13 @@ func TestPosition(t *testing.T) {
 	}
 
 	for k, v := range index {
-		n := printheads.Nozzle{Index: v}
-		position, err := n.Row()
-		if err != nil || position != row[k] {
+		n, err := printheads.NewNozzle(v)
+		if err != nil || n.Row != row[k] {
 			t.Errorf(
 				"\n%d: EXPECT: %v\nGET: %v\n",
 				k,
 				row[k],
-				position,
+				n.Row,
 			)
 		}
 	}
