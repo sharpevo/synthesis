@@ -38,17 +38,6 @@ type Nozzle struct {
 	PositionY int
 }
 
-type Row struct {
-	Nozzles []Nozzle
-}
-
-type PrintHead struct {
-	RowD Row
-	RowC Row
-	RowB Row
-	RowA Row
-}
-
 func NewNozzle(index int) (*Nozzle, error) {
 	n := &Nozzle{}
 	n.Index = index
@@ -71,4 +60,29 @@ func (n *Nozzle) ArrangeRow() (int, error) {
 	default:
 		return -1, fmt.Errorf("invalid index %v", n.Index)
 	}
+}
+
+type Row struct {
+	Index   int
+	Nozzles []*Nozzle
+}
+
+type PrintHead struct {
+	Rows []*Row
+}
+
+func NewPrintHead(row int, nozzle int) (*PrintHead, error) {
+	h := &PrintHead{}
+	h.Rows = []*Row{}
+	for index := 0; index < row; index++ {
+		h.Rows = append(h.Rows, &Row{Index: index})
+	}
+	for index := 0; index < nozzle; index++ {
+		n, err := NewNozzle(index)
+		if err != nil {
+			return h, err
+		}
+		h.Rows[n.Row].Nozzles = append(h.Rows[n.Row].Nozzles, n)
+	}
+	return h, nil
 }

@@ -41,3 +41,18 @@ func TestPosition(t *testing.T) {
 		}
 	}
 }
+
+func TestPrintHead(t *testing.T) {
+	h, _ := printheads.NewPrintHead(4, 1280)
+	for _, row := range h.Rows {
+		for _, nozzle := range row.Nozzles {
+			if nozzle.Row != row.Index {
+				t.Errorf(
+					"\nEXPECT: %v\nGET: %v\n",
+					row.Index,
+					nozzle.Row,
+				)
+			}
+		}
+	}
+}
