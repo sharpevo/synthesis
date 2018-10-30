@@ -32,6 +32,7 @@ const (
 )
 
 type Nozzle struct {
+	Index     int
 	PositionX int
 	PositionY int
 }
@@ -47,8 +48,8 @@ type PrintHead struct {
 	RowA Row
 }
 
-func Position(index int) (int, error) {
-	mod := index % 4
+func (n *Nozzle) Row() (int, error) {
+	mod := n.Index % 4
 	switch mod {
 	case 0:
 		return 3, nil
@@ -59,6 +60,6 @@ func Position(index int) (int, error) {
 	case 3:
 		return 1, nil
 	default:
-		return -1, fmt.Errorf("invalid index %v", index)
+		return -1, fmt.Errorf("invalid index %v", n.Index)
 	}
 }
