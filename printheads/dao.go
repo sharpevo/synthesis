@@ -177,3 +177,12 @@ func (h *PrintHead) CalcRowPosition(index int, dposx int, dposy int) (int, int) 
 	}
 	return 0, 0
 }
+
+func (h *PrintHead) UpdatePosition(dposx int, dposy int) {
+	for index, row := range h.Rows {
+		row.PositionX, row.PositionY = h.CalcRowPosition(index, dposx, dposy)
+		for index, nozzle := range row.Nozzles {
+			nozzle.PositionX, nozzle.PositionY = row.CalcNozzlePosition(index)
+		}
+	}
+}

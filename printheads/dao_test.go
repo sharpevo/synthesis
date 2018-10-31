@@ -213,3 +213,35 @@ func TestPrintHead(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdatePosition(t *testing.T) {
+	h, _ := printheads.NewPrintHeadLineD(
+		4,
+		1280,
+		169.3*printheads.UM,
+		84.65*printheads.UM,
+		550.3*printheads.UM,
+		11.811*printheads.MM,
+		0,
+		0,
+	)
+	expected := NozzleMap0[1]
+	actual := *h.Rows[0].Nozzles[0]
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf(
+			"\nEXPECT: %#v\nGET: %#v\n",
+			expected,
+			actual,
+		)
+	}
+	h.UpdatePosition(27172650, 6180650)
+	expected = NozzleMap1[1]
+	actual = *h.Rows[0].Nozzles[0]
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf(
+			"\nEXPECT: %#v\nGET: %#v\n",
+			expected,
+			actual,
+		)
+	}
+}
