@@ -258,15 +258,23 @@ func TestPrintHead(t *testing.T) {
 }
 
 func TestUpdatePosition(t *testing.T) {
+	zero := printheads.Position{
+		X: 0,
+		Y: 0,
+	}
+	test := printheads.Position{
+		X: 27172650,
+		Y: 6180650,
+	}
 	h, _ := printheads.NewPrintHeadLineD(
-		4,
-		1280,
-		169.3*printheads.UM,
-		84.65*printheads.UM,
-		550.3*printheads.UM,
-		11.811*printheads.MM,
-		0,
-		0,
+		ROW_COUNT,
+		NOZZLE_COUNT,
+		NOZZLE_SPACE,
+		ROW_OFFSET,
+		ROW_SPACE_A,
+		ROW_SPACE_B,
+		zero.X,
+		zero.Y,
 	)
 	expected := NozzleMap0[1]
 	actual := *h.Rows[0].Nozzles[0]
@@ -277,7 +285,7 @@ func TestUpdatePosition(t *testing.T) {
 			actual,
 		)
 	}
-	h.UpdatePosition(27172650, 6180650)
+	h.UpdatePosition(test.X, test.Y)
 	expected = NozzleMap1[1]
 	actual = *h.Rows[0].Nozzles[0]
 	if !reflect.DeepEqual(expected, actual) {
