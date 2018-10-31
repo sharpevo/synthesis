@@ -295,4 +295,14 @@ func TestUpdatePosition(t *testing.T) {
 			actual,
 		)
 	}
+	h.UpdatePosition(zero.X, zero.Y)
+	expected = NozzleMap0[1]
+	actual = *h.Rows[0].Nozzles[0]
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf(
+			"\nEXPECT: %#v\nGET: %#v\n",
+			expected,
+			actual,
+		)
+	}
 }
