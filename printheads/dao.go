@@ -41,13 +41,13 @@ type Nozzle struct {
 func NewNozzle(index int) (*Nozzle, error) {
 	n := &Nozzle{}
 	n.Index = index
-	row, err := n.ArrangeRow()
+	row, err := n.GetRowByIndex()
 	n.Row = row
 	return n, err
 }
 
-func (n *Nozzle) ArrangeRow() (int, error) {
-	mod := n.Index % 4
+func (n *Nozzle) GetRowByIndex() (int, error) {
+	mod := (n.Index + 1) % 4
 	switch mod {
 	case 0:
 		return 3, nil
@@ -63,26 +63,86 @@ func (n *Nozzle) ArrangeRow() (int, error) {
 }
 
 type Row struct {
-	Index   int
-	Nozzles []*Nozzle
+	Index       int
+	PositionX   int
+	PositionY   int
+	NozzleSpace int
+	Nozzles     []*Nozzle
+}
+
+func NewRow(
+	index int,
+	posx int,
+	posy int,
+	nozzleSpace int,
+) *Row {
+	return &Row{
+		Index:       index,
+		PositionX:   posx,
+		PositionY:   posy,
+		NozzleSpace: nozzleSpace,
+	}
+}
+
+func (r *Row) CalcNozzlePosition(index int) (int, int) {
+	factor := index
+	return r.PositionX + factor*r.NozzleSpace, r.PositionY
+}
+
+func (r *Row) AddNozzle(nozzle *Nozzle) {
+	nozzle.PositionX, nozzle.PositionY = r.CalcNozzlePosition(len(r.Nozzles))
+	r.Nozzles = append(r.Nozzles, nozzle)
 }
 
 type PrintHead struct {
-	Rows []*Row
+	Index     int
+	Rows      []*Row
+	RowOffset int
+	RowSpaceA int
+	RowSpaceB int
 }
 
-func NewPrintHead(row int, nozzle int) (*PrintHead, error) {
-	h := &PrintHead{}
-	h.Rows = []*Row{}
-	for index := 0; index < row; index++ {
-		h.Rows = append(h.Rows, &Row{Index: index})
+func NewPrintHead(
+	rowCount int,
+	nozzleCount int,
+	nozzleSpace int,
+	rowOffset int,
+	rowSpaceA int,
+	rowSpaceB int,
+	dposx int,
+	dposy int,
+) (*PrintHead, error) {
+	h := &PrintHead{
+		RowOffset: rowOffset,
+		RowSpaceA: rowSpaceA,
+		RowSpaceB: rowSpaceB,
 	}
-	for index := 0; index < nozzle; index++ {
+	h.Rows = []*Row{}
+	for index := 0; index < rowCount; index++ {
+		posx, posy := h.CalcRowPosition(index, dposx, dposy)
+		row := NewRow(index, posx, posy, nozzleSpace)
+		h.Rows = append(h.Rows, row)
+	}
+	for index := 0; index < nozzleCount; index++ {
 		n, err := NewNozzle(index)
 		if err != nil {
 			return h, err
 		}
-		h.Rows[n.Row].Nozzles = append(h.Rows[n.Row].Nozzles, n)
+		h.Rows[n.Row].AddNozzle(n)
 	}
 	return h, nil
+}
+
+func (h *PrintHead) CalcRowPosition(index int, dposx int, dposy int) (int, int) {
+	switch index {
+	case 0:
+		return dposx - h.RowOffset, dposy - h.RowSpaceA - h.RowSpaceB
+	case 1:
+		return dposx, dposy - h.RowSpaceB
+	case 2:
+		return dposx - h.RowOffset, dposy - h.RowSpaceA
+	case 3:
+		return dposx, dposy
+	}
+	return 0, 0
 }
