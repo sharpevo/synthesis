@@ -62,6 +62,15 @@ func (n *Nozzle) GetRowByIndex() (int, error) {
 	}
 }
 
+func (n *Nozzle) String() string {
+	return fmt.Sprintf("%d at line %d: %v, %v",
+		n.Index+1,
+		n.Row,
+		float64(n.PositionX)/UM,
+		float64(n.PositionY)/UM,
+	)
+}
+
 type Row struct {
 	Index       int
 	PositionX   int
@@ -103,6 +112,28 @@ type PrintHead struct {
 }
 
 func NewPrintHead(
+	rowCount int,
+	nozzleCount int,
+	nozzleSpace int,
+	rowOffset int,
+	rowSpaceA int,
+	rowSpaceB int,
+) (*PrintHead, error) {
+	dposy := (rowSpaceB + rowSpaceA) / 2
+	dposx := nozzleSpace*160 + rowOffset
+	return NewPrintHeadLineD(
+		rowCount,
+		nozzleCount,
+		nozzleSpace,
+		rowOffset,
+		rowSpaceA,
+		rowSpaceB,
+		dposx,
+		dposy,
+	)
+}
+
+func NewPrintHeadLineD(
 	rowCount int,
 	nozzleCount int,
 	nozzleSpace int,
