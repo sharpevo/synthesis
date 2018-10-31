@@ -31,11 +31,15 @@ const (
 	POS_FIRST_NOZZLE_ROW_A_Y = POS_FIRST_NOZZLE_ROW_D_Y - ROW_OFFSET_Y_A - ROW_OFFSET_Y_B
 )
 
+type Position struct {
+	X int
+	Y int
+}
+
 type Nozzle struct {
-	Index     int
-	Row       int
-	PositionX int
-	PositionY int
+	Position
+	Index int
+	Row   int
 }
 
 func NewNozzle(index int) (*Nozzle, error) {
@@ -66,15 +70,14 @@ func (n *Nozzle) String() string {
 	return fmt.Sprintf("%d at line %d: %v, %v",
 		n.Index+1,
 		n.Row,
-		float64(n.PositionX)/UM,
-		float64(n.PositionY)/UM,
+		float64(n.X)/UM,
+		float64(n.Y)/UM,
 	)
 }
 
 type Row struct {
+	Position
 	Index       int
-	PositionX   int
-	PositionY   int
 	NozzleSpace int
 	Nozzles     []*Nozzle
 }
@@ -86,20 +89,22 @@ func NewRow(
 	nozzleSpace int,
 ) *Row {
 	return &Row{
-		Index:       index,
-		PositionX:   posx,
-		PositionY:   posy,
+		Index: index,
+		Position: Position{
+			X: posx,
+			Y: posy,
+		},
 		NozzleSpace: nozzleSpace,
 	}
 }
 
 func (r *Row) CalcNozzlePosition(index int) (int, int) {
 	factor := index
-	return r.PositionX + factor*r.NozzleSpace, r.PositionY
+	return r.X + factor*r.NozzleSpace, r.Y
 }
 
 func (r *Row) AddNozzle(nozzle *Nozzle) {
-	nozzle.PositionX, nozzle.PositionY = r.CalcNozzlePosition(len(r.Nozzles))
+	nozzle.X, nozzle.Y = r.CalcNozzlePosition(len(r.Nozzles))
 	r.Nozzles = append(r.Nozzles, nozzle)
 }
 
@@ -121,6 +126,7 @@ func NewPrintHead(
 ) (*PrintHead, error) {
 	dposy := (rowSpaceB + rowSpaceA) / 2
 	dposx := nozzleSpace*160 + rowOffset
+	fmt.Println(dposx, dposy)
 	return NewPrintHeadLineD(
 		rowCount,
 		nozzleCount,
@@ -180,9 +186,9 @@ func (h *PrintHead) CalcRowPosition(index int, dposx int, dposy int) (int, int) 
 
 func (h *PrintHead) UpdatePosition(dposx int, dposy int) {
 	for index, row := range h.Rows {
-		row.PositionX, row.PositionY = h.CalcRowPosition(index, dposx, dposy)
+		row.X, row.Y = h.CalcRowPosition(index, dposx, dposy)
 		for index, nozzle := range row.Nozzles {
-			nozzle.PositionX, nozzle.PositionY = row.CalcNozzlePosition(index)
+			nozzle.X, nozzle.Y = row.CalcNozzlePosition(index)
 		}
 	}
 }
