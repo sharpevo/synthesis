@@ -7,6 +7,117 @@ import (
 	"testing"
 )
 
+const (
+	ROW_COUNT    = 4
+	NOZZLE_COUNT = 1280
+	NOZZLE_SPACE = 169.3 * printheads.UM
+	ROW_OFFSET   = 84.65 * printheads.UM
+	ROW_SPACE_A  = 550.3 * printheads.UM
+	ROW_SPACE_B  = 11.811 * printheads.MM
+)
+
+var NozzleMap0 = map[int]printheads.Nozzle{
+	1: printheads.Nozzle{
+		Index:     0,
+		Row:       0,
+		PositionX: -84650,
+		PositionY: -12361300,
+	},
+	3: printheads.Nozzle{
+		Index:     2,
+		Row:       1,
+		PositionX: 0,
+		PositionY: -11811000,
+	},
+	2: printheads.Nozzle{
+		Index:     1,
+		Row:       2,
+		PositionX: -84650,
+		PositionY: -550300,
+	},
+	4: printheads.Nozzle{
+		Index:     3,
+		Row:       3,
+		PositionX: 0,
+		PositionY: 0,
+	},
+	1277: printheads.Nozzle{
+		Index:     1276,
+		Row:       0,
+		PositionX: 53922050,
+		PositionY: -12361300,
+	},
+	1279: printheads.Nozzle{
+		Index:     1278,
+		Row:       1,
+		PositionX: 54006700,
+		PositionY: -11811000,
+	},
+	1278: printheads.Nozzle{
+		Index:     1277,
+		Row:       2,
+		PositionX: 53922050,
+		PositionY: -550300,
+	},
+	1280: printheads.Nozzle{
+		Index:     1279,
+		Row:       3,
+		PositionX: 54006700,
+		PositionY: 0,
+	},
+}
+
+var NozzleMap1 = map[int]printheads.Nozzle{
+	1: printheads.Nozzle{
+		Index:     0,
+		Row:       0,
+		PositionX: 27088000,
+		PositionY: -6180650,
+	},
+	3: printheads.Nozzle{
+		Index:     2,
+		Row:       1,
+		PositionX: 27172650,
+		PositionY: -5630350,
+	},
+	2: printheads.Nozzle{
+		Index:     1,
+		Row:       2,
+		PositionX: 27088000,
+		PositionY: 5630350,
+	},
+	4: printheads.Nozzle{
+		Index:     3,
+		Row:       3,
+		PositionX: 27172650,
+		PositionY: 6180650,
+	},
+	1277: printheads.Nozzle{
+		Index:     1276,
+		Row:       0,
+		PositionX: 81094700,
+		PositionY: -6180650,
+	},
+	1279: printheads.Nozzle{
+		Index:     1278,
+		Row:       1,
+		PositionX: 81179350,
+		PositionY: -5630350,
+	},
+	1278: printheads.Nozzle{
+		Index:     1277,
+		Row:       2,
+		PositionX: 81094700,
+		PositionY: 5630350,
+	},
+	1280: printheads.Nozzle{
+		Index:     1279,
+		Row:       3,
+		PositionX: 81179350,
+		PositionY: 6180650,
+	},
+}
+
 func TestOne(t *testing.T) {
 	fmt.Println(printheads.SPACE_ROW_B)
 	fmt.Println(printheads.SPACE_NOZZLE_PITCH)
@@ -45,65 +156,15 @@ func TestPosition(t *testing.T) {
 
 func TestPrintHeadLineD(t *testing.T) {
 	h, _ := printheads.NewPrintHeadLineD(
-		4,
-		1280,
-		169.3*printheads.UM,
-		84.65*printheads.UM,
-		550.3*printheads.UM,
-		11.811*printheads.MM,
+		ROW_COUNT,
+		NOZZLE_COUNT,
+		NOZZLE_SPACE,
+		ROW_OFFSET,
+		ROW_SPACE_A,
+		ROW_SPACE_B,
 		0,
 		0,
 	)
-	nozzleMap := map[int]printheads.Nozzle{
-		1: printheads.Nozzle{
-			Index:     0,
-			Row:       0,
-			PositionX: -84650,
-			PositionY: -12361300,
-		},
-		3: printheads.Nozzle{
-			Index:     2,
-			Row:       1,
-			PositionX: 0,
-			PositionY: -11811000,
-		},
-		2: printheads.Nozzle{
-			Index:     1,
-			Row:       2,
-			PositionX: -84650,
-			PositionY: -550300,
-		},
-		4: printheads.Nozzle{
-			Index:     3,
-			Row:       3,
-			PositionX: 0,
-			PositionY: 0,
-		},
-		1277: printheads.Nozzle{
-			Index:     1276,
-			Row:       0,
-			PositionX: 53922050,
-			PositionY: -12361300,
-		},
-		1279: printheads.Nozzle{
-			Index:     1278,
-			Row:       1,
-			PositionX: 54006700,
-			PositionY: -11811000,
-		},
-		1278: printheads.Nozzle{
-			Index:     1277,
-			Row:       2,
-			PositionX: 53922050,
-			PositionY: -550300,
-		},
-		1280: printheads.Nozzle{
-			Index:     1279,
-			Row:       3,
-			PositionX: 54006700,
-			PositionY: 0,
-		},
-	}
 	for _, row := range h.Rows {
 		for _, nozzle := range row.Nozzles {
 			//fmt.Printf("%#v\n", nozzle)
@@ -114,7 +175,7 @@ func TestPrintHeadLineD(t *testing.T) {
 					nozzle.Row,
 				)
 			}
-			if n, ok := nozzleMap[nozzle.Index+1]; ok {
+			if n, ok := NozzleMap0[nozzle.Index+1]; ok {
 				if !reflect.DeepEqual(n, *nozzle) {
 					t.Errorf(
 						"\n%d EXPECT: %#v\nGET: %#v\n",
@@ -130,64 +191,14 @@ func TestPrintHeadLineD(t *testing.T) {
 
 func TestPrintHead(t *testing.T) {
 	h, _ := printheads.NewPrintHead(
-		4,
-		1280,
-		169.3*printheads.UM,
-		84.65*printheads.UM,
-		550.3*printheads.UM,
-		11.811*printheads.MM,
+		ROW_COUNT,
+		NOZZLE_COUNT,
+		NOZZLE_SPACE,
+		ROW_OFFSET,
+		ROW_SPACE_A,
+		ROW_SPACE_B,
 	)
-	nozzleMap := map[int]printheads.Nozzle{
-		1: printheads.Nozzle{
-			Index:     0,
-			Row:       0,
-			PositionX: 27088000,
-			PositionY: -6180650,
-		},
-		3: printheads.Nozzle{
-			Index:     2,
-			Row:       1,
-			PositionX: 27172650,
-			PositionY: -5630350,
-		},
-		2: printheads.Nozzle{
-			Index:     1,
-			Row:       2,
-			PositionX: 27088000,
-			PositionY: 5630350,
-		},
-		4: printheads.Nozzle{
-			Index:     3,
-			Row:       3,
-			PositionX: 27172650,
-			PositionY: 6180650,
-		},
-		1277: printheads.Nozzle{
-			Index:     1276,
-			Row:       0,
-			PositionX: 81094700,
-			PositionY: -6180650,
-		},
-		1279: printheads.Nozzle{
-			Index:     1278,
-			Row:       1,
-			PositionX: 81179350,
-			PositionY: -5630350,
-		},
-		1278: printheads.Nozzle{
-			Index:     1277,
-			Row:       2,
-			PositionX: 81094700,
-			PositionY: 5630350,
-		},
-		1280: printheads.Nozzle{
-			Index:     1279,
-			Row:       3,
-			PositionX: 81179350,
-			PositionY: 6180650,
-		},
-	}
-	for _, v := range nozzleMap {
+	for _, v := range NozzleMap1 {
 		fmt.Printf("%s\n", v.String())
 	}
 	for _, row := range h.Rows {
@@ -200,7 +211,7 @@ func TestPrintHead(t *testing.T) {
 					nozzle.Row,
 				)
 			}
-			if n, ok := nozzleMap[nozzle.Index+1]; ok {
+			if n, ok := NozzleMap1[nozzle.Index+1]; ok {
 				if !reflect.DeepEqual(n, *nozzle) {
 					t.Errorf(
 						"\n%d EXPECT: %#v\nGET: %#v\n",
