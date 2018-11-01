@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -122,8 +124,9 @@ func (s *Statement) Execute(terminatec <-chan interface{}, completec chan<- inte
 
 	respc := make(chan Response)
 	go func() {
-
 		defer close(respc)
+		defer runtime.GC()
+		defer debug.FreeOSMemory()
 		for {
 			select {
 			case <-terminatec:
