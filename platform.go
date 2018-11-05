@@ -13,23 +13,25 @@ type Base struct {
 	Color color.NRGBA
 }
 
+var data uint8 = 0xff
+
 var BaseA = &Base{
 	"A",
-	color.NRGBA{0xff, 0x00, 0x00, 0xff},
+	color.NRGBA{0xff, 0x00, 0x00, data},
 }
 
 var BaseC = &Base{
 	"C",
-	color.NRGBA{0x00, 0xff, 0x00, 0xff},
+	color.NRGBA{0x00, 0xff, 0x00, data},
 }
 var BaseG = &Base{
 	"G",
-	color.NRGBA{0x00, 0x00, 0xff, 0xff},
+	color.NRGBA{0x00, 0x00, 0xff, data},
 }
 
 var BaseT = &Base{
 	"T",
-	color.NRGBA{0xff, 0x00, 0xff, 0xff},
+	color.NRGBA{0xff, 0x00, 0xff, data},
 }
 
 var BaseN = &Base{
@@ -93,7 +95,8 @@ func NewPlatform(width int, height int) *Platform {
 }
 
 func (p *Platform) AddBase(x int, y int, base *Base) {
-	fmt.Println(x, y, base)
+	fmt.Println(x-50, 50-y, base)
+
 	dot := &Dot{
 		Base:      base,
 		Printed:   false,
@@ -113,30 +116,35 @@ func (p *Platform) AddBlock(block *Block) {
 	}
 }
 
-func (p *Platform) NextPosition() (int, int) {
+func (p *Platform) NextPosition() (int, int, error) {
 	for posy, row := range p.Dots {
 		for posx, dot := range row {
 			if dot == nil {
 				continue
 			}
 			if !dot.Printed {
-				return posx, posy
+				//fmt.Println(dot.Base.Name, dot.Printed, dot.PositionX, dot.PositionY)
+				return posx, posy, nil
 			}
 		}
 	}
-	return 0, 0
+	return 0, 0, fmt.Errorf("all dots are printed")
 }
 
 func (p *Platform) DotsInRow(y int) []*Dot {
 	output := []*Dot{}
+	//fmt.Println(p.Dots[y][:5])
 	for _, dot := range p.Dots[y] {
 		if dot == nil {
 			continue
 		}
+		//fmt.Println(dot.Base.Name, dot.Printed, dot.PositionX, dot.PositionY)
 		if !dot.Printed {
 			output = append(output, dot)
 		}
 	}
+	//fmt.Printf("%#v\n", output)
+	//fmt.Println(len(output))
 	return output
 }
 
