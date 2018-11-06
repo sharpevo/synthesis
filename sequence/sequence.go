@@ -1,6 +1,7 @@
 package sequence
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
@@ -21,13 +22,9 @@ func NewSequence() *widgets.QGroupBox {
 	group := widgets.NewQGroupBox2("sequence", nil)
 	layout := widgets.NewQGridLayout2()
 
-	img := gui.NewQImage()
-	img.Load("test.png", "png")
-	img = img.Scaled2(1000, 1000, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
-
 	scene := widgets.NewQGraphicsScene(nil)
 	view := widgets.NewQGraphicsView(nil)
-
+	img := gui.NewQImage()
 	imageItem = widgets.NewQGraphicsPixmapItem2(gui.NewQPixmap().FromImage(img, 0), nil)
 	scene.AddItem(imageItem)
 	view.SetScene(scene)
@@ -237,13 +234,11 @@ func generateImage(
 			img.Set(posx, posy, dot.Base.Color)
 		}
 	}
-
-	outputFile, _ := os.Create("test.png")
-	png.Encode(outputFile, img)
-	outputFile.Close()
-
+	var imagebuff bytes.Buffer
+	png.Encode(&imagebuff, img)
+	imagebyte := imagebuff.Bytes()
 	qimg := gui.NewQImage()
-	qimg.Load("test.png", "png")
+	qimg.LoadFromData2(core.NewQByteArray2(string(imagebyte), len(imagebyte)), "png")
 	qimg = qimg.Scaled2(5*p.Width, 5*p.Height, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
 	imageItem.SetPixmap(gui.NewQPixmap().FromImage(qimg, 0))
 	fmt.Println(startX, startY, spaceX, spaceY, spaceBlockx, spaceBlocky)
