@@ -8,7 +8,9 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"posam/gui/uiutil"
 	"posam/util/platform"
+	"strconv"
 	"strings"
 )
 
@@ -62,10 +64,66 @@ func NewSequenceDetail() *widgets.QGroupBox {
 
 	sequenceInput := widgets.NewQTextEdit(nil)
 
+	startxInput.SetText("25")
+	startyInput.SetText("25")
+	spacexInput.SetText("2")
+	spaceyInput.SetText("5")
+	spaceBlockxInput.SetText("20")
+	spaceBlockyInput.SetText("30")
+	sequenceInput.SetText(`TTTTTCTGGA,GGGCCTGGAA,TTTTTCTGGA
+AGGTGCGTGT,TGAATCATTG,AGGTGCGTGT
+GGAGGGAATG,CTAGTACTTT,GGAGGGAATG
+CTGTGCGTGA,ACACCCTTGG,CTGTGCGTGA
+
+TATAGCCTAC,GTACTCGTAG,TATAGCCTAC
+ACACATACGG,ACTCGACTGA,ACACATACGG
+GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
+CATACGCAGC,TGTACATGAC,CATACGCAGC
+
+GTACTCGTAG,TATAGCCTAC,TATAGCCTAC
+ACTCGACTGA,ACACATACGG,ACACATACGG
+AAGCTTGTTC,GTCAGCATAC,GTCAGCATAC
+TGTACATGAC,CATACGCAGC,CATACGCAGC
+`)
 	generateButton := widgets.NewQPushButton2("GENERATE", nil)
 	generateButton.ConnectClicked(func(bool) {
+		startxInt, err := strconv.Atoi(startxInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		startyInt, err := strconv.Atoi(startyInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		spacexInt, err := strconv.Atoi(spacexInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		spaceyInt, err := strconv.Atoi(spaceyInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		spaceBlockxInt, err := strconv.Atoi(spaceBlockxInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		spaceBlockyInt, err := strconv.Atoi(spaceBlockyInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
 		generateImage(
-			2, 5, 10, 20,
+			startxInt,
+			startyInt,
+			spacexInt,
+			spaceyInt,
+			spaceBlockxInt,
+			spaceBlockyInt,
 			sequenceInput.ToPlainText(),
 		)
 	})
@@ -92,34 +150,63 @@ func NewSequenceDetail() *widgets.QGroupBox {
 }
 
 func generateImage(
+	startX int,
+	startY int,
 	spaceX int,
 	spaceY int,
 	spaceBlockx int,
 	spaceBlocky int,
 	sequences string,
 ) {
-	p := platform.NewPlatform(100, 100)
-	img := image.NewRGBA(image.Rect(0, 0, p.Width, p.Height))
-	lines := strings.Split(sequences, "\n")
-	blocks := make([]*platform.Block, len(strings.Split(lines[0], ",")))
-	xoffset := 0
-	yoffset := 0
-	for _, line := range strings.Split(sequences, "\n") {
-		for x, seq := range strings.Split(line, ",") {
-			if blocks[x] == nil {
-				blocks[x] = &platform.Block{}
-				blocks[x].PositionX = xoffset + spaceBlockx
-				blocks[x].PositionY = yoffset + spaceBlocky
-				blocks[x].SpaceX = spaceX
-				blocks[x].SpaceY = spaceY
-			}
-			blocks[x].AddRow(seq)
-			xoffset += len(blocks[x].Sequence[0])*spaceX + spaceBlockx
-		}
-		yoffset += spaceBlocky
-	}
-	fmt.Println(strings.Split(sequences, "\n"))
+	//lines := strings.Split(sequences, "\n")
+	//blocks := make([]*platform.Block, len(strings.Split(lines[0], ",")))
+	blocks := map[int]*platform.Block{}
+	//xoffset := startX - 50
+	//yoffset := 50 - startY
 
+	yoffset := startY
+	vcount := 0
+	for _, line := range strings.Split(sequences, "\n") {
+		if line == "" {
+			yoffset += spaceBlocky
+			vcount += 1
+			continue
+		}
+		xoffset := startX
+		for x, seq := range strings.Split(line, ",") {
+			//hcount := vcount + x
+			hcount := x
+			if blocks[hcount] == nil {
+				blocks[hcount] = &platform.Block{}
+				//blocks[hcount].PositionX = xoffset - 50 + spaceBlockx
+				//blocks[hcount].PositionY = 50 - yoffset + spaceBlocky
+				if x == 0 {
+					blocks[hcount].PositionX = xoffset
+					blocks[hcount].PositionY = yoffset
+				} else {
+					xoffset += spaceBlockx
+					blocks[hcount].PositionX = xoffset // + spaceBlockx
+					blocks[hcount].PositionY = yoffset // + spaceBlocky
+				}
+				//blocks[hcount].PositionX = xoffset + spaceBlockx
+				//blocks[hcount].PositionY = yoffset + spaceBlocky
+				blocks[hcount].SpaceX = spaceX
+				blocks[hcount].SpaceY = spaceY
+				fmt.Println(">>>>", hcount, blocks[hcount].PositionX, blocks[hcount].PositionY)
+			}
+			blocks[hcount].AddRow(seq)
+			//lastCount := len(blocks[hcount].Sequence[0])
+			//xoffset = startX + len(blocks[hcount].Sequence[0])*(spaceX+1)
+			xoffset += len(blocks[hcount].Sequence[0]) * (spaceX + 1)
+			//yoffset += y * (spaceY + 1)
+		}
+	}
+	//fmt.Println(strings.Split(sequences, "\n"))
+
+	//minWidth := 10 + block1.SpaceX*(10-1) + block1.PositionX
+	//minHeight := 4 + block1.SpaceY*(4-1) + block1.PositionY
+	p := platform.NewPlatform(500, 500)
+	img := image.NewRGBA(image.Rect(0, 0, p.Width, p.Height))
 	for _, block := range blocks {
 		p.AddBlock(block)
 	}
@@ -129,7 +216,7 @@ func generateImage(
 			if dot == nil {
 				continue
 			}
-			fmt.Println(posx, posy, dot.Base.Name)
+			//fmt.Println(posx, posy, dot.Base.Name)
 			img.Set(posx, posy, dot.Base.Color)
 		}
 	}
@@ -139,6 +226,7 @@ func generateImage(
 
 	qimg := gui.NewQImage()
 	qimg.Load("test.png", "png")
-	qimg = qimg.Scaled2(1000, 1000, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
+	qimg = qimg.Scaled2(10*p.Width, 10*p.Height, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
 	imageItem.SetPixmap(gui.NewQPixmap().FromImage(qimg, 0))
+	fmt.Println(startX, startY, spaceX, spaceY, spaceBlockx, spaceBlocky)
 }
