@@ -10,6 +10,7 @@ import (
 	"posam/dao/aoztech"
 	"posam/dao/canalystii"
 	"posam/dao/ricoh_g5"
+	"posam/gui/sequence"
 	"runtime"
 	"strconv"
 	"strings"
@@ -441,6 +442,13 @@ func main() {
 	devTab.SetLayout(devTabLayout)
 
 	tabWidget.AddTab(devTab, "Devices")
+
+	seqTab := widgets.NewQWidget(nil, 0)
+	seqTabLayout := widgets.NewQGridLayout2()
+	seqTabLayout.AddWidget(sequence.NewSequence(), 0, 0, 0)
+	seqTab.SetLayout(seqTabLayout)
+	tabWidget.AddTab(seqTab, "Sequences")
+
 	window.Show()
 	app.Exec()
 }
