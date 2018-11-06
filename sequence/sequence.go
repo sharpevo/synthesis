@@ -52,15 +52,17 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	startyLabel := widgets.NewQLabel2("Starts at y:", nil, 0)
 	startyInput := widgets.NewQLineEdit(nil)
 
-	spacexLabel := widgets.NewQLabel2("Space x:", nil, 0)
+	spacexLabel := widgets.NewQLabel2("Drop space x:", nil, 0)
 	spacexInput := widgets.NewQLineEdit(nil)
-	spaceyLabel := widgets.NewQLabel2("Space y:", nil, 0)
+	spaceyLabel := widgets.NewQLabel2("Drop space y:", nil, 0)
 	spaceyInput := widgets.NewQLineEdit(nil)
 
-	spaceBlockxLabel := widgets.NewQLabel2("Space slide x:", nil, 0)
+	spaceBlockxLabel := widgets.NewQLabel2("Block space x:", nil, 0)
 	spaceBlockxInput := widgets.NewQLineEdit(nil)
-	spaceBlockyLabel := widgets.NewQLabel2("Space slide y:", nil, 0)
+	spaceBlockyLabel := widgets.NewQLabel2("Block space y:", nil, 0)
 	spaceBlockyInput := widgets.NewQLineEdit(nil)
+	spaceSlideyLabel := widgets.NewQLabel2("Slide space y:", nil, 0)
+	spaceSlideyInput := widgets.NewQLineEdit(nil)
 
 	sequenceInput := widgets.NewQTextEdit(nil)
 
@@ -70,6 +72,7 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	spaceyInput.SetText("5")
 	spaceBlockxInput.SetText("20")
 	spaceBlockyInput.SetText("30")
+	spaceSlideyInput.SetText("50")
 	sequenceInput.SetText(`TTTTTCTGGA,GGGCCTGGAA,TTTTTCTGGA
 AGGTGCGTGT,TGAATCATTG,AGGTGCGTGT
 GGAGGGAATG,CTAGTACTTT,GGAGGGAATG
@@ -84,6 +87,12 @@ GTACTCGTAG,TATAGCCTAC,TATAGCCTAC
 ACTCGACTGA,ACACATACGG,ACACATACGG
 AAGCTTGTTC,GTCAGCATAC,GTCAGCATAC
 TGTACATGAC,CATACGCAGC,CATACGCAGC
+
+
+GGAGGGAATG,CTAGTACTTT,GGAGGGAATG
+
+AAGCTTGTTC,GTCAGCATAC,GTCAGCATAC
+GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
 `)
 	generateButton := widgets.NewQPushButton2("GENERATE", nil)
 	generateButton.ConnectClicked(func(bool) {
@@ -117,6 +126,11 @@ TGTACATGAC,CATACGCAGC,CATACGCAGC
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
+		spaceSlideyInt, err := strconv.Atoi(spaceSlideyInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
 		generateImage(
 			startxInt,
 			startyInt,
@@ -124,6 +138,7 @@ TGTACATGAC,CATACGCAGC,CATACGCAGC
 			spaceyInt,
 			spaceBlockxInt,
 			spaceBlockyInt,
+			spaceSlideyInt,
 			sequenceInput.ToPlainText(),
 		)
 	})
@@ -142,14 +157,99 @@ TGTACATGAC,CATACGCAGC,CATACGCAGC
 	layout.AddWidget(spaceBlockxInput, 4, 1, 0)
 	layout.AddWidget(spaceBlockyLabel, 5, 0, 0)
 	layout.AddWidget(spaceBlockyInput, 5, 1, 0)
+	layout.AddWidget(spaceSlideyLabel, 6, 0, 0)
+	layout.AddWidget(spaceSlideyInput, 6, 1, 0)
 
-	layout.AddWidget3(sequenceInput, 6, 0, 1, 2, 0)
-	layout.AddWidget3(generateButton, 7, 0, 1, 2, 0)
+	layout.AddWidget3(sequenceInput, 7, 0, 1, 2, 0)
+	layout.AddWidget3(generateButton, 8, 0, 1, 2, 0)
 	group.SetLayout(layout)
 	return group
 }
 
 func generateImage(
+	startX int,
+	startY int,
+	spaceX int,
+	spaceY int,
+	spaceBlockx int,
+	spaceBlocky int,
+	//spaceSlidex int, // use spaceBlockx
+	spaceSlidey int,
+	sequences string,
+) {
+
+	width := 0
+	height := 0
+	blocks := map[int]map[int]map[int]*platform.Block{}
+	yoffset := startY
+	for z, slide := range strings.Split(sequences, "\n\n\n") { // slide
+		if _, ok := blocks[z]; !ok {
+			blocks[z] = make(map[int]map[int]*platform.Block)
+		}
+
+		for y, block := range strings.Split(slide, "\n\n") { // block
+			if _, ok := blocks[z][y]; !ok {
+				blocks[z][y] = make(map[int]*platform.Block)
+			}
+
+			for _, line := range strings.Split(block, "\n") { // line
+
+				xoffset := startX - spaceBlockx
+				for x, seq := range strings.Split(line, ",") { // seq
+					if _, ok := blocks[z][y][x]; !ok {
+						xoffset += spaceBlockx
+						b := &platform.Block{}
+						b.PositionX = xoffset
+						b.PositionY = yoffset
+						b.SpaceX = spaceX
+						b.SpaceY = spaceY
+						blocks[z][y][x] = b
+					}
+					blocks[z][y][x].AddRow(seq)
+					xoffset += len(blocks[z][y][x].Sequence[0]) * (spaceX + 1)
+				}
+				if xoffset > width {
+					width = xoffset
+				}
+			}
+			yoffset += len(blocks[z][y][0].Sequence)*(spaceY+1) + spaceBlocky
+		}
+		yoffset += spaceSlidey
+	}
+	height = yoffset
+
+	fmt.Println(width, height)
+	p := platform.NewPlatform(width, height)
+	for _, slide := range blocks {
+		for _, row := range slide {
+			for _, block := range row {
+				fmt.Println("block", block.PositionX, block.PositionY)
+				p.AddBlock(block)
+			}
+		}
+	}
+	img := image.NewRGBA(image.Rect(0, 0, p.Width, p.Height))
+	for posy, row := range p.Dots {
+		for posx, dot := range row {
+			if dot == nil {
+				continue
+			}
+			img.Set(posx, posy, dot.Base.Color)
+		}
+	}
+
+	outputFile, _ := os.Create("test.png")
+	png.Encode(outputFile, img)
+	outputFile.Close()
+
+	qimg := gui.NewQImage()
+	qimg.Load("test.png", "png")
+	qimg = qimg.Scaled2(5*p.Width, 5*p.Height, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
+	imageItem.SetPixmap(gui.NewQPixmap().FromImage(qimg, 0))
+	fmt.Println(startX, startY, spaceX, spaceY, spaceBlockx, spaceBlocky)
+}
+
+func generateImage2(
 	startX int,
 	startY int,
 	spaceX int,
