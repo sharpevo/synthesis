@@ -70,8 +70,7 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	spaceBlockxInput.SetText("20")
 	spaceBlockyInput.SetText("30")
 	spaceSlideyInput.SetText("50")
-	sequenceInput.SetText(`TTTTTCTGGA,GGGCCTGGAA,TTTTTCTGGA
-AGGTGCGTGT,TGAATCATTG,AGGTGCGTGT
+	sequenceInput.SetText(`AGGTGCGTGT,TGAATCATTG,AGGTGCGTGT
 GGAGGGAATG,CTAGTACTTT,GGAGGGAATG
 CTGTGCGTGA,ACACCCTTGG,CTGTGCGTGA
 
@@ -188,30 +187,39 @@ func generateImage(
 		}
 		switch count {
 		case 0:
-			xoffset = startX
-			if _, ok := pixels[yoffset]; !ok {
-				pixels[yoffset] = make(map[int]*color.NRGBA)
-			}
-			for _, seq := range strings.Split(line, ",") {
-				for _, base := range strings.Split(strings.Trim(seq, " "), "") {
-					pixels[yoffset][xoffset] = ToColor(base)
-					xoffset += spaceX
-					if xoffset > width {
-						width = xoffset
-					}
-				}
-				xoffset += spaceBlockx - spaceX
-			}
-			yoffset += spaceY
-			if yoffset > height {
-				height = yoffset
-			}
 		case 1:
-			xoffset = startX
-			yoffset += spaceBlocky - spaceY
+			if yoffset != startY {
+				yoffset += spaceBlocky - spaceY
+			} else {
+				yoffset += spaceBlocky
+			}
 		case 2:
-			xoffset = startX
-			yoffset += spaceSlidey - spaceY
+			if yoffset != startY {
+				yoffset += spaceSlidey - spaceY
+			} else {
+				yoffset += spaceSlidey
+			}
+		default:
+			uiutil.MessageBoxError("invalid sequences")
+			return
+		}
+		if _, ok := pixels[yoffset]; !ok {
+			pixels[yoffset] = make(map[int]*color.NRGBA)
+		}
+		xoffset = startX
+		for _, seq := range strings.Split(line, ",") {
+			for _, base := range strings.Split(strings.Trim(seq, " "), "") {
+				pixels[yoffset][xoffset] = ToColor(base)
+				xoffset += spaceX
+				if xoffset > width {
+					width = xoffset
+				}
+			}
+			xoffset += spaceBlockx - spaceX
+		}
+		yoffset += spaceY
+		if yoffset > height {
+			height = yoffset
 		}
 		count = 0
 	}
@@ -228,7 +236,6 @@ func generateImage(
 	qimg.LoadFromData2(core.NewQByteArray2(string(imagebyte), len(imagebyte)), "png")
 	qimg = qimg.Scaled2(5*width, 5*height, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
 	imageItem.SetPixmap(gui.NewQPixmap().FromImage(qimg, 0))
-	fmt.Println(startX, startY, spaceX, spaceY, spaceBlockx, spaceBlocky)
 }
 
 func ToColor(base string) *color.NRGBA {
