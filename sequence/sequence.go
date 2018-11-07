@@ -558,7 +558,7 @@ func export(
 		count = 0
 	}
 
-	pf := platform.NewPlatform(rowCount+1, columnCount+1)
+	pf := platform.NewPlatform(columnCount+1, rowCount+1)
 	for y, row := range dots {
 		for x, dot := range row {
 			pf.Dots[y][x] = dot
