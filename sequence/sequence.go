@@ -24,15 +24,25 @@ func NewSequence() *widgets.QGroupBox {
 	group := widgets.NewQGroupBox2("sequence", nil)
 	layout := widgets.NewQGridLayout2()
 
+	viewGroup := widgets.NewQGroupBox2("sequence", nil)
+	viewLayout := widgets.NewQGridLayout2()
 	scene := widgets.NewQGraphicsScene(nil)
 	view := widgets.NewQGraphicsView(nil)
-	img := gui.NewQImage()
-	imageItem = widgets.NewQGraphicsPixmapItem2(gui.NewQPixmap().FromImage(img, 0), nil)
+	qimg := gui.NewQImage()
+	imageItem = widgets.NewQGraphicsPixmapItem2(gui.NewQPixmap().FromImage(qimg, 0), nil)
 	scene.AddItem(imageItem)
 	view.SetScene(scene)
 	view.Show()
 
-	layout.AddWidget(view, 0, 0, 0)
+	exportButton := widgets.NewQPushButton2("EXPORT", nil)
+	exportButton.ConnectClicked(func(bool) {
+	})
+
+	viewLayout.AddWidget(view, 0, 0, 0)
+	viewLayout.AddWidget(exportButton, 1, 0, 0)
+	viewGroup.SetLayout(viewLayout)
+
+	layout.AddWidget(viewGroup, 0, 0, 0)
 	layout.AddWidget(NewSequenceDetail(), 0, 1, 0)
 
 	layout.SetColumnStretch(0, 1)
