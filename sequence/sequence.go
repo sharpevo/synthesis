@@ -11,6 +11,7 @@ import (
 	"image/png"
 	"posam/gui/uiutil"
 	"posam/util/platform"
+	//"posam/util/printheads"
 	"strconv"
 	"strings"
 )
@@ -44,6 +45,8 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	group := widgets.NewQGroupBox2("Config", nil)
 	layout := widgets.NewQGridLayout2()
 
+	resolutionLabel := widgets.NewQLabel2("resolution:", nil, 0)
+	resolutionInput := widgets.NewQLineEdit(nil)
 	startxLabel := widgets.NewQLabel2("Starts at x:", nil, 0)
 	startxInput := widgets.NewQLineEdit(nil)
 	startyLabel := widgets.NewQLabel2("Starts at y:", nil, 0)
@@ -63,11 +66,12 @@ func NewSequenceDetail() *widgets.QGroupBox {
 
 	sequenceInput := widgets.NewQTextEdit(nil)
 
-	startxInput.SetText("25")
-	startyInput.SetText("25")
-	spacexInput.SetText("2")
-	spaceyInput.SetText("5")
-	spaceBlockxInput.SetText("20")
+	resolutionInput.SetText("84.65")
+	startxInput.SetText("-50000")
+	startyInput.SetText("50000")
+	spacexInput.SetText("169.3")
+	spaceyInput.SetText("550.3")
+	spaceBlockxInput.SetText("1000")
 	spaceBlockyInput.SetText("30")
 	spaceSlideyInput.SetText("50")
 	sequenceInput.SetText(`AGGTGCGTGT,TGAATCATTG,AGGTGCGTGT
@@ -92,37 +96,51 @@ GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
 `)
 	generateButton := widgets.NewQPushButton2("GENERATE", nil)
 	generateButton.ConnectClicked(func(bool) {
-		startxInt, err := strconv.Atoi(startxInput.Text())
+		resolutionFloat, err := strconv.ParseFloat(resolutionInput.Text(), 32)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		startyInt, err := strconv.Atoi(startyInput.Text())
+		if resolutionFloat < 12.0 {
+			uiutil.MessageBoxError("invaild resolution")
+			return
+		}
+		resolutionInt := int(resolutionFloat * platform.UM)
+		maxWidth := 100 * platform.MM / resolutionInt
+		maxHeight := 100 * platform.MM / resolutionInt
+		startxIntRaw, err := parseArg(startxInput.Text(), resolutionInt)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		spacexInt, err := strconv.Atoi(spacexInput.Text())
+		startxInt := startxIntRaw + 50*platform.MM/resolutionInt
+		startyIntRaw, err := parseArg(startyInput.Text(), resolutionInt)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		spaceyInt, err := strconv.Atoi(spaceyInput.Text())
+		startyInt := 50*platform.MM/resolutionInt - startyIntRaw
+		spacexInt, err := parseArg(spacexInput.Text(), resolutionInt)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		spaceBlockxInt, err := strconv.Atoi(spaceBlockxInput.Text())
+		spaceyInt, err := parseArg(spaceyInput.Text(), resolutionInt)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		spaceBlockyInt, err := strconv.Atoi(spaceBlockyInput.Text())
+		spaceBlockxInt, err := parseArg(spaceBlockxInput.Text(), resolutionInt)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		spaceSlideyInt, err := strconv.Atoi(spaceSlideyInput.Text())
+		spaceBlockyInt, err := parseArg(spaceBlockyInput.Text(), resolutionInt)
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		spaceSlideyInt, err := parseArg(spaceSlideyInput.Text(), resolutionInt)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
@@ -136,30 +154,42 @@ GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
 			spaceBlockyInt,
 			spaceSlideyInt,
 			sequenceInput.ToPlainText(),
+			maxWidth,
+			maxHeight,
 		)
 	})
 
-	layout.AddWidget(startxLabel, 0, 0, 0)
-	layout.AddWidget(startxInput, 0, 1, 0)
-	layout.AddWidget(startyLabel, 1, 0, 0)
-	layout.AddWidget(startyInput, 1, 1, 0)
+	layout.AddWidget(resolutionLabel, 0, 0, 0)
+	layout.AddWidget(resolutionInput, 0, 1, 0)
+	layout.AddWidget(startxLabel, 1, 0, 0)
+	layout.AddWidget(startxInput, 1, 1, 0)
+	layout.AddWidget(startyLabel, 2, 0, 0)
+	layout.AddWidget(startyInput, 2, 1, 0)
 
-	layout.AddWidget(spacexLabel, 2, 0, 0)
-	layout.AddWidget(spacexInput, 2, 1, 0)
-	layout.AddWidget(spaceyLabel, 3, 0, 0)
-	layout.AddWidget(spaceyInput, 3, 1, 0)
+	layout.AddWidget(spacexLabel, 3, 0, 0)
+	layout.AddWidget(spacexInput, 3, 1, 0)
+	layout.AddWidget(spaceyLabel, 4, 0, 0)
+	layout.AddWidget(spaceyInput, 4, 1, 0)
 
-	layout.AddWidget(spaceBlockxLabel, 4, 0, 0)
-	layout.AddWidget(spaceBlockxInput, 4, 1, 0)
-	layout.AddWidget(spaceBlockyLabel, 5, 0, 0)
-	layout.AddWidget(spaceBlockyInput, 5, 1, 0)
-	layout.AddWidget(spaceSlideyLabel, 6, 0, 0)
-	layout.AddWidget(spaceSlideyInput, 6, 1, 0)
+	layout.AddWidget(spaceBlockxLabel, 5, 0, 0)
+	layout.AddWidget(spaceBlockxInput, 5, 1, 0)
+	layout.AddWidget(spaceBlockyLabel, 6, 0, 0)
+	layout.AddWidget(spaceBlockyInput, 6, 1, 0)
+	layout.AddWidget(spaceSlideyLabel, 7, 0, 0)
+	layout.AddWidget(spaceSlideyInput, 7, 1, 0)
 
-	layout.AddWidget3(sequenceInput, 7, 0, 1, 2, 0)
-	layout.AddWidget3(generateButton, 8, 0, 1, 2, 0)
+	layout.AddWidget3(sequenceInput, 8, 0, 1, 2, 0)
+	layout.AddWidget3(generateButton, 9, 0, 1, 2, 0)
 	group.SetLayout(layout)
 	return group
+}
+
+func parseArg(argString string, resolution int) (int, error) {
+	argFloat, err := strconv.ParseFloat(argString, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int(argFloat*platform.UM) / resolution, nil
 }
 
 func generateImage(
@@ -172,9 +202,11 @@ func generateImage(
 	//spaceSlidex int, // use spaceBlockx
 	spaceSlidey int,
 	sequences string,
+	maxWidth int,
+	maxHeight int,
 ) {
-	yoffset := startY
 	xoffset := startX
+	yoffset := startY
 	width := 0
 	height := 0
 	pixels := make(map[int]map[int]*color.NRGBA)
@@ -222,6 +254,11 @@ func generateImage(
 			height = yoffset
 		}
 		count = 0
+	}
+	fmt.Println(width, height)
+	if width > maxWidth || height > maxHeight {
+		uiutil.MessageBoxError(fmt.Sprintf("invalid size: %d x %d (%d x %d)", width, height, maxWidth, maxHeight))
+		return
 	}
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	for y, pixel := range pixels {
