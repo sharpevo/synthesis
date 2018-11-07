@@ -9,6 +9,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"os"
 	"posam/gui/uiutil"
 	"posam/util/platform"
 	//"posam/util/printheads"
@@ -45,16 +46,16 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	group := widgets.NewQGroupBox2("Config", nil)
 	layout := widgets.NewQGridLayout2()
 
-	resolutionLabel := widgets.NewQLabel2("resolution:", nil, 0)
+	resolutionLabel := widgets.NewQLabel2("Resolution:", nil, 0)
 	resolutionInput := widgets.NewQLineEdit(nil)
 	startxLabel := widgets.NewQLabel2("Starts at x:", nil, 0)
 	startxInput := widgets.NewQLineEdit(nil)
 	startyLabel := widgets.NewQLabel2("Starts at y:", nil, 0)
 	startyInput := widgets.NewQLineEdit(nil)
 
-	spacexLabel := widgets.NewQLabel2("Drop space x:", nil, 0)
+	spacexLabel := widgets.NewQLabel2("Spot space x:", nil, 0)
 	spacexInput := widgets.NewQLineEdit(nil)
-	spaceyLabel := widgets.NewQLabel2("Drop space y:", nil, 0)
+	spaceyLabel := widgets.NewQLabel2("Spot space y:", nil, 0)
 	spaceyInput := widgets.NewQLineEdit(nil)
 
 	spaceBlockxLabel := widgets.NewQLabel2("Block space x:", nil, 0)
@@ -70,10 +71,10 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	startxInput.SetText("-50000")
 	startyInput.SetText("50000")
 	spacexInput.SetText("169.3")
-	spaceyInput.SetText("550.3")
+	spaceyInput.SetText("84.65")
 	spaceBlockxInput.SetText("1000")
-	spaceBlockyInput.SetText("30")
-	spaceSlideyInput.SetText("50")
+	spaceBlockyInput.SetText("42.65")
+	spaceSlideyInput.SetText("100")
 	sequenceInput.SetText(`AGGTGCGTGT,TGAATCATTG,AGGTGCGTGT
 GGAGGGAATG,CTAGTACTTT,GGAGGGAATG
 CTGTGCGTGA,ACACCCTTGG,CTGTGCGTGA
@@ -255,7 +256,6 @@ func generateImage(
 		}
 		count = 0
 	}
-	fmt.Println(width, height)
 	if width > maxWidth || height > maxHeight {
 		uiutil.MessageBoxError(fmt.Sprintf("invalid size: %d x %d (%d x %d)", width, height, maxWidth, maxHeight))
 		return
@@ -266,6 +266,11 @@ func generateImage(
 			img.Set(x, y, *c)
 		}
 	}
+	// with file
+	outputFile, _ := os.Create("test.png")
+	png.Encode(outputFile, img)
+	outputFile.Close()
+	// nofile
 	var imagebuff bytes.Buffer
 	png.Encode(&imagebuff, img)
 	imagebyte := imagebuff.Bytes()
