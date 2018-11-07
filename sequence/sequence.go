@@ -7,8 +7,8 @@ import (
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"image"
+	"image/color"
 	"image/png"
-	"os"
 	"posam/gui/uiutil"
 	"posam/util/platform"
 	"strconv"
@@ -164,6 +164,89 @@ GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
 }
 
 func generateImage(
+	startX int,
+	startY int,
+	spaceX int,
+	spaceY int,
+	spaceBlockx int,
+	spaceBlocky int,
+	//spaceSlidex int, // use spaceBlockx
+	spaceSlidey int,
+	sequences string,
+) {
+	yoffset := startY
+	xoffset := startX
+	width := 0
+	height := 0
+	pixels := make(map[int]map[int]*color.NRGBA)
+
+	count := 0
+	for _, line := range strings.Split(sequences, "\n") {
+		if line == "" {
+			count += 1
+			continue
+		}
+		switch count {
+		case 0:
+			xoffset = startX
+			if _, ok := pixels[yoffset]; !ok {
+				pixels[yoffset] = make(map[int]*color.NRGBA)
+			}
+			for _, seq := range strings.Split(line, ",") {
+				for _, base := range strings.Split(strings.Trim(seq, " "), "") {
+					pixels[yoffset][xoffset] = ToColor(base)
+					xoffset += spaceX
+					if xoffset > width {
+						width = xoffset
+					}
+				}
+				xoffset += spaceBlockx - spaceX
+			}
+			yoffset += spaceY
+			if yoffset > height {
+				height = yoffset
+			}
+		case 1:
+			xoffset = startX
+			yoffset += spaceBlocky - spaceY
+		case 2:
+			xoffset = startX
+			yoffset += spaceSlidey - spaceY
+		}
+		count = 0
+	}
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for y, pixel := range pixels {
+		for x, c := range pixel {
+			img.Set(x, y, *c)
+		}
+	}
+	var imagebuff bytes.Buffer
+	png.Encode(&imagebuff, img)
+	imagebyte := imagebuff.Bytes()
+	qimg := gui.NewQImage()
+	qimg.LoadFromData2(core.NewQByteArray2(string(imagebyte), len(imagebyte)), "png")
+	qimg = qimg.Scaled2(5*width, 5*height, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
+	imageItem.SetPixmap(gui.NewQPixmap().FromImage(qimg, 0))
+	fmt.Println(startX, startY, spaceX, spaceY, spaceBlockx, spaceBlocky)
+}
+
+func ToColor(base string) *color.NRGBA {
+	switch base {
+	case "A":
+		return platform.BaseA.Color
+	case "C":
+		return platform.BaseC.Color
+	case "G":
+		return platform.BaseG.Color
+	case "T":
+		return platform.BaseT.Color
+	default:
+		return platform.BaseN.Color
+	}
+}
+
+func generateImage2(
 	startX int,
 	startY int,
 	spaceX int,
