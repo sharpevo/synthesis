@@ -519,15 +519,15 @@ func export(
 		case 0:
 		case 1:
 			if yoffset != startY {
-				yoffset += spaceBlocky - spaceY
+				yoffset -= spaceBlocky + spaceY
 			} else {
-				yoffset += spaceBlocky
+				yoffset -= spaceBlocky
 			}
 		case 2:
 			if yoffset != startY {
-				yoffset += spaceSlidey - spaceY
+				yoffset -= spaceSlidey + spaceY
 			} else {
-				yoffset += spaceSlidey
+				yoffset -= spaceSlidey
 			}
 		default:
 			uiutil.MessageBoxError("invalid sequences")
@@ -550,7 +550,7 @@ func export(
 			}
 			xoffset += spaceBlockx - spaceX
 		}
-		yoffset += spaceY
+		yoffset -= spaceY
 		if baseCount > columnCount {
 			columnCount = baseCount
 		}
