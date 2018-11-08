@@ -191,8 +191,8 @@ GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
 			return
 		}
 		export(
-			int((startxFloat+50)*platform.UM),
-			int((50-startyFloat)*platform.UM),
+			int(startxFloat*platform.UM+50*platform.MM),
+			int(50*platform.MM-startyFloat*platform.UM),
 			int(spacexFloat*platform.UM),
 			int(spaceyFloat*platform.UM),
 			int(spaceBlockxFloat*platform.UM),
