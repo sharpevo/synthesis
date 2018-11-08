@@ -168,7 +168,7 @@ GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
 	})
 	exportButton := widgets.NewQPushButton2("EXPORT", nil)
 	exportButton.ConnectClicked(func(bool) {
-		_,
+		resolutionFloat,
 			startxFloat,
 			startyFloat,
 			spacexFloat,
@@ -191,6 +191,7 @@ GTCAGCATAC,AAGCTTGTTC,GTCAGCATAC
 			return
 		}
 		export(
+			int(resolutionFloat*platform.UM),
 			int(startxFloat*platform.UM+50*platform.MM),
 			int(50*platform.MM-startyFloat*platform.UM),
 			int(spacexFloat*platform.UM),
@@ -488,6 +489,7 @@ func ToBase(base string) *platform.Base {
 }
 
 func export(
+	resolution int,
 	startX int,
 	startY int,
 	spaceX int,
