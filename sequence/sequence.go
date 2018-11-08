@@ -584,13 +584,20 @@ func export(
 		fmt.Println(err)
 	}
 	h.UpdatePositionStar(dot.PositionX, dot.PositionX)
+	// loop horizontally, from left to right
+	// 1. offset, upward
+	// 2. next, downward
+	imageIndex := 0
+	img := image.NewRGBA(image.Rect(0, 0, 100*platform.MM/resolution, 100*platform.MM/resolution))
+	//img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	fmt.Println("IMAGE", 100*platform.MM/resolution*platform.UM)
 	for h.Rows[3].Nozzles[0].X < 50*printheads.MM {
 
 		// loop vertically, from printhead bottom to printhead top
 		// downward
 		fmt.Println(">>>downward")
 		for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y > -50*printheads.MM; dposy -= h.RowOffset {
-			genData(h, pf, py)
+			genData(h, pf, py, &imageIndex, img, resolution)
 			h.UpdatePositionStar(dot.PositionX, dposy)
 		}
 
@@ -600,7 +607,7 @@ func export(
 		// upward
 		fmt.Println(">>>upword")
 		for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y < 50*printheads.MM; dposy += h.RowOffset {
-			genData(h, pf, py)
+			genData(h, pf, py, &imageIndex, img, resolution)
 			h.UpdatePositionStar(dposx, dposy)
 		}
 
@@ -612,10 +619,10 @@ func export(
 	}
 }
 
-func genData(h *printheads.PrintHead, pf *platform.Platform, py int) []int {
+func genData(h *printheads.PrintHead, pf *platform.Platform, py int, imageIndex *int, img *image.RGBA, resolution int) []int {
 	data := make([]int, 1280)
 
-	//printable := false
+	printable := false
 	// traverse nozzles
 	for _, row := range h.Rows {
 		for _, nozzle := range row.Nozzles {
@@ -630,22 +637,22 @@ func genData(h *printheads.PrintHead, pf *platform.Platform, py int) []int {
 						(dot.Base.Name == "G" && row.Index == 2) ||
 						(dot.Base.Name == "T" && row.Index == 3) {
 						dot.Printed = true
-						//img.Set(dot.PositionX, dot.PositionY, dot.Base.Color)
-						fmt.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty)
+						img.Set((dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution, dot.Base.Color)
+						fmt.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty, "..", (dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution)
 						data[nozzle.Index] = int(dot.Base.Color.A)
-						//printable = true
+						printable = true
 					}
 				}
 			}
 
 		}
 	}
-	//if printable {
-	//fileName := fmt.Sprintf("output/%02d.png", *imageIndex)
-	//outputFile, _ := os.Create(fileName)
-	//png.Encode(outputFile, img)
-	//outputFile.Close()
-	//*imageIndex = *imageIndex + 1
-	//}
+	if printable {
+		fileName := fmt.Sprintf("output/%02d.png", *imageIndex)
+		outputFile, _ := os.Create(fileName)
+		png.Encode(outputFile, img)
+		outputFile.Close()
+		*imageIndex = *imageIndex + 1
+	}
 	return data
 }
