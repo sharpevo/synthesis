@@ -21,7 +21,7 @@ func (i *InstructionCANSensorPressure) Execute(args ...string) (resp interface{}
 	if err != nil {
 		return resp, err
 	}
-	variable, err := i.ParseFloat64Variable(args[1])
+	variable, err := i.ParseIntVariable(args[1])
 	if err != nil {
 		return resp, err
 	}
