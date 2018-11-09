@@ -353,6 +353,30 @@ func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 	return resp, nil
 }
 
+func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
+	deviceBytes, err := uint8Bytes(device)
+	if err != nil {
+		return resp, err
+	}
+	req := SensorPressureUnit.Request()
+	message := req.Bytes()
+	message = append(message, deviceBytes...)
+	message = append(message, []byte{0x00, 0x00, 0x00, 0x00, 0x00}...)
+	output, err := d.Send(message)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	if output[2] == 0xff {
+		return resp, fmt.Errorf("invalid pressure device '%v'", device)
+	}
+	voltageDec := binary.BigEndian.Uint16(output[2:4])
+	voltage := float64(voltageDec) / 4096 * 3.3 * 3 / 2
+	pressure := (voltage - 0.5) / 4 * 12.5
+	resp = pressure
+	return resp, nil
+}
+
 func (d *Dao) WriteSystemRom(
 	address int,
 	value int,
