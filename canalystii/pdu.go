@@ -12,6 +12,7 @@ var MotorMoveRelativeUnit,
 	SwitcherControlAdvancedUnit,
 	SensorHumitureUnit,
 	SensorOxygenConcUnit,
+	SensorPressureUnit,
 	SystemRomReadUnit,
 	SystemRomWriteUnit dao.Unit
 
@@ -86,6 +87,14 @@ func init() {
 	SensorOxygenConcUnit.SetRequest(SensorOxygenConcRequest)
 	SensorOxygenConcUnit.SetRecResp(responseNil())
 	SensorOxygenConcUnit.SetComResp(responseNil())
+	// }}}
+
+	// SensorPressure{{{
+	SensorPressureRequest := dao.Request{}
+	SensorPressureRequest.Function = 0x0E
+	SensorPressureUnit.SetRequest(SensorPressureRequest)
+	SensorPressureUnit.SetRecResp(responseNil())
+	SensorPressureUnit.SetComResp(responseNil())
 	// }}}
 
 	// SystemRomReadUnit{{{
