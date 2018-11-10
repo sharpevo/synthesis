@@ -528,6 +528,7 @@ func export(
 	spaceBlocky int,
 	spaceSlidey int,
 	sequences string,
+	progressbar *widgets.QProgressBar,
 ) {
 	//filePath, err := uiutil.FilePath()
 	//if err != nil {
@@ -594,9 +595,10 @@ func export(
 	for y, row := range dots {
 		for x, dot := range row {
 			pf.Dots[y][x] = dot
+			//pf.Dots[x][y] = dot
 		}
 	}
-	fmt.Println(pf.Dots[0])
+	fmt.Println("PLATFORM", columnCount+1, rowCount+1)
 
 	h, _ := printheads.NewPrintHeadLineD(
 		4,
@@ -609,11 +611,13 @@ func export(
 		0,
 	)
 
-	_, py, dot, err := pf.NextDot()
+	sum, px, py, dot, err := pf.NextDotVertical()
 	if err != nil {
 		fmt.Println(err)
 	}
-	h.UpdatePositionStar(dot.PositionX, dot.PositionX)
+	//dotIndexX := px
+	//dotIndexY := py
+	h.UpdatePositionStar(dot.PositionX, dot.PositionY)
 	// loop horizontally, from left to right
 	// 1. offset, upward
 	// 2. next, downward
@@ -621,35 +625,164 @@ func export(
 	img := image.NewRGBA(image.Rect(0, 0, 100*platform.MM/resolution, 100*platform.MM/resolution))
 	//img := image.NewRGBA(image.Rect(0, 0, 100, 100))
 	fmt.Println("IMAGE", 100*platform.MM/resolution*platform.UM)
-	for h.Rows[3].Nozzles[0].X < 50*printheads.MM {
 
-		// loop vertically, from printhead bottom to printhead top
-		// downward
-		fmt.Println(">>>downward")
-		for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y > -50*printheads.MM; dposy -= h.RowOffset {
-			genData(h, pf, py, &imageIndex, img, resolution)
-			h.UpdatePositionStar(dot.PositionX, dposy)
+	step := int(30 * platform.UM)
+	tolerance := step
+	var direction string
+
+	//for h.Rows[3].Nozzles[0].X < 50*printheads.MM {
+
+	//// loop vertically, from printhead bottom to printhead top
+	//// downward
+	//direction = "downward"
+	//fmt.Println(">>>downward")
+	////for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= -50*printheads.MM; dposy -= h.RowOffset {
+	//for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= -50*printheads.MM; dposy -= step {
+	////for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= -50*printheads.MM; dposy = pf.NextDotPositionY(-1, dot.PositionX, dposy) {
+	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+	//h.UpdatePositionStar(dot.PositionX, dposy)
+	////if dposy < -50*printheads.MM {
+	////break
+	////}
+	////h.UpdatePositionStar(dot.PositionX, dposy)
+	////genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+	//}
+
+	//fmt.Println("===========1", dot.PositionX, h.Rows[3].Nozzles[0].Y)
+	////dposx := dot.PositionX + h.RowOffset
+	//dposx := dot.PositionX + step
+	////dposx := dot.PositionX + pf.NextDotPositionX()
+	////dposx := pf.NextDotPositionX()
+	////dposx := dot.PositionX + h.RowOffset
+	//h.UpdatePositionStar(dposx, h.Rows[0].Nozzles[0].Y)
+
+	//// upward
+	//direction = "upward"
+	//fmt.Println(">>>upward")
+	////for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= 50*printheads.MM; dposy += h.RowOffset {
+	//for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= 50*printheads.MM; dposy += step {
+	////for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= 50*printheads.MM; dposy = pf.NextDotPositionY(1, dposx, dposy) {
+	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+	//h.UpdatePositionStar(dposx, dposy)
+	////if dposy > 50*printheads.MM {
+	////dposy = 50*k
+	////}
+	////h.UpdatePositionStar(dposx, dposy)
+	////genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+	//}
+	//fmt.Println("===========2", dposx, h.Rows[0].Nozzles[0].Y)
+
+	//_, py, dot, err = pf.NextDotVertical()
+	//if err != nil {
+	//fmt.Println("ERROR:", err)
+	//break
+	//}
+	//fmt.Println("NEXT DOT:", dot.Base.Name, dot.PositionX, dot.PositionY)
+	//h.UpdatePositionStar(dot.PositionX, dot.PositionY)
+	//}
+
+	// worked seamless{{{
+	//donec := make(chan struct{})
+	go func() {
+		count := 0
+		fmt.Println("rect", pf.Top(), pf.Right(), pf.Bottom(), pf.Left())
+		for h.Rows[3].Nozzles[0].X <= pf.Right() {
+			// loop vertically, from printhead bottom to printhead top
+			// downward
+			direction = "downward"
+			fmt.Println(">>>downward", dot.PositionY, pf.Bottom())
+			for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= pf.Bottom(); dposy -= step {
+				genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+				h.UpdatePositionStar(dot.PositionX, dposy)
+			}
+
+			fmt.Println(
+				"===========1",
+				dot.PositionX,
+				h.Rows[3].Nozzles[0].Y,
+				h.Rows[0].Nozzles[0].Y,
+			)
+			dposx := dot.PositionX + h.RowOffset
+			//dposx := dot.PositionX + resolution
+			h.UpdatePositionStar(dposx, h.Rows[0].Nozzles[0].Y)
+
+			direction = "upward"
+			fmt.Println(">>>upward", h.Rows[0].Nozzles[0].Y, pf.Top())
+			for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= pf.Top(); dposy += step {
+				genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+				h.UpdatePositionStar(dposx, dposy)
+			}
+			fmt.Println("===========2", dposx, h.Rows[0].Nozzles[0].Y)
+
+			sum, px, py, dot, err = pf.NextDotVertical()
+			if err != nil {
+				fmt.Println("DONE", err, count, sum)
+				break
+			}
+			fmt.Println("################## NEXT DOT:", count, sum, "||", px, py, dot.Base.Name, dot.PositionX, dot.PositionY)
+			h.UpdatePositionStar(dot.PositionX, dot.PositionY)
 		}
+		//donec <- struct{}{}
+	}()
+	//<-donec
+	//}}}
 
-		dposx := dot.PositionX + h.RowOffset
-		h.UpdatePositionStar(dposx, h.Rows[0].Nozzles[0].Y)
+	//fmt.Println("rect", pf.Top(), pf.Right(), pf.Bottom(), pf.Left())
+	//for h.Rows[3].Nozzles[0].X <= pf.Right() {
+	//// loop vertically, from printhead bottom to printhead top
+	//// downward
+	//direction = "downward"
+	//fmt.Println(">>>downward", dot.PositionY, pf.Bottom())
+	//for h.Rows[3].Nozzles[0].Y >= pf.Bottom() {
+	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+	//x, y, d := pf.NextDotInColumn(dot.PositionX)
+	//if d == nil {
+	//break
+	//}
+	//dotIndexX = x
+	//dotIndexY = y
+	//h.UpdatePositionStar(dot.PositionX, d.PositionY)
+	//}
 
-		// upward
-		fmt.Println(">>>upword")
-		for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y < 50*printheads.MM; dposy += h.RowOffset {
-			genData(h, pf, py, &imageIndex, img, resolution)
-			h.UpdatePositionStar(dposx, dposy)
-		}
+	//fmt.Println(
+	//"===========1",
+	//dot.PositionX,
+	//h.Rows[3].Nozzles[0].Y,
+	//h.Rows[0].Nozzles[0].Y,
+	//)
+	//dposx := dot.PositionX + resolution
+	//h.UpdatePositionStar(dposx, h.Rows[0].Nozzles[0].Y)
 
-		_, py, dot, err = pf.NextDot()
-		if err != nil {
-			break
-		}
-		h.UpdatePositionStar(dot.PositionX, dot.PositionY)
-	}
+	//// upward one by one
+	//direction = "upward"
+	//fmt.Println(">>>upward", h.Rows[0].Nozzles[0].Y, pf.Top())
+	//for h.Rows[0].Nozzles[0].Y <= pf.Top() {
+	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+	//x, y, d := pf.PreviousDot(dotIndexX, dotIndexY)
+	//if d == nil {
+	//break
+	//}
+	//dotIndexX = x
+	//dotIndexY = y
+	//h.UpdatePositionStar(dot.PositionX, d.PositionY)
+	//}
+
+	//fmt.Println("===========2", dposx, h.Rows[0].Nozzles[0].Y)
+
+	//px, py, dot, err = pf.NextDotVertical()
+	//if err != nil {
+	//fmt.Println("DONE", err)
+	//break
+	//}
+	//dotIndexX = px
+	//dotIndexY = py
+	//fmt.Println("################## NEXT DOT:", px, py, dot.Base.Name, dot.PositionX, dot.PositionY)
+	//h.UpdatePositionStar(dot.PositionX, dot.PositionY)
+	//}
+
 }
 
-func genData(h *printheads.PrintHead, pf *platform.Platform, py int, imageIndex *int, img *image.RGBA, resolution int) []int {
+func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printheads.PrintHead, pf *platform.Platform, py int, tolerance int, imageIndex *int, img *image.RGBA, resolution int, direction string) []int {
 	data := make([]int, 1280)
 
 	printable := false
@@ -658,31 +791,36 @@ func genData(h *printheads.PrintHead, pf *platform.Platform, py int, imageIndex 
 		for _, nozzle := range row.Nozzles {
 
 			// check available nozzles
-			for _, dot := range pf.DotsInRow(py) {
+			//for _, dot := range pf.DotsInRow(py) {
+			for _, dot := range pf.AvailableDots() {
 				dotx, doty := dot.PositionX, dot.PositionY
-				if math.Abs(float64(nozzle.X-dotx)) < float64(h.RowOffset) &&
-					math.Abs(float64(nozzle.Y-doty)) < float64(h.RowOffset) {
+				//if math.Abs(float64(nozzle.X-dotx)) < float64(h.RowOffset) &&
+				//math.Abs(float64(nozzle.Y-doty)) < float64(h.RowOffset) {
+				if math.Abs(float64(nozzle.X-dotx)) < float64(tolerance) &&
+					math.Abs(float64(nozzle.Y-doty)) < float64(tolerance) {
 					if (dot.Base.Name == "A" && row.Index == 0) ||
 						(dot.Base.Name == "C" && row.Index == 1) ||
 						(dot.Base.Name == "G" && row.Index == 2) ||
 						(dot.Base.Name == "T" && row.Index == 3) {
+						*count = *count + 1
+						progressbar.SetValue(*count * progressbar.Maximum() / sum)
 						dot.Printed = true
 						img.Set((dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution, dot.Base.Color)
-						fmt.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty, "..", (dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution)
+						fmt.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty) //, "..", (dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution)
 						data[nozzle.Index] = int(dot.Base.Color.A)
 						printable = true
 					}
 				}
 			}
-
 		}
 	}
 	if printable {
-		fileName := fmt.Sprintf("output/%02d.png", *imageIndex)
+		fileName := fmt.Sprintf("output/%03d.%s.png", *imageIndex, direction)
 		outputFile, _ := os.Create(fileName)
 		png.Encode(outputFile, img)
 		outputFile.Close()
 		*imageIndex = *imageIndex + 1
+		fmt.Println("----------------------------------------")
 	}
 	return data
 }
