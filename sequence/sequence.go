@@ -203,6 +203,10 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	printheadPathLabel := widgets.NewQLabel2("Printhead path:", nil, 0)
 	printheadPathInput := widgets.NewQLineEdit(nil)
 	printheadPathInput.SetText("/Ricoh-G5/Printer#1")
+	printheadxLabel := widgets.NewQLabel2("Printhead x:", nil, 0)
+	printheadxInput := widgets.NewQLineEdit(nil)
+	printheadyLabel := widgets.NewQLabel2("Printhead y:", nil, 0)
+	printheadyInput := widgets.NewQLineEdit(nil)
 
 	exportButton := widgets.NewQPushButton2("BUILD", nil)
 
@@ -232,6 +236,8 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err := parseFloatArg(
 			resolutionInput.Text(),
 			startxInput.Text(),
@@ -241,6 +247,8 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			spaceBlockxInput.Text(),
 			spaceBlockyInput.Text(),
 			spaceSlideyInput.Text(),
+			printheadxInput.Text(),
+			printheadyInput.Text(),
 		)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
@@ -260,6 +268,8 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			motorSpeedInput.Text(),
 			motorAccelInput.Text(),
 			printheadPathInput.Text(),
+			int(printheadxFloat*platform.UM),
+			int(printheadyFloat*platform.UM),
 			progressbar,
 		)
 	})
@@ -293,8 +303,12 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	layout.AddWidget(motorAccelInput, 12, 1, 0)
 	layout.AddWidget(printheadPathLabel, 13, 0, 0)
 	layout.AddWidget(printheadPathInput, 13, 1, 0)
-	layout.AddWidget3(progressbar, 14, 0, 1, 2, 0)
-	layout.AddWidget3(exportButton, 15, 0, 1, 2, 0)
+	layout.AddWidget(printheadxLabel, 14, 0, 0)
+	layout.AddWidget(printheadxInput, 14, 1, 0)
+	layout.AddWidget(printheadyLabel, 15, 0, 0)
+	layout.AddWidget(printheadyInput, 15, 1, 0)
+	layout.AddWidget3(progressbar, 16, 0, 1, 2, 0)
+	layout.AddWidget3(exportButton, 17, 0, 1, 2, 0)
 
 	group.SetLayout(layout)
 	return group
@@ -309,6 +323,8 @@ func parseFloatArg(
 	spaceBlockx string,
 	spaceBlocky string,
 	spaceSlidey string,
+	printheadx string,
+	printheady string,
 ) (
 	resolutionFloat float64,
 	startxFloat float64,
@@ -318,6 +334,8 @@ func parseFloatArg(
 	spaceBlockxFloat float64,
 	spaceBlockyFloat float64,
 	spaceSlideyFloat float64,
+	printheadxFloat float64,
+	printheadyFloat float64,
 	err error,
 ) {
 	resolutionFloat, err = strconv.ParseFloat(resolution, 32)
@@ -330,6 +348,8 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	startxFloat, err = strconv.ParseFloat(startx, 32)
@@ -342,6 +362,8 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	startyFloat, err = strconv.ParseFloat(starty, 32)
@@ -354,6 +376,8 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	spacexFloat, err = strconv.ParseFloat(spacex, 32)
@@ -366,6 +390,8 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	spaceyFloat, err = strconv.ParseFloat(spacey, 32)
@@ -378,6 +404,8 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	spaceBlockxFloat, err = strconv.ParseFloat(spaceBlockx, 32)
@@ -390,6 +418,8 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	spaceBlockyFloat, err = strconv.ParseFloat(spaceBlocky, 32)
@@ -402,6 +432,8 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	spaceSlideyFloat, err = strconv.ParseFloat(spaceSlidey, 32)
@@ -414,6 +446,36 @@ func parseFloatArg(
 			spaceBlockxFloat,
 			spaceBlockyFloat,
 			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
+			err
+	}
+	printheadxFloat, err = strconv.ParseFloat(printheadx, 32)
+	if err != nil {
+		return resolutionFloat,
+			startxFloat,
+			startyFloat,
+			spacexFloat,
+			spaceyFloat,
+			spaceBlockxFloat,
+			spaceBlockyFloat,
+			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
+			err
+	}
+	printheadyFloat, err = strconv.ParseFloat(printheady, 32)
+	if err != nil {
+		return resolutionFloat,
+			startxFloat,
+			startyFloat,
+			spacexFloat,
+			spaceyFloat,
+			spaceBlockxFloat,
+			spaceBlockyFloat,
+			spaceSlideyFloat,
+			printheadxFloat,
+			printheadyFloat,
 			err
 	}
 	return resolutionFloat,
@@ -424,6 +486,8 @@ func parseFloatArg(
 		spaceBlockxFloat,
 		spaceBlockyFloat,
 		spaceSlideyFloat,
+		printheadxFloat,
+		printheadyFloat,
 		nil
 }
 
@@ -572,6 +636,8 @@ func export(
 	motorSpeed string,
 	motorAccel string,
 	printheadPath string,
+	printheadX int,
+	printheadY int,
 	progressbar *widgets.QProgressBar,
 ) {
 	filePath, err := uiutil.FilePath()
@@ -653,8 +719,8 @@ func export(
 		84.65*platform.UM,
 		550.3*platform.UM,
 		11.811*platform.MM,
-		0,
-		0,
+		printheadX,
+		printheadY,
 	)
 
 	sum, px, py, dot, err := pf.NextDotVertical()
