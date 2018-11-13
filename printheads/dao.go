@@ -192,3 +192,15 @@ func (h *PrintHead) UpdatePosition(dposx int, dposy int) {
 		}
 	}
 }
+
+func (h *PrintHead) UpdatePositionLeftBottom(aposx int, aposy int) {
+	dposx := aposx + h.RowOffset
+	dposy := aposy + h.RowSpaceA + h.RowSpaceB
+	h.UpdatePosition(dposx, dposy)
+}
+
+func (h *PrintHead) UpdatePositionStar(x int, y int) {
+	dposx := x
+	dposy := y + h.RowSpaceA + h.RowSpaceB
+	h.UpdatePosition(dposx, dposy)
+}
