@@ -2,6 +2,7 @@ package sequence
 
 import (
 	"bytes"
+	"encoding/gob"
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
@@ -17,6 +18,8 @@ import (
 	"strconv"
 	"strings"
 )
+
+const DEBUG = false
 
 var imageItem *widgets.QGraphicsPixmapItem
 
@@ -54,6 +57,10 @@ func NewSequenceDetail() *widgets.QGroupBox {
 
 	resolutionLabel := widgets.NewQLabel2("Resolution:", nil, 0)
 	resolutionInput := widgets.NewQLineEdit(nil)
+	if !DEBUG {
+		resolutionLabel.SetVisible(false)
+		resolutionInput.SetVisible(false)
+	}
 	startxLabel := widgets.NewQLabel2("Starts at x:", nil, 0)
 	startxInput := widgets.NewQLineEdit(nil)
 	startyLabel := widgets.NewQLabel2("Starts at y:", nil, 0)
@@ -70,6 +77,10 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	spaceBlockyInput := widgets.NewQLineEdit(nil)
 	spaceSlideyLabel := widgets.NewQLabel2("Slide space y:", nil, 0)
 	spaceSlideyInput := widgets.NewQLineEdit(nil)
+	if !DEBUG {
+		spaceSlideyLabel.SetVisible(false)
+		spaceSlideyInput.SetVisible(false)
+	}
 
 	sequenceInput := widgets.NewQTextEdit(nil)
 
@@ -81,7 +92,17 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	spaceBlockxInput.SetText("3000")
 	spaceBlockyInput.SetText("3000")
 	spaceSlideyInput.SetText("5000")
-	sequenceInput.SetText(`CTGGTTCCTCATATAAGCTT, CGTTAAAACATCGACTGACT, GTTGTGAGAGTCAGTTATAG, TTGTCGTAACTTTCTGCCCT, CATAGGTTTAATATTGGATC, GTGAATACTTCGGCGGGTTG, AGGGTCTGAACGCTCATAGT, GCGTTATCGCTAGTGCGCAA
+	sequenceInput.SetText(`CTGGTTCCTCATATAAGCTT, CGTTAAAACATCGACTGACT
+CAACATTTAGACAATAAACG, CACCAGGTGAACATTTTTGA
+TGAGCGTCCGACGCGGTCCT, ATATAGAAAGTTATTTGATG
+GAAATATCACTTCGTGAACA, GTAGCTCATGAGCTGCAGTG
+
+GTAACTCTAACGTATAGGCA, TATGATCTTCTAACCATATG
+TTGGGAAGACAGCACCTGAC, TGCCTACAGCGCTACGCGCA
+CCCAGTACCCTGGGCCACGA, AAAACCGGTAAGGTGCGAAG
+CCCGGCAATGGATACCGTAG, TGCTCGCCAGGATCACCTAT`)
+	if DEBUG {
+		sequenceInput.SetText(`CTGGTTCCTCATATAAGCTT, CGTTAAAACATCGACTGACT, GTTGTGAGAGTCAGTTATAG, TTGTCGTAACTTTCTGCCCT, CATAGGTTTAATATTGGATC, GTGAATACTTCGGCGGGTTG, AGGGTCTGAACGCTCATAGT, GCGTTATCGCTAGTGCGCAA
 CAACATTTAGACAATAAACG, CACCAGGTGAACATTTTTGA, GTTTCAAAATACGCCAAAGT, CCGGTATTTCTACCGAATGT, GATCCACGTCAGTGTGCTAG, GTTCGACCATTTCCAGCAGT, GGGATCGTTCGCGGTCTGTT, AAACCATCGCACCCCCAAGC
 TGAGCGTCCGACGCGGTCCT, ATATAGAAAGTTATTTGATG, CGATTGAGGAGCGCAAAGGA, TATAGTTACTGAGGATGTGC, GAAGAATACGAAACACGCTC, GTGAATTGTACGCCAACGGG, ACTCGCAGTCAGAGCATTCA, ACAGAGGAGCCTCGAATCCT
 GAAATATCACTTCGTGAACA, GTAGCTCATGAGCTGCAGTG, GGCTCTATATTTCAACGAAC, TAAAGGTGCAAGCGGATACG, ACGAGAGACGCCAATGACTC, TGCTGTAGCGGTAGTGATCA, GTTGGGTTGGTCTGCACAGC, AATCCTGAGGAATGTGTTTT
@@ -103,6 +124,7 @@ CGCAATTTTCGTATAAATAT, CGAGCAGAGCCCCGAACATG, GCACCGAAATCCCCATAAAG, ACAGATTTCACAAA
 GCACGTGAGGTTAAGTTATG, ACCATTTCCCTCGTGTTAGT, TAGCATCATATGGCCGAAGC, TTGCTTAGTAGACGCATATC, CCCGCTTGTATCAAGAAAGT, GCCGGGGGGTATCACGGGGA, CACGTTACACAGCTGCTCTC, TTATCACCAAATCATCTCCT
 GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGGTCGATG, ACTTCGGCCTGAGGCTCGAC, CACGACAAAGCCATCTTATG, TCTGCCTGCACATGCTTGGC, ATGACCTATGTTCAGCTCTA
 `)
+	}
 	generateButton := widgets.NewQPushButton2("PREVIEW", nil)
 	generateButton.ConnectClicked(func(bool) {
 		resolutionFloat, err := strconv.ParseFloat(resolutionInput.Text(), 32)
@@ -169,12 +191,20 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 		)
 	})
 
-	motorLabel := widgets.NewQLabel2("Motor:", nil, 0)
-	motorInput := widgets.NewQLineEdit(nil)
-	printheadLabel := widgets.NewQLabel2("Printhead:", nil, 0)
-	printheadInput := widgets.NewQLineEdit(nil)
+	motorPathLabel := widgets.NewQLabel2("Motor path:", nil, 0)
+	motorPathInput := widgets.NewQLineEdit(nil)
+	motorPathInput.SetText("/AOZTECH/Motor")
+	motorSpeedLabel := widgets.NewQLabel2("Motor speed:", nil, 0)
+	motorSpeedInput := widgets.NewQLineEdit(nil)
+	motorSpeedInput.SetText("10")
+	motorAccelLabel := widgets.NewQLabel2("Motor acceleration:", nil, 0)
+	motorAccelInput := widgets.NewQLineEdit(nil)
+	motorAccelInput.SetText("100")
+	printheadPathLabel := widgets.NewQLabel2("Printhead path:", nil, 0)
+	printheadPathInput := widgets.NewQLineEdit(nil)
+	printheadPathInput.SetText("/Ricoh-G5/Printer#1")
 
-	exportButton := widgets.NewQPushButton2("EXPORT", nil)
+	exportButton := widgets.NewQPushButton2("BUILD", nil)
 
 	progressbar := widgets.NewQProgressBar(nil)
 	progressbar.SetWindowTitle("exporting...")
@@ -226,6 +256,10 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			int(spaceBlockyFloat*platform.UM),
 			int(spaceSlideyFloat*platform.UM),
 			sequenceInput.ToPlainText(),
+			motorPathInput.Text(),
+			motorSpeedInput.Text(),
+			motorAccelInput.Text(),
+			printheadPathInput.Text(),
 			progressbar,
 		)
 	})
@@ -251,12 +285,16 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 
 	layout.AddWidget3(sequenceInput, 8, 0, 1, 2, 0)
 	layout.AddWidget3(generateButton, 9, 0, 1, 2, 0)
-	layout.AddWidget(motorLabel, 10, 0, 0)
-	layout.AddWidget(motorInput, 10, 1, 0)
-	layout.AddWidget(printheadLabel, 11, 0, 0)
-	layout.AddWidget(printheadInput, 11, 1, 0)
-	layout.AddWidget3(progressbar, 12, 0, 1, 2, 0)
-	layout.AddWidget3(exportButton, 13, 0, 1, 2, 0)
+	layout.AddWidget(motorPathLabel, 10, 0, 0)
+	layout.AddWidget(motorPathInput, 10, 1, 0)
+	layout.AddWidget(motorSpeedLabel, 11, 0, 0)
+	layout.AddWidget(motorSpeedInput, 11, 1, 0)
+	layout.AddWidget(motorAccelLabel, 12, 0, 0)
+	layout.AddWidget(motorAccelInput, 12, 1, 0)
+	layout.AddWidget(printheadPathLabel, 13, 0, 0)
+	layout.AddWidget(printheadPathInput, 13, 1, 0)
+	layout.AddWidget3(progressbar, 14, 0, 1, 2, 0)
+	layout.AddWidget3(exportButton, 15, 0, 1, 2, 0)
 
 	group.SetLayout(layout)
 	return group
@@ -528,13 +566,19 @@ func export(
 	spaceBlocky int,
 	spaceSlidey int,
 	sequences string,
+	motorPath string,
+	motorSpeed string,
+	motorAccel string,
+	printheadPath string,
 	progressbar *widgets.QProgressBar,
 ) {
-	//filePath, err := uiutil.FilePath()
-	//if err != nil {
-	//uiutil.MessageBoxError(err.Error())
-	//return
-	//}
+	filePath, err := uiutil.FilePath()
+	if err != nil {
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
+
+	bin := NewBin(motorPath, motorSpeed, motorAccel, printheadPath)
 
 	dots := [][]*platform.Dot{}
 
@@ -630,69 +674,18 @@ func export(
 	tolerance := step
 	var direction string
 
-	//for h.Rows[3].Nozzles[0].X < 50*printheads.MM {
-
-	//// loop vertically, from printhead bottom to printhead top
-	//// downward
-	//direction = "downward"
-	//fmt.Println(">>>downward")
-	////for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= -50*printheads.MM; dposy -= h.RowOffset {
-	//for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= -50*printheads.MM; dposy -= step {
-	////for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= -50*printheads.MM; dposy = pf.NextDotPositionY(-1, dot.PositionX, dposy) {
-	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
-	//h.UpdatePositionStar(dot.PositionX, dposy)
-	////if dposy < -50*printheads.MM {
-	////break
-	////}
-	////h.UpdatePositionStar(dot.PositionX, dposy)
-	////genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
-	//}
-
-	//fmt.Println("===========1", dot.PositionX, h.Rows[3].Nozzles[0].Y)
-	////dposx := dot.PositionX + h.RowOffset
-	//dposx := dot.PositionX + step
-	////dposx := dot.PositionX + pf.NextDotPositionX()
-	////dposx := pf.NextDotPositionX()
-	////dposx := dot.PositionX + h.RowOffset
-	//h.UpdatePositionStar(dposx, h.Rows[0].Nozzles[0].Y)
-
-	//// upward
-	//direction = "upward"
-	//fmt.Println(">>>upward")
-	////for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= 50*printheads.MM; dposy += h.RowOffset {
-	//for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= 50*printheads.MM; dposy += step {
-	////for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= 50*printheads.MM; dposy = pf.NextDotPositionY(1, dposx, dposy) {
-	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
-	//h.UpdatePositionStar(dposx, dposy)
-	////if dposy > 50*printheads.MM {
-	////dposy = 50*k
-	////}
-	////h.UpdatePositionStar(dposx, dposy)
-	////genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
-	//}
-	//fmt.Println("===========2", dposx, h.Rows[0].Nozzles[0].Y)
-
-	//_, py, dot, err = pf.NextDotVertical()
-	//if err != nil {
-	//fmt.Println("ERROR:", err)
-	//break
-	//}
-	//fmt.Println("NEXT DOT:", dot.Base.Name, dot.PositionX, dot.PositionY)
-	//h.UpdatePositionStar(dot.PositionX, dot.PositionY)
-	//}
-
-	// worked seamless{{{
-	//donec := make(chan struct{})
 	go func() {
 		count := 0
 		fmt.Println("rect", pf.Top(), pf.Right(), pf.Bottom(), pf.Left())
 		for h.Rows[3].Nozzles[0].X <= pf.Right() {
-			// loop vertically, from printhead bottom to printhead top
-			// downward
 			direction = "downward"
 			fmt.Println(">>>downward", dot.PositionY, pf.Bottom())
 			for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= pf.Bottom(); dposy -= step {
-				genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+				data := genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+				if data != "" {
+					bin.AddMotion(dot.PositionX, dposy)
+					bin.AddPrint(data)
+				}
 				h.UpdatePositionStar(dot.PositionX, dposy)
 			}
 
@@ -709,7 +702,11 @@ func export(
 			direction = "upward"
 			fmt.Println(">>>upward", h.Rows[0].Nozzles[0].Y, pf.Top())
 			for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= pf.Top(); dposy += step {
-				genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+				data := genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+				if data != "" {
+					bin.AddMotion(dposx, dposy)
+					bin.AddPrint(data)
+				}
 				h.UpdatePositionStar(dposx, dposy)
 			}
 			fmt.Println("===========2", dposx, h.Rows[0].Nozzles[0].Y)
@@ -722,74 +719,29 @@ func export(
 			fmt.Println("################## NEXT DOT:", count, sum, "||", px, py, dot.Base.Name, dot.PositionX, dot.PositionY)
 			h.UpdatePositionStar(dot.PositionX, dot.PositionY)
 		}
-		//donec <- struct{}{}
+
+		file, err := os.Create(filePath)
+		defer file.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(bin.Node)
+		//fmt.Printf("%#v\n", bin.Node)
+		//uiutil.MessageBoxInfo(fmt.Sprintf("Sequences have been built into %q", filePath))
 	}()
-	//<-donec
-	//}}}
-
-	//fmt.Println("rect", pf.Top(), pf.Right(), pf.Bottom(), pf.Left())
-	//for h.Rows[3].Nozzles[0].X <= pf.Right() {
-	//// loop vertically, from printhead bottom to printhead top
-	//// downward
-	//direction = "downward"
-	//fmt.Println(">>>downward", dot.PositionY, pf.Bottom())
-	//for h.Rows[3].Nozzles[0].Y >= pf.Bottom() {
-	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
-	//x, y, d := pf.NextDotInColumn(dot.PositionX)
-	//if d == nil {
-	//break
-	//}
-	//dotIndexX = x
-	//dotIndexY = y
-	//h.UpdatePositionStar(dot.PositionX, d.PositionY)
-	//}
-
-	//fmt.Println(
-	//"===========1",
-	//dot.PositionX,
-	//h.Rows[3].Nozzles[0].Y,
-	//h.Rows[0].Nozzles[0].Y,
-	//)
-	//dposx := dot.PositionX + resolution
-	//h.UpdatePositionStar(dposx, h.Rows[0].Nozzles[0].Y)
-
-	//// upward one by one
-	//direction = "upward"
-	//fmt.Println(">>>upward", h.Rows[0].Nozzles[0].Y, pf.Top())
-	//for h.Rows[0].Nozzles[0].Y <= pf.Top() {
-	//genData(h, pf, py, tolerance, &imageIndex, img, resolution, direction)
-	//x, y, d := pf.PreviousDot(dotIndexX, dotIndexY)
-	//if d == nil {
-	//break
-	//}
-	//dotIndexX = x
-	//dotIndexY = y
-	//h.UpdatePositionStar(dot.PositionX, d.PositionY)
-	//}
-
-	//fmt.Println("===========2", dposx, h.Rows[0].Nozzles[0].Y)
-
-	//px, py, dot, err = pf.NextDotVertical()
-	//if err != nil {
-	//fmt.Println("DONE", err)
-	//break
-	//}
-	//dotIndexX = px
-	//dotIndexY = py
-	//fmt.Println("################## NEXT DOT:", px, py, dot.Base.Name, dot.PositionX, dot.PositionY)
-	//h.UpdatePositionStar(dot.PositionX, dot.PositionY)
-	//}
 
 }
 
-func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printheads.PrintHead, pf *platform.Platform, py int, tolerance int, imageIndex *int, img *image.RGBA, resolution int, direction string) []int {
-	data := make([]int, 1280)
+func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printheads.PrintHead, pf *platform.Platform, py int, tolerance int, imageIndex *int, img *image.RGBA, resolution int, direction string) (output string) {
+	data := make([]string, 1280)
 
 	printable := false
 	// traverse nozzles
 	for _, row := range h.Rows {
 		for _, nozzle := range row.Nozzles {
 
+			data[nozzle.Index] = "0"
 			// check available nozzles
 			//for _, dot := range pf.DotsInRow(py) {
 			for _, dot := range pf.AvailableDots() {
@@ -805,9 +757,12 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 						*count = *count + 1
 						progressbar.SetValue(*count * progressbar.Maximum() / sum)
 						dot.Printed = true
-						img.Set((dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution, dot.Base.Color)
-						fmt.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty) //, "..", (dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution)
-						data[nozzle.Index] = int(dot.Base.Color.A)
+						if DEBUG {
+							img.Set((dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution, dot.Base.Color)
+							fmt.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty) //, "..", (dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution)
+						}
+						//data[nozzle.Index] = int(dot.Base.Color.A)
+						data[nozzle.Index] = "1"
 						printable = true
 					}
 				}
@@ -815,12 +770,23 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 		}
 	}
 	if printable {
-		fileName := fmt.Sprintf("output/%03d.%s.png", *imageIndex, direction)
-		outputFile, _ := os.Create(fileName)
-		png.Encode(outputFile, img)
-		outputFile.Close()
-		*imageIndex = *imageIndex + 1
+		if DEBUG {
+			fileName := fmt.Sprintf("output/%03d.%s.png", *imageIndex, direction)
+			outputFile, _ := os.Create(fileName)
+			png.Encode(outputFile, img)
+			outputFile.Close()
+			*imageIndex = *imageIndex + 1
+		}
 		fmt.Println("----------------------------------------")
+		outputSlice := make([]string, 160)
+		for i := 0; i < len(data); i += 8 {
+			value, _ := strconv.ParseInt(strings.Join(data[i:i+8], ""), 2, 64)
+			outputSlice = append(outputSlice, fmt.Sprintf("%02x", value))
+		}
+		output = strings.Join(outputSlice, "")
+		//fmt.Println(len(outputSlice), outputSlice)
+		//fmt.Println(len(output), output)
+		//fmt.Println(data)
 	}
-	return data
+	return output
 }
