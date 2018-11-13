@@ -29,11 +29,11 @@ func (i *InstructionCANSensorHumiture) Execute(args ...string) (resp interface{}
 	if err != nil {
 		return resp, err
 	}
-	resp, err = instance.ReadOxygenConc()
+	resp, err = instance.ReadHumiture()
 	if err != nil {
 		return resp, err
 	}
-	humiture, ok := resp.([]byte)
+	humiture, ok := resp.([]float64)
 	if !ok {
 		return resp, fmt.Errorf("invalid humiture response %#v", resp)
 	}
