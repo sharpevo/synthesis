@@ -371,7 +371,7 @@ func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
 		return resp, fmt.Errorf("invalid pressure device '%v'", device)
 	}
 	voltageDec := binary.BigEndian.Uint16(output[2:4])
-	resp = int(voltageDec)
+	resp = int64(voltageDec)
 	return resp, nil
 }
 
