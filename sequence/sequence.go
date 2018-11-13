@@ -10,7 +10,6 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"math"
 	"os"
 	"posam/dao/printheads"
 	"posam/gui/uiutil"
@@ -706,12 +705,8 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 				dotx, doty := dot.PositionX, dot.PositionY
 				//if math.Abs(float64(nozzle.X-dotx)) < float64(h.RowOffset) &&
 				//math.Abs(float64(nozzle.Y-doty)) < float64(h.RowOffset) {
-				if math.Abs(float64(nozzle.X-dotx)) < float64(tolerance) &&
-					math.Abs(float64(nozzle.Y-doty)) < float64(tolerance) {
-					if (dot.Base.Name == "A" && row.Index == 0) ||
-						(dot.Base.Name == "C" && row.Index == 1) ||
-						(dot.Base.Name == "G" && row.Index == 2) ||
-						(dot.Base.Name == "T" && row.Index == 3) {
+				if nozzle.IsAvailable(dotx, doty, tolerance) {
+					if dot.Base.Name == row.Reagent {
 						*count = *count + 1
 						progressbar.SetValue(*count * progressbar.Maximum() / sum)
 						dot.Printed = true
@@ -722,6 +717,8 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 						//data[nozzle.Index] = int(dot.Base.Color.A)
 						data[nozzle.Index] = "1"
 						printable = true
+					} else {
+						// should not happen
 					}
 				}
 			}
