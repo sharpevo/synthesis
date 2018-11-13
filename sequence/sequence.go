@@ -340,155 +340,45 @@ func parseFloatArg(
 ) {
 	resolutionFloat, err = strconv.ParseFloat(resolution, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	startxFloat, err = strconv.ParseFloat(startx, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	startyFloat, err = strconv.ParseFloat(starty, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	spacexFloat, err = strconv.ParseFloat(spacex, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	spaceyFloat, err = strconv.ParseFloat(spacey, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	spaceBlockxFloat, err = strconv.ParseFloat(spaceBlockx, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	spaceBlockyFloat, err = strconv.ParseFloat(spaceBlocky, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	spaceSlideyFloat, err = strconv.ParseFloat(spaceSlidey, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	printheadxFloat, err = strconv.ParseFloat(printheadx, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
 	printheadyFloat, err = strconv.ParseFloat(printheady, 32)
 	if err != nil {
-		return resolutionFloat,
-			startxFloat,
-			startyFloat,
-			spacexFloat,
-			spaceyFloat,
-			spaceBlockxFloat,
-			spaceBlockyFloat,
-			spaceSlideyFloat,
-			printheadxFloat,
-			printheadyFloat,
-			err
+		return
 	}
-	return resolutionFloat,
-		startxFloat,
-		startyFloat,
-		spacexFloat,
-		spaceyFloat,
-		spaceBlockxFloat,
-		spaceBlockyFloat,
-		spaceSlideyFloat,
-		printheadxFloat,
-		printheadyFloat,
-		nil
+	return
 }
 
 func parseArg(argString string, resolution int) (int, error) {
