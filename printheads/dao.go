@@ -2,6 +2,7 @@ package printheads
 
 import (
 	"fmt"
+	"math"
 )
 
 const (
@@ -75,9 +76,15 @@ func (n *Nozzle) String() string {
 	)
 }
 
+func (n *Nozzle) IsAvailable(posx int, posy int, tolerance int) bool {
+	return math.Abs(float64(n.X-posx)) < float64(tolerance) &&
+		math.Abs(float64(n.Y-posy)) < float64(tolerance)
+}
+
 type Row struct {
 	Position
 	Index       int
+	Reagent     string
 	NozzleSpace int
 	Nozzles     []*Nozzle
 }
@@ -87,6 +94,7 @@ func NewRow(
 	posx int,
 	posy int,
 	nozzleSpace int,
+	reagents []string,
 ) *Row {
 	return &Row{
 		Index: index,
@@ -94,6 +102,7 @@ func NewRow(
 			X: posx,
 			Y: posy,
 		},
+		Reagent:     reagents[index],
 		NozzleSpace: nozzleSpace,
 	}
 }
@@ -155,9 +164,10 @@ func NewPrintHeadLineD(
 		RowSpaceB: rowSpaceB,
 	}
 	h.Rows = []*Row{}
+	reagents := []string{"A", "C", "G", "T"}
 	for index := 0; index < rowCount; index++ {
 		posx, posy := h.CalcRowPosition(index, dposx, dposy)
-		row := NewRow(index, posx, posy, nozzleSpace)
+		row := NewRow(index, posx, posy, nozzleSpace, reagents)
 		h.Rows = append(h.Rows, row)
 	}
 	for index := 0; index < nozzleCount; index++ {
