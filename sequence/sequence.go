@@ -512,10 +512,12 @@ func generateImage(
 			img.Set(x, y, *c)
 		}
 	}
-	// with file
-	outputFile, _ := os.Create("test.png")
-	png.Encode(outputFile, img)
-	outputFile.Close()
+	if DEBUG {
+		// with file
+		outputFile, _ := os.Create("test.png")
+		png.Encode(outputFile, img)
+		outputFile.Close()
+	}
 	// nofile
 	var imagebuff bytes.Buffer
 	png.Encode(&imagebuff, img)
