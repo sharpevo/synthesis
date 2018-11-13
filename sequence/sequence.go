@@ -54,12 +54,8 @@ func NewSequenceDetail() *widgets.QGroupBox {
 	group := widgets.NewQGroupBox2("Config", nil)
 	layout := widgets.NewQGridLayout2()
 
-	resolutionLabel := widgets.NewQLabel2("Resolution:", nil, 0)
+	resolutionLabel := widgets.NewQLabel2("Tolerance:", nil, 0)
 	resolutionInput := widgets.NewQLineEdit(nil)
-	if !DEBUG {
-		resolutionLabel.SetVisible(false)
-		resolutionInput.SetVisible(false)
-	}
 	startxLabel := widgets.NewQLabel2("Starts at x:", nil, 0)
 	startxInput := widgets.NewQLineEdit(nil)
 	startyLabel := widgets.NewQLabel2("Starts at y:", nil, 0)
@@ -83,7 +79,7 @@ func NewSequenceDetail() *widgets.QGroupBox {
 
 	sequenceInput := widgets.NewQTextEdit(nil)
 
-	resolutionInput.SetText("20")
+	resolutionInput.SetText("30")
 	startxInput.SetText("-50000")
 	startyInput.SetText("50000")
 	spacexInput.SetText("169.3")
@@ -132,7 +128,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			return
 		}
 		if resolutionFloat < 10.0 {
-			uiutil.MessageBoxError("invaild resolution")
+			uiutil.MessageBoxError("tolerance should be greater than the resolution of motor")
 			return
 		}
 		resolutionInt := int(resolutionFloat * platform.UM)
@@ -225,8 +221,6 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	})
 
 	exportButton.ConnectClicked(func(bool) {
-		exportButton.SetVisible(false)
-		progressbar.SetVisible(true)
 		resolutionFloat,
 			startxFloat,
 			startyFloat,
@@ -253,6 +247,8 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
+		exportButton.SetVisible(false)
+		progressbar.SetVisible(true)
 		export(
 			int(resolutionFloat*platform.UM),
 			int(startxFloat*platform.UM),
@@ -339,6 +335,10 @@ func parseFloatArg(
 ) {
 	resolutionFloat, err = strconv.ParseFloat(resolution, 32)
 	if err != nil {
+		return
+	}
+	if resolutionFloat < 10.0 {
+		err = fmt.Errorf("tolerance should be greater than the resolution of motor")
 		return
 	}
 	startxFloat, err = strconv.ParseFloat(startx, 32)
@@ -627,8 +627,6 @@ func export(
 	//img := image.NewRGBA(image.Rect(0, 0, 100, 100))
 	fmt.Println("IMAGE", 100*platform.MM/resolution*platform.UM)
 
-	step := int(30 * platform.UM)
-	tolerance := step
 	var direction string
 
 	go func() {
@@ -637,8 +635,8 @@ func export(
 		for h.Rows[3].Nozzles[0].X <= pf.Right() {
 			direction = "downward"
 			fmt.Println(">>>downward", dot.PositionY, pf.Bottom())
-			for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= pf.Bottom(); dposy -= step {
-				data := genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+			for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= pf.Bottom(); dposy -= resolution {
+				data := genData(progressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
 				if data != "" {
 					bin.AddMotion(dot.PositionX, dposy)
 					bin.AddPrint(data)
@@ -658,8 +656,8 @@ func export(
 
 			direction = "upward"
 			fmt.Println(">>>upward", h.Rows[0].Nozzles[0].Y, pf.Top())
-			for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= pf.Top(); dposy += step {
-				data := genData(progressbar, &count, sum, h, pf, py, tolerance, &imageIndex, img, resolution, direction)
+			for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= pf.Top(); dposy += resolution {
+				data := genData(progressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
 				if data != "" {
 					bin.AddMotion(dposx, dposy)
 					bin.AddPrint(data)
@@ -690,7 +688,7 @@ func export(
 
 }
 
-func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printheads.PrintHead, pf *platform.Platform, py int, tolerance int, imageIndex *int, img *image.RGBA, resolution int, direction string) (output string) {
+func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printheads.PrintHead, pf *platform.Platform, py int, imageIndex *int, img *image.RGBA, resolution int, direction string) (output string) {
 	data := make([]string, 1280)
 
 	printable := false
@@ -705,7 +703,7 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 				dotx, doty := dot.PositionX, dot.PositionY
 				//if math.Abs(float64(nozzle.X-dotx)) < float64(h.RowOffset) &&
 				//math.Abs(float64(nozzle.Y-doty)) < float64(h.RowOffset) {
-				if nozzle.IsAvailable(dotx, doty, tolerance) {
+				if nozzle.IsAvailable(dotx, doty, resolution) {
 					if dot.Base.Name == row.Reagent {
 						*count = *count + 1
 						progressbar.SetValue(*count * progressbar.Maximum() / sum)
