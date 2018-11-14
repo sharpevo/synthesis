@@ -10,6 +10,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"log"
 	"os"
 	"posam/dao/printheads"
 	"posam/gui/uiutil"
@@ -401,10 +402,6 @@ func generateImage(
 	maxWidth int,
 	maxHeight int,
 ) {
-	fmt.Println("start", startX, startY)
-	fmt.Println("space spot", spaceX, spaceY)
-	fmt.Println("space block", spaceBlockx, spaceBlocky)
-	fmt.Println("space slide", spaceSlidey)
 	xoffset := startX
 	yoffset := startY
 	width := 0
@@ -572,7 +569,7 @@ func export(
 		baseCount := 0
 		for _, seq := range strings.Split(line, ",") {
 			for _, base := range strings.Split(strings.Trim(seq, " "), "") {
-				fmt.Println("location", xoffset, yoffset)
+				log.Println("location", xoffset, yoffset)
 				baseCount += 1
 				dots[rowCount] = append(dots[rowCount], &platform.Dot{
 					platform.NewBase(base),
@@ -599,7 +596,7 @@ func export(
 			//pf.Dots[x][y] = dot
 		}
 	}
-	fmt.Println("PLATFORM", columnCount+1, rowCount+1)
+	log.Println("platform", columnCount+1, rowCount+1)
 
 	h, _ := printheads.NewPrintHeadLineD(
 		4,
@@ -625,16 +622,16 @@ func export(
 	imageIndex := 0
 	img := image.NewRGBA(image.Rect(0, 0, 100*platform.MM/resolution, 100*platform.MM/resolution))
 	//img := image.NewRGBA(image.Rect(0, 0, 100, 100))
-	fmt.Println("IMAGE", 100*platform.MM/resolution*platform.UM)
+	//fmt.Println("IMAGE", 100*platform.MM/resolution*platform.UM)
 
 	var direction string
 
 	go func() {
 		count := 0
-		fmt.Println("rect", pf.Top(), pf.Right(), pf.Bottom(), pf.Left())
+		log.Println("rect", pf.Top(), pf.Right(), pf.Bottom(), pf.Left())
 		for h.Rows[3].Nozzles[0].X <= pf.Right() {
 			direction = "downward"
-			fmt.Println(">>>downward", dot.PositionY, pf.Bottom())
+			log.Println("moving downward", dot.PositionY, pf.Bottom())
 			for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= pf.Bottom(); dposy -= resolution {
 				data := genData(progressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
 				if data != "" {
@@ -644,18 +641,12 @@ func export(
 				h.UpdatePositionStar(dot.PositionX, dposy)
 			}
 
-			fmt.Println(
-				"===========1",
-				dot.PositionX,
-				h.Rows[3].Nozzles[0].Y,
-				h.Rows[0].Nozzles[0].Y,
-			)
 			dposx := dot.PositionX + h.RowOffset
 			//dposx := dot.PositionX + resolution
 			h.UpdatePositionStar(dposx, h.Rows[0].Nozzles[0].Y)
 
 			direction = "upward"
-			fmt.Println(">>>upward", h.Rows[0].Nozzles[0].Y, pf.Top())
+			log.Println("moving upward", h.Rows[0].Nozzles[0].Y, pf.Top())
 			for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= pf.Top(); dposy += resolution {
 				data := genData(progressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
 				if data != "" {
@@ -664,14 +655,13 @@ func export(
 				}
 				h.UpdatePositionStar(dposx, dposy)
 			}
-			fmt.Println("===========2", dposx, h.Rows[0].Nozzles[0].Y)
 
 			sum, px, py, dot, err = pf.NextDotVertical()
 			if err != nil {
-				fmt.Println("DONE", err, count, sum)
+				log.Println("DONE", err, count, sum)
 				break
 			}
-			fmt.Println("################## NEXT DOT:", count, sum, "||", px, py, dot.Base.Name, dot.PositionX, dot.PositionY)
+			log.Println("moving to the next spot", count, sum, "||", px, py, dot.Base.Name, dot.PositionX, dot.PositionY)
 			h.UpdatePositionStar(dot.PositionX, dot.PositionY)
 		}
 
@@ -682,7 +672,6 @@ func export(
 		}
 		encoder := gob.NewEncoder(file)
 		encoder.Encode(bin.Node)
-		//fmt.Printf("%#v\n", bin.Node)
 		//uiutil.MessageBoxInfo(fmt.Sprintf("Sequences have been built into %q", filePath))
 	}()
 
@@ -697,12 +686,8 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 		for _, nozzle := range row.Nozzles {
 
 			data[nozzle.Index] = "0"
-			// check available nozzles
-			//for _, dot := range pf.DotsInRow(py) {
 			for _, dot := range pf.AvailableDots() {
 				dotx, doty := dot.PositionX, dot.PositionY
-				//if math.Abs(float64(nozzle.X-dotx)) < float64(h.RowOffset) &&
-				//math.Abs(float64(nozzle.Y-doty)) < float64(h.RowOffset) {
 				if nozzle.IsAvailable(dotx, doty, resolution) {
 					if dot.Base.Name == row.Reagent {
 						*count = *count + 1
@@ -710,9 +695,8 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 						dot.Printed = true
 						if DEBUG {
 							img.Set((dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution, dot.Base.Color)
-							fmt.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty) //, "..", (dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution)
+							log.Println(dot.Base.Name, nozzle, " || ", dot, " >> ", dotx, doty) //, "..", (dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution)
 						}
-						//data[nozzle.Index] = int(dot.Base.Color.A)
 						data[nozzle.Index] = "1"
 						printable = true
 					} else {
@@ -730,7 +714,6 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 			outputFile.Close()
 			*imageIndex = *imageIndex + 1
 		}
-		fmt.Println("----------------------------------------")
 		outputSlice := make([]string, 160)
 		for i := 0; i < len(data); i += 8 {
 			value, _ := strconv.ParseInt(strings.Join(data[i:i+8], ""), 2, 64)
