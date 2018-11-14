@@ -121,7 +121,24 @@ GCACGTGAGGTTAAGTTATG, ACCATTTCCCTCGTGTTAGT, TAGCATCATATGGCCGAAGC, TTGCTTAGTAGACG
 GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGGTCGATG, ACTTCGGCCTGAGGCTCGAC, CACGACAAAGCCATCTTATG, TCTGCCTGCACATGCTTGGC, ATGACCTATGTTCAGCTCTA
 `)
 	}
+
 	generateButton := widgets.NewQPushButton2("PREVIEW", nil)
+
+	generateProgressbar := widgets.NewQProgressBar(nil)
+	generateProgressbar.SetWindowTitle("generating...")
+	generateProgressbar.SetMinimum(0)
+	generateProgressbar.SetMaximum(1000)
+	generateProgressbar.SetValue(0)
+	generateProgressbar.SetVisible(false)
+
+	generateProgressbar.ConnectValueChanged(func(value int) {
+		if value == generateProgressbar.Maximum() {
+			generateProgressbar.SetValue(generateProgressbar.Minimum())
+			generateButton.SetVisible(true)
+			generateProgressbar.SetVisible(false)
+		}
+	})
+
 	generateButton.ConnectClicked(func(bool) {
 		resolutionFloat, err := strconv.ParseFloat(resolutionInput.Text(), 32)
 		if err != nil {
@@ -173,18 +190,23 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			return
 		}
 
-		generateImage(
-			startxInt,
-			startyInt,
-			spacexInt,
-			spaceyInt,
-			spaceBlockxInt,
-			spaceBlockyInt,
-			spaceSlideyInt,
-			sequenceInput.ToPlainText(),
-			maxWidth,
-			maxHeight,
-		)
+		generateButton.SetVisible(false)
+		generateProgressbar.SetVisible(true)
+		go func() {
+			generateImage(
+				startxInt,
+				startyInt,
+				spacexInt,
+				spaceyInt,
+				spaceBlockxInt,
+				spaceBlockyInt,
+				spaceSlideyInt,
+				sequenceInput.ToPlainText(),
+				maxWidth,
+				maxHeight,
+				generateProgressbar,
+			)
+		}()
 	})
 
 	motorPathLabel := widgets.NewQLabel2("Motor path:", nil, 0)
@@ -290,21 +312,22 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	layout.AddWidget(spaceSlideyInput, 7, 1, 0)
 
 	layout.AddWidget3(sequenceInput, 8, 0, 1, 2, 0)
-	layout.AddWidget3(generateButton, 9, 0, 1, 2, 0)
-	layout.AddWidget(motorPathLabel, 10, 0, 0)
-	layout.AddWidget(motorPathInput, 10, 1, 0)
-	layout.AddWidget(motorSpeedLabel, 11, 0, 0)
-	layout.AddWidget(motorSpeedInput, 11, 1, 0)
-	layout.AddWidget(motorAccelLabel, 12, 0, 0)
-	layout.AddWidget(motorAccelInput, 12, 1, 0)
-	layout.AddWidget(printheadPathLabel, 13, 0, 0)
-	layout.AddWidget(printheadPathInput, 13, 1, 0)
-	layout.AddWidget(printheadxLabel, 14, 0, 0)
-	layout.AddWidget(printheadxInput, 14, 1, 0)
-	layout.AddWidget(printheadyLabel, 15, 0, 0)
-	layout.AddWidget(printheadyInput, 15, 1, 0)
-	layout.AddWidget3(exportProgressbar, 16, 0, 1, 2, 0)
-	layout.AddWidget3(exportButton, 17, 0, 1, 2, 0)
+	layout.AddWidget3(generateProgressbar, 9, 0, 1, 2, 0)
+	layout.AddWidget3(generateButton, 10, 0, 1, 2, 0)
+	layout.AddWidget(motorPathLabel, 11, 0, 0)
+	layout.AddWidget(motorPathInput, 11, 1, 0)
+	layout.AddWidget(motorSpeedLabel, 12, 0, 0)
+	layout.AddWidget(motorSpeedInput, 12, 1, 0)
+	layout.AddWidget(motorAccelLabel, 13, 0, 0)
+	layout.AddWidget(motorAccelInput, 13, 1, 0)
+	layout.AddWidget(printheadPathLabel, 14, 0, 0)
+	layout.AddWidget(printheadPathInput, 14, 1, 0)
+	layout.AddWidget(printheadxLabel, 15, 0, 0)
+	layout.AddWidget(printheadxInput, 15, 1, 0)
+	layout.AddWidget(printheadyLabel, 16, 0, 0)
+	layout.AddWidget(printheadyInput, 16, 1, 0)
+	layout.AddWidget3(exportProgressbar, 17, 0, 1, 2, 0)
+	layout.AddWidget3(exportButton, 18, 0, 1, 2, 0)
 
 	group.SetLayout(layout)
 	return group
@@ -401,6 +424,7 @@ func generateImage(
 	sequences string,
 	maxWidth int,
 	maxHeight int,
+	generateProgressbar *widgets.QProgressBar,
 ) {
 	xoffset := startX
 	yoffset := startY
@@ -408,6 +432,7 @@ func generateImage(
 	height := 0
 	pixels := make(map[int]map[int]*color.NRGBA)
 
+	pixelSum := 0
 	count := 0
 	for _, line := range strings.Split(sequences, "\n") {
 		if line == "" {
@@ -439,6 +464,7 @@ func generateImage(
 		for _, seq := range strings.Split(line, ",") {
 			for _, base := range strings.Split(strings.Trim(seq, " "), "") {
 				pixels[yoffset][xoffset] = ToColor(base)
+				pixelSum += 1
 				xoffset += spaceX
 				if xoffset > width {
 					width = xoffset
@@ -457,9 +483,12 @@ func generateImage(
 		return
 	}
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	pixelCount := -1
 	for y, pixel := range pixels {
 		for x, c := range pixel {
 			img.Set(x, y, *c)
+			pixelCount += 1
+			generateProgressbar.SetValue(pixelCount * generateProgressbar.Maximum() / pixelSum)
 		}
 	}
 	if DEBUG {
@@ -476,6 +505,7 @@ func generateImage(
 	qimg.LoadFromData2(core.NewQByteArray2(string(imagebyte), len(imagebyte)), "png")
 	qimg = qimg.Scaled2(5*width, 5*height, core.Qt__IgnoreAspectRatio, core.Qt__FastTransformation)
 	imageItem.SetPixmap(gui.NewQPixmap().FromImage(qimg, 0))
+	generateProgressbar.SetValue(generateProgressbar.Maximum())
 }
 
 func ToColor(base string) *color.NRGBA {
