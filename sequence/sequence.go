@@ -206,18 +206,18 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 
 	exportButton := widgets.NewQPushButton2("BUILD", nil)
 
-	progressbar := widgets.NewQProgressBar(nil)
-	progressbar.SetWindowTitle("exporting...")
-	progressbar.SetMinimum(0)
-	progressbar.SetMaximum(1000)
-	progressbar.SetValue(0)
-	progressbar.SetVisible(false)
+	exportProgressbar := widgets.NewQProgressBar(nil)
+	exportProgressbar.SetWindowTitle("exporting...")
+	exportProgressbar.SetMinimum(0)
+	exportProgressbar.SetMaximum(1000)
+	exportProgressbar.SetValue(0)
+	exportProgressbar.SetVisible(false)
 
-	progressbar.ConnectValueChanged(func(value int) {
-		if value == progressbar.Maximum() {
-			progressbar.SetValue(progressbar.Minimum())
+	exportProgressbar.ConnectValueChanged(func(value int) {
+		if value == exportProgressbar.Maximum() {
+			exportProgressbar.SetValue(exportProgressbar.Minimum())
 			exportButton.SetVisible(true)
-			progressbar.SetVisible(false)
+			exportProgressbar.SetVisible(false)
 		}
 	})
 
@@ -249,7 +249,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			return
 		}
 		exportButton.SetVisible(false)
-		progressbar.SetVisible(true)
+		exportProgressbar.SetVisible(true)
 		export(
 			int(resolutionFloat*platform.UM),
 			int(startxFloat*platform.UM),
@@ -266,7 +266,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			printheadPathInput.Text(),
 			int(printheadxFloat*platform.UM),
 			int(printheadyFloat*platform.UM),
-			progressbar,
+			exportProgressbar,
 		)
 	})
 
@@ -303,7 +303,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	layout.AddWidget(printheadxInput, 14, 1, 0)
 	layout.AddWidget(printheadyLabel, 15, 0, 0)
 	layout.AddWidget(printheadyInput, 15, 1, 0)
-	layout.AddWidget3(progressbar, 16, 0, 1, 2, 0)
+	layout.AddWidget3(exportProgressbar, 16, 0, 1, 2, 0)
 	layout.AddWidget3(exportButton, 17, 0, 1, 2, 0)
 
 	group.SetLayout(layout)
@@ -524,7 +524,7 @@ func export(
 	printheadPath string,
 	printheadX int,
 	printheadY int,
-	progressbar *widgets.QProgressBar,
+	exportProgressbar *widgets.QProgressBar,
 ) {
 	filePath, err := uiutil.FilePath()
 	if err != nil {
@@ -633,7 +633,7 @@ func export(
 			direction = "downward"
 			log.Println("moving downward", dot.PositionY, pf.Bottom())
 			for dposy := dot.PositionY; h.Rows[3].Nozzles[0].Y >= pf.Bottom(); dposy -= resolution {
-				data := genData(progressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
+				data := genData(exportProgressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
 				if data != "" {
 					bin.AddMotion(dot.PositionX, dposy)
 					bin.AddPrint(data)
@@ -648,7 +648,7 @@ func export(
 			direction = "upward"
 			log.Println("moving upward", h.Rows[0].Nozzles[0].Y, pf.Top())
 			for dposy := h.Rows[0].Nozzles[0].Y; h.Rows[0].Nozzles[0].Y <= pf.Top(); dposy += resolution {
-				data := genData(progressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
+				data := genData(exportProgressbar, &count, sum, h, pf, py, &imageIndex, img, resolution, direction)
 				if data != "" {
 					bin.AddMotion(dposx, dposy)
 					bin.AddPrint(data)
@@ -677,7 +677,7 @@ func export(
 
 }
 
-func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printheads.PrintHead, pf *platform.Platform, py int, imageIndex *int, img *image.RGBA, resolution int, direction string) (output string) {
+func genData(exportProgressbar *widgets.QProgressBar, count *int, sum int, h *printheads.PrintHead, pf *platform.Platform, py int, imageIndex *int, img *image.RGBA, resolution int, direction string) (output string) {
 	data := make([]string, 1280)
 
 	printable := false
@@ -691,7 +691,7 @@ func genData(progressbar *widgets.QProgressBar, count *int, sum int, h *printhea
 				if nozzle.IsAvailable(dotx, doty, resolution) {
 					if dot.Base.Name == row.Reagent {
 						*count = *count + 1
-						progressbar.SetValue(*count * progressbar.Maximum() / sum)
+						exportProgressbar.SetValue(*count * exportProgressbar.Maximum() / sum)
 						dot.Printed = true
 						if DEBUG {
 							img.Set((dotx+50*platform.MM)/resolution, (50*platform.MM-doty)/resolution, dot.Base.Color)
