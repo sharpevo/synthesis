@@ -231,15 +231,15 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 
 	reagentGroup := widgets.NewQGroupBox2("Reagent", nil)
 	reagentLayout := widgets.NewQGridLayout2()
-	printhead0line0Label := widgets.NewQLabel2("Reagent of Line A in Printhead #0", nil, 0)
-	printhead0line1Label := widgets.NewQLabel2("Reagent of Line B in Printhead #0", nil, 0)
-	printhead0line2Label := widgets.NewQLabel2("Reagent of Line C in Printhead #0", nil, 0)
-	printhead0line3Label := widgets.NewQLabel2("Reagent of Line D in Printhead #0", nil, 0)
+	printhead0line0Label := widgets.NewQLabel2("Row A of Printhead #0", nil, 0)
+	printhead0line1Label := widgets.NewQLabel2("Row B of Printhead #0", nil, 0)
+	printhead0line2Label := widgets.NewQLabel2("Row C of Printhead #0", nil, 0)
+	printhead0line3Label := widgets.NewQLabel2("Row D of Printhead #0", nil, 0)
 
-	printhead1line0Label := widgets.NewQLabel2("Reagent of Line A in Printhead #1", nil, 0)
-	printhead1line1Label := widgets.NewQLabel2("Reagent of Line B in Printhead #1", nil, 0)
-	printhead1line2Label := widgets.NewQLabel2("Reagent of Line C in Printhead #1", nil, 0)
-	printhead1line3Label := widgets.NewQLabel2("Reagent of Line D in Printhead #1", nil, 0)
+	printhead1line0Label := widgets.NewQLabel2("Row A of Printhead #1", nil, 0)
+	printhead1line1Label := widgets.NewQLabel2("Row B of Printhead #1", nil, 0)
+	printhead1line2Label := widgets.NewQLabel2("Row C of Printhead #1", nil, 0)
+	printhead1line3Label := widgets.NewQLabel2("Row D of Printhead #1", nil, 0)
 
 	printhead0line0Input := widgets.NewQLineEdit(nil)
 	printhead0line1Input := widgets.NewQLineEdit(nil)
