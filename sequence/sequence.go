@@ -227,6 +227,64 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	printheadyLabel := widgets.NewQLabel2("Printhead y:", nil, 0)
 	printheadyInput := widgets.NewQLineEdit(nil)
 
+	// position group of printhead{{{
+
+	positionGroup := widgets.NewQGroupBox2("Centroid position", nil)
+	positionLayout := widgets.NewQGridLayout2()
+	printhead0PositionLabel := widgets.NewQLabel2("Printhead #0", nil, 0)
+	printhead1PositionLabel := widgets.NewQLabel2("Printhead #1", nil, 0)
+	slide0PositionLabel := widgets.NewQLabel2("Slide #0", nil, 0)
+	slide1PositionLabel := widgets.NewQLabel2("Slide #1", nil, 0)
+	slide2PositionLabel := widgets.NewQLabel2("Slide #2", nil, 0)
+
+	printhead0PositionXInput := widgets.NewQLineEdit(nil)
+	printhead0PositionYInput := widgets.NewQLineEdit(nil)
+	printhead1PositionXInput := widgets.NewQLineEdit(nil)
+	printhead1PositionYInput := widgets.NewQLineEdit(nil)
+
+	printhead0PositionXInput.SetText("0")
+	printhead0PositionYInput.SetText("0")
+	printhead1PositionXInput.SetText("50")
+	printhead1PositionYInput.SetText("0")
+
+	slide0PositionXInput := widgets.NewQLineEdit(nil)
+	slide0PositionYInput := widgets.NewQLineEdit(nil)
+	slide1PositionXInput := widgets.NewQLineEdit(nil)
+	slide1PositionYInput := widgets.NewQLineEdit(nil)
+	slide2PositionXInput := widgets.NewQLineEdit(nil)
+	slide2PositionYInput := widgets.NewQLineEdit(nil)
+
+	slide0PositionXInput.SetText("0")
+	slide0PositionYInput.SetText("0")
+	slide1PositionXInput.SetText("-26")
+	slide1PositionYInput.SetText("0")
+	slide2PositionXInput.SetText("26")
+	slide2PositionYInput.SetText("0")
+
+	positionLayout.AddWidget(printhead0PositionLabel, 0, 0, 0)
+	positionLayout.AddWidget(printhead0PositionXInput, 0, 1, 0)
+	positionLayout.AddWidget(printhead0PositionYInput, 0, 2, 0)
+
+	positionLayout.AddWidget(printhead1PositionLabel, 1, 0, 0)
+	positionLayout.AddWidget(printhead1PositionXInput, 1, 1, 0)
+	positionLayout.AddWidget(printhead1PositionYInput, 1, 2, 0)
+
+	positionLayout.AddWidget(slide0PositionLabel, 2, 0, 0)
+	positionLayout.AddWidget(slide0PositionXInput, 2, 1, 0)
+	positionLayout.AddWidget(slide0PositionYInput, 2, 2, 0)
+
+	positionLayout.AddWidget(slide1PositionLabel, 3, 0, 0)
+	positionLayout.AddWidget(slide1PositionXInput, 3, 1, 0)
+	positionLayout.AddWidget(slide1PositionYInput, 3, 2, 0)
+
+	positionLayout.AddWidget(slide2PositionLabel, 4, 0, 0)
+	positionLayout.AddWidget(slide2PositionXInput, 4, 1, 0)
+	positionLayout.AddWidget(slide2PositionYInput, 4, 2, 0)
+
+	positionGroup.SetLayout(positionLayout)
+
+	// }}}
+
 	// reagentGroup {{{
 
 	reagentGroup := widgets.NewQGroupBox2("Reagent", nil)
@@ -388,9 +446,10 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	layout.AddWidget(printheadxInput, 15, 1, 0)
 	layout.AddWidget(printheadyLabel, 16, 0, 0)
 	layout.AddWidget(printheadyInput, 16, 1, 0)
-	layout.AddWidget3(reagentGroup, 17, 0, 1, 2, 0)
-	layout.AddWidget3(exportProgressbar, 18, 0, 1, 2, 0)
-	layout.AddWidget3(exportButton, 19, 0, 1, 2, 0)
+	layout.AddWidget3(positionGroup, 17, 0, 1, 2, 0)
+	layout.AddWidget3(reagentGroup, 18, 0, 1, 2, 0)
+	layout.AddWidget3(exportProgressbar, 19, 0, 1, 2, 0)
+	layout.AddWidget3(exportButton, 20, 0, 1, 2, 0)
 
 	group.SetLayout(layout)
 	return group
