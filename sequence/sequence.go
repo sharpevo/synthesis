@@ -227,6 +227,66 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	printheadyLabel := widgets.NewQLabel2("Printhead y:", nil, 0)
 	printheadyInput := widgets.NewQLineEdit(nil)
 
+	// reagentGroup {{{
+
+	reagentGroup := widgets.NewQGroupBox2("Reagent", nil)
+	reagentLayout := widgets.NewQGridLayout2()
+	printhead0line0Label := widgets.NewQLabel2("Reagent of Line A in Printhead #0", nil, 0)
+	printhead0line1Label := widgets.NewQLabel2("Reagent of Line B in Printhead #0", nil, 0)
+	printhead0line2Label := widgets.NewQLabel2("Reagent of Line C in Printhead #0", nil, 0)
+	printhead0line3Label := widgets.NewQLabel2("Reagent of Line D in Printhead #0", nil, 0)
+
+	printhead1line0Label := widgets.NewQLabel2("Reagent of Line A in Printhead #1", nil, 0)
+	printhead1line1Label := widgets.NewQLabel2("Reagent of Line B in Printhead #1", nil, 0)
+	printhead1line2Label := widgets.NewQLabel2("Reagent of Line C in Printhead #1", nil, 0)
+	printhead1line3Label := widgets.NewQLabel2("Reagent of Line D in Printhead #1", nil, 0)
+
+	printhead0line0Input := widgets.NewQLineEdit(nil)
+	printhead0line1Input := widgets.NewQLineEdit(nil)
+	printhead0line2Input := widgets.NewQLineEdit(nil)
+	printhead0line3Input := widgets.NewQLineEdit(nil)
+
+	printhead1line0Input := widgets.NewQLineEdit(nil)
+	printhead1line1Input := widgets.NewQLineEdit(nil)
+	printhead1line2Input := widgets.NewQLineEdit(nil)
+	printhead1line3Input := widgets.NewQLineEdit(nil)
+
+	printhead0line0Input.SetText("T")
+	printhead0line1Input.SetText("W")
+	printhead0line2Input.SetText("W")
+	printhead0line3Input.SetText("G")
+	printhead1line0Input.SetText("A")
+	printhead1line1Input.SetText("W")
+	printhead1line2Input.SetText("W")
+	printhead1line3Input.SetText("C")
+
+	reagentLayout.AddWidget(printhead0line0Label, 0, 0, 0)
+	reagentLayout.AddWidget(printhead0line0Input, 0, 1, 0)
+
+	reagentLayout.AddWidget(printhead0line1Label, 1, 0, 0)
+	reagentLayout.AddWidget(printhead0line1Input, 1, 1, 0)
+
+	reagentLayout.AddWidget(printhead0line2Label, 2, 0, 0)
+	reagentLayout.AddWidget(printhead0line2Input, 2, 1, 0)
+
+	reagentLayout.AddWidget(printhead0line3Label, 3, 0, 0)
+	reagentLayout.AddWidget(printhead0line3Input, 3, 1, 0)
+
+	reagentLayout.AddWidget(printhead1line0Label, 4, 0, 0)
+	reagentLayout.AddWidget(printhead1line0Input, 4, 1, 0)
+
+	reagentLayout.AddWidget(printhead1line1Label, 5, 0, 0)
+	reagentLayout.AddWidget(printhead1line1Input, 5, 1, 0)
+
+	reagentLayout.AddWidget(printhead1line2Label, 6, 0, 0)
+	reagentLayout.AddWidget(printhead1line2Input, 6, 1, 0)
+
+	reagentLayout.AddWidget(printhead1line3Label, 7, 0, 0)
+	reagentLayout.AddWidget(printhead1line3Input, 7, 1, 0)
+
+	reagentGroup.SetLayout(reagentLayout)
+	// }}}
+
 	exportButton := widgets.NewQPushButton2("BUILD", nil)
 
 	exportProgressbar := widgets.NewQProgressBar(nil)
@@ -328,8 +388,9 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 	layout.AddWidget(printheadxInput, 15, 1, 0)
 	layout.AddWidget(printheadyLabel, 16, 0, 0)
 	layout.AddWidget(printheadyInput, 16, 1, 0)
-	layout.AddWidget3(exportProgressbar, 17, 0, 1, 2, 0)
-	layout.AddWidget3(exportButton, 18, 0, 1, 2, 0)
+	layout.AddWidget3(reagentGroup, 17, 0, 1, 2, 0)
+	layout.AddWidget3(exportProgressbar, 18, 0, 1, 2, 0)
+	layout.AddWidget3(exportButton, 19, 0, 1, 2, 0)
 
 	group.SetLayout(layout)
 	return group
