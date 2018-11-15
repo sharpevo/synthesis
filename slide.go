@@ -1,24 +1,26 @@
-package printing
+package slide
 
-import ()
+import (
+	"posam/util/geometry"
+)
 
 const (
-	SPACE_X_FROM_CENTROID = 10 * MM
-	SPACE_Y_FROM_CENTROID = 25 * MM
+	SPACE_X_FROM_CENTROID = 10 * geometry.MM
+	SPACE_Y_FROM_CENTROID = 25 * geometry.MM
 )
 
 type Slide struct {
-	CentroidPosition *Position
-	AvailableArea    *Area
+	CentroidPosition *geometry.Position
+	AvailableArea    *geometry.Area
 }
 
 func NewSlide(posx int, posy int) *Slide {
 	return &Slide{
-		CentroidPosition: &Position{
+		CentroidPosition: &geometry.Position{
 			X: posx,
 			Y: posy,
 		},
-		AvailableArea: &Area{
+		AvailableArea: &geometry.Area{
 			Top:    posy + SPACE_Y_FROM_CENTROID,
 			Right:  posx + SPACE_X_FROM_CENTROID,
 			Bottom: posy - SPACE_Y_FROM_CENTROID,
