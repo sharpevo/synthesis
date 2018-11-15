@@ -192,6 +192,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 
 		generateButton.SetVisible(false)
 		generateProgressbar.SetVisible(true)
+		seqText := sequenceInput.ToPlainText()
 		go func() {
 			generateImage(
 				startxInt,
@@ -201,7 +202,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 				spaceBlockxInt,
 				spaceBlockyInt,
 				spaceSlideyInt,
-				sequenceInput.ToPlainText(),
+				&seqText,
 				maxWidth,
 				maxHeight,
 				generateProgressbar,
@@ -272,6 +273,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 		}
 		exportButton.SetVisible(false)
 		exportProgressbar.SetVisible(true)
+		seqText := sequenceInput.ToPlainText()
 		export(
 			int(resolutionFloat*platform.UM),
 			int(startxFloat*platform.UM),
@@ -281,7 +283,7 @@ GGATTTAATCTGTTCGGATA, GACGCTGAATCGTGATAAAC, TGGACCTCCCTTGTTAACTC, AGTAATTCTTCGGG
 			int(spaceBlockxFloat*platform.UM),
 			int(spaceBlockyFloat*platform.UM),
 			int(spaceSlideyFloat*platform.UM),
-			sequenceInput.ToPlainText(),
+			&seqText,
 			motorPathInput.Text(),
 			motorSpeedInput.Text(),
 			motorAccelInput.Text(),
@@ -421,7 +423,7 @@ func generateImage(
 	spaceBlocky int,
 	//spaceSlidex int, // use spaceBlockx
 	spaceSlidey int,
-	sequences string,
+	sequences *string,
 	maxWidth int,
 	maxHeight int,
 	generateProgressbar *widgets.QProgressBar,
@@ -434,7 +436,7 @@ func generateImage(
 
 	pixelSum := 0
 	count := 0
-	for _, line := range strings.Split(sequences, "\n") {
+	for _, line := range strings.Split(*sequences, "\n") {
 		if line == "" {
 			count += 1
 			continue
@@ -478,6 +480,7 @@ func generateImage(
 		}
 		count = 0
 	}
+	log.Printf("%d x %d (%d x %d), Pixels: %d\n", width, height, width/30*platform.UM, height/30*platform.UM, pixelSum)
 	if width > maxWidth || height > maxHeight {
 		uiutil.MessageBoxError(fmt.Sprintf("invalid size: %d x %d (%d x %d)", width, height, maxWidth, maxHeight))
 		return
@@ -497,6 +500,7 @@ func generateImage(
 		png.Encode(outputFile, img)
 		outputFile.Close()
 	}
+
 	// nofile
 	var imagebuff bytes.Buffer
 	png.Encode(&imagebuff, img)
@@ -547,7 +551,7 @@ func export(
 	spaceBlockx int,
 	spaceBlocky int,
 	spaceSlidey int,
-	sequences string,
+	sequences *string,
 	motorPath string,
 	motorSpeed string,
 	motorAccel string,
@@ -571,7 +575,7 @@ func export(
 	xoffset := startX
 	yoffset := startY
 	count := 0
-	for _, line := range strings.Split(sequences, "\n") {
+	for _, line := range strings.Split(*sequences, "\n") {
 		if line == "" {
 			count += 1
 			continue
