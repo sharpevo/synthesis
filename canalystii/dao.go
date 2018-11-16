@@ -194,7 +194,6 @@ func (d *Dao) MoveRelative(
 	message = append(message, directionBytes...)
 	message = append(message, speedBytes...)
 	message = append(message, posBytes...)
-	message = append(message, []byte{0x00, 0x00}...)
 	output, err := d.SendAck2(
 		message,
 		MotorMoveRelativeUnit.RecResp(),
