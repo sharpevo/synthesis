@@ -2,12 +2,17 @@ package slide
 
 import ()
 
+type SpotSlice []*Spot
+type SpotSliceMap map[string]SpotSlice
+type ReagentMap map[int]SpotSliceMap
 type Array struct {
-	Slides []*Slide
+	Slides     []*Slide
+	ReagentMap ReagentMap
 }
 
 func NewArray(slides ...*Slide) *Array {
 	a := &Array{}
+	a.ReagentMap = make(ReagentMap)
 	for _, s := range slides {
 		a.AddSlide(s)
 	}
@@ -67,7 +72,19 @@ func (a *Array) AddSpot(spot *Spot) bool {
 		if a.Slides[k].IsFull() {
 			continue
 		}
-		return a.Slides[k].AddSpot(spot)
+		a.Slides[k].AddSpot(spot)
+		for index, reagent := range spot.Reagents {
+			if a.ReagentMap == nil {
+				a.ReagentMap = make(ReagentMap)
+			}
+			if a.ReagentMap[index] == nil {
+				a.ReagentMap[index] = make(SpotSliceMap)
+			}
+			a.ReagentMap[index][reagent.Reagent.Name] = append(
+				a.ReagentMap[index][reagent.Reagent.Name],
+				spot,
+			)
+		}
 	}
 	return false
 }
