@@ -412,20 +412,22 @@ func NewInputGroup() *widgets.QGroupBox {
 
 		// rows of printhead 0
 
+		nozzleSpace := int(169.3 * geometry.UM)
+
 		row00 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead0Line0Input.Text()),
 		)
 		row01 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead0Line1Input.Text()),
 		)
 		row02 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead0Line2Input.Text()),
 		)
 		row03 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead0Line3Input.Text()),
 		)
 		rows0 := []*printhead.Row{row00, row01, row02, row03}
@@ -433,19 +435,19 @@ func NewInputGroup() *widgets.QGroupBox {
 		// rows of printhead 1
 
 		row10 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead1Line0Input.Text()),
 		)
 		row11 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead1Line1Input.Text()),
 		)
 		row12 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead1Line2Input.Text()),
 		)
 		row13 := printhead.NewRow(
-			spacex,
+			nozzleSpace,
 			reagent.NewReagent(printhead1Line3Input.Text()),
 		)
 		rows1 := []*printhead.Row{row10, row11, row12, row13}
@@ -456,7 +458,7 @@ func NewInputGroup() *widgets.QGroupBox {
 			//printhead0PositionX,
 			//printhead0PositionY,
 			rows0,
-			84.65*geometry.UM,
+			nozzleSpace,
 			550.3*geometry.UM,
 			11.811*geometry.UM,
 		)
@@ -471,7 +473,7 @@ func NewInputGroup() *widgets.QGroupBox {
 			printhead1OffsetX,
 			printhead1OffsetY,
 			rows1,
-			84.65*geometry.UM,
+			nozzleSpace,
 			550.3*geometry.UM,
 			11.811*geometry.UM,
 		)
