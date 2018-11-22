@@ -14,6 +14,12 @@ import (
 	"strings"
 )
 
+const (
+	DPI_150 = "169.3"
+	DPI_300 = "84.65"
+	DPI_600 = "42.325"
+)
+
 var (
 	offsetX = 0
 	offsetY = 0
@@ -275,6 +281,12 @@ func NewInputGroup() *widgets.QGroupBox {
 	toleranceInput := widgets.NewQLineEdit(nil)
 	toleranceInput.SetText("30")
 
+	dpiLabel := widgets.NewQLabel2("Resolution", nil, 0)
+	dpiInput := widgets.NewQComboBox(nil)
+	dpiInput.AddItems([]string{
+		DPI_150,
+	})
+
 	printhead0OffsetLabel := widgets.NewQLabel2("offset #0 (mm)", nil, 0)
 	printhead0OffsetXInput := widgets.NewQLineEdit(nil)
 	printhead0OffsetYInput := widgets.NewQLineEdit(nil)
@@ -289,12 +301,14 @@ func NewInputGroup() *widgets.QGroupBox {
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget(toleranceInput, 0, 1, 0)
-	miscLayout.AddWidget(printhead0OffsetLabel, 1, 0, 0)
-	miscLayout.AddWidget(printhead0OffsetXInput, 1, 1, 0)
-	miscLayout.AddWidget(printhead0OffsetYInput, 1, 2, 0)
-	miscLayout.AddWidget(printhead1OffsetLabel, 2, 0, 0)
-	miscLayout.AddWidget(printhead1OffsetXInput, 2, 1, 0)
-	miscLayout.AddWidget(printhead1OffsetYInput, 2, 2, 0)
+	miscLayout.AddWidget(dpiLabel, 1, 0, 0)
+	miscLayout.AddWidget3(dpiInput, 1, 1, 1, 2, 0)
+	miscLayout.AddWidget(printhead0OffsetLabel, 2, 0, 0)
+	miscLayout.AddWidget(printhead0OffsetXInput, 2, 1, 0)
+	miscLayout.AddWidget(printhead0OffsetYInput, 2, 2, 0)
+	miscLayout.AddWidget(printhead1OffsetLabel, 3, 0, 0)
+	miscLayout.AddWidget(printhead1OffsetXInput, 3, 1, 0)
+	miscLayout.AddWidget(printhead1OffsetYInput, 3, 2, 0)
 
 	// }}}
 
@@ -372,11 +386,27 @@ func NewInputGroup() *widgets.QGroupBox {
 			slide1PositionY,
 			slide2PositionX,
 			slide2PositionY,
+			spacex,
+			spacey,
 		)
 
 		seqText := sequenceInput.ToPlainText()
 		offsetX = printhead1OffsetX
 		offsetY = printhead1OffsetY
+
+		var step int
+		var space int
+		switch dpiInput.CurrentText() {
+		case DPI_300:
+			step = 126.975 * geometry.UM
+			space = 84.65 * geometry.UM
+		case DPI_600:
+			step = 169.3 * geometry.UM
+			space = 42.325 * geometry.UM
+		default:
+			step = 42.325 * geometry.UM
+			space = 169.3 * geometry.UM
+		}
 
 		// create printhead{{{
 
@@ -475,7 +505,8 @@ func NewInputGroup() *widgets.QGroupBox {
 		//spacey,
 		//)
 		//slideArray := slide.NewArray(slide0, slide1, slide2)
-		slideArray := slide.NewDefaultArray(spacex, spacey, 3)
+		//slideArray := slide.NewDefaultArray(spacex, spacey, 3)
+		slideArray := slide.NewDefaultArray(space, space, 3)
 
 		cycleCount := 0
 		for _, lineRaw := range strings.Split(seqText, "\n") {
@@ -500,6 +531,7 @@ func NewInputGroup() *widgets.QGroupBox {
 			fmt.Println(spot.Pos.X, spot.Pos.Y, spot.Reagents)
 			fmt.Println(">>", spot.Reagents[0].Reagent.Name)
 		}
+		fmt.Println(slideArray.ReagentMap)
 
 		// }}}
 		fmt.Println("create slide array", slideArray.AvailableSpots(), *slideArray.AvailableSpots()[0].Reagents[0])
@@ -508,6 +540,7 @@ func NewInputGroup() *widgets.QGroupBox {
 		buildProgressbar.SetVisible(true)
 
 		build(
+			step,
 			cycleCount,
 			printheadArray,
 			slideArray,
@@ -700,6 +733,7 @@ func ParseParameters( // {{{
 // }}}
 
 func build(
+	step int,
 	cycleCount int,
 	printheadArray *printhead.Array,
 	slideArray *slide.Array,
