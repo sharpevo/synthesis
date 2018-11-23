@@ -7,7 +7,6 @@ import (
 const (
 	WIDTH  = 20 * geometry.MM
 	HEIGHT = 50 * geometry.MM
-	SPACE  = 5 * geometry.MM
 )
 
 type Slide struct {

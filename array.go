@@ -19,14 +19,14 @@ func NewArray(slides ...*Slide) *Array {
 	return a
 }
 
-func NewDefaultArray(spacex int, spacey int, count int) *Array {
+func NewDefaultArray(nozzleSpace int, slideSpace int, count int) *Array {
 	a := &Array{}
 	for i := 0; i < count; i++ {
 		slide := NewSlide(
-			i*(WIDTH+SPACE),
+			i*(WIDTH+slideSpace),
 			0,
-			spacex,
-			spacey,
+			nozzleSpace,
+			nozzleSpace,
 		)
 		a.AddSlide(slide)
 	}
