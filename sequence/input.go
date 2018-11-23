@@ -285,11 +285,15 @@ func NewInputGroup() *widgets.QGroupBox {
 	toleranceInput := widgets.NewQLineEdit(nil)
 	toleranceInput.SetText("30")
 
-	dpiLabel := widgets.NewQLabel2("Resolution", nil, 0)
+	dpiLabel := widgets.NewQLabel2("Resolution (um)", nil, 0)
 	dpiInput := widgets.NewQComboBox(nil)
 	dpiInput.AddItems([]string{
 		DPI_150,
 	})
+
+	slideAreaSpaceLabel := widgets.NewQLabel2("Slide space (mm)", nil, 0)
+	slideAreaSpaceInput := widgets.NewQLineEdit(nil)
+	slideAreaSpaceInput.SetText("5")
 
 	printhead0OffsetLabel := widgets.NewQLabel2("offset #0 (mm)", nil, 0)
 	printhead0OffsetXInput := widgets.NewQLineEdit(nil)
@@ -304,15 +308,17 @@ func NewInputGroup() *widgets.QGroupBox {
 	printhead1OffsetYInput.SetText("-20")
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
-	miscLayout.AddWidget(toleranceInput, 0, 1, 0)
+	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
 	miscLayout.AddWidget(dpiLabel, 1, 0, 0)
 	miscLayout.AddWidget3(dpiInput, 1, 1, 1, 2, 0)
-	miscLayout.AddWidget(printhead0OffsetLabel, 2, 0, 0)
-	miscLayout.AddWidget(printhead0OffsetXInput, 2, 1, 0)
-	miscLayout.AddWidget(printhead0OffsetYInput, 2, 2, 0)
-	miscLayout.AddWidget(printhead1OffsetLabel, 3, 0, 0)
-	miscLayout.AddWidget(printhead1OffsetXInput, 3, 1, 0)
-	miscLayout.AddWidget(printhead1OffsetYInput, 3, 2, 0)
+	miscLayout.AddWidget(slideAreaSpaceLabel, 2, 0, 0)
+	miscLayout.AddWidget3(slideAreaSpaceInput, 2, 1, 1, 2, 0)
+	miscLayout.AddWidget(printhead0OffsetLabel, 3, 0, 0)
+	miscLayout.AddWidget(printhead0OffsetXInput, 3, 1, 0)
+	miscLayout.AddWidget(printhead0OffsetYInput, 3, 2, 0)
+	miscLayout.AddWidget(printhead1OffsetLabel, 4, 0, 0)
+	miscLayout.AddWidget(printhead1OffsetXInput, 4, 1, 0)
+	miscLayout.AddWidget(printhead1OffsetYInput, 4, 2, 0)
 
 	// }}}
 
@@ -352,6 +358,7 @@ func NewInputGroup() *widgets.QGroupBox {
 			spacex,
 			spacey,
 			tolerance,
+			slideAreaSpace,
 			printhead0OffsetX,
 			printhead0OffsetY,
 			printhead1OffsetX,
@@ -370,6 +377,7 @@ func NewInputGroup() *widgets.QGroupBox {
 			spacexInput.Text(),
 			spaceyInput.Text(),
 			toleranceInput.Text(),
+			slideAreaSpaceInput.Text(),
 			printhead0OffsetXInput.Text(),
 			printhead0OffsetYInput.Text(),
 			printhead1OffsetXInput.Text(),
@@ -512,7 +520,7 @@ func NewInputGroup() *widgets.QGroupBox {
 		//)
 		//slideArray := slide.NewArray(slide0, slide1, slide2)
 		//slideArray := slide.NewDefaultArray(spacex, spacey, 3)
-		slideArray := slide.NewDefaultArray(space, space, 3)
+		slideArray := slide.NewDefaultArray(space, slideAreaSpace, 3)
 
 		cycleCount := 0
 		for _, lineRaw := range strings.Split(seqText, "\n") {
@@ -594,6 +602,7 @@ func ParseParameters( // {{{
 	spacexString string,
 	spaceyString string,
 	toleranceString string,
+	slideAreaSpaceString string,
 	printhead0OffsetXString string,
 	printhead0OffsetYString string,
 	printhead1OffsetXString string,
@@ -612,6 +621,7 @@ func ParseParameters( // {{{
 	spacexInt int,
 	spaceyInt int,
 	toleranceInt int,
+	slideAreaSpaceInt int,
 	printhead0OffsetXInt int,
 	printhead0OffsetYInt int,
 	printhead1OffsetXInt int,
@@ -631,6 +641,7 @@ func ParseParameters( // {{{
 		spacexFloat,
 		spaceyFloat,
 		toleranceFloat,
+		slideAreaSpaceFloat,
 		printhead0OffsetXFloat,
 		printhead0OffsetYFloat,
 		printhead1OffsetXFloat,
@@ -713,6 +724,12 @@ func ParseParameters( // {{{
 		return
 	}
 	toleranceInt = int(toleranceFloat * geometry.UM)
+
+	slideAreaSpaceFloat, err = ToFloat(slideAreaSpaceString)
+	if err != nil {
+		return
+	}
+	slideAreaSpaceInt = int(slideAreaSpaceFloat * geometry.MM)
 
 	printhead0OffsetXFloat, err = ToFloat(printhead0OffsetXString)
 	if err != nil {
