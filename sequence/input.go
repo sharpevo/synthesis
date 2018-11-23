@@ -1,17 +1,19 @@
 package sequence
 
 import (
+	"encoding/gob"
 	"fmt"
 	"github.com/therecipe/qt/widgets"
-	"posam/util/formation"
-	//"os"
+	"os"
 	"posam/gui/uiutil"
+	"posam/util/formation"
 	"posam/util/geometry"
 	"posam/util/printhead"
 	"posam/util/reagent"
 	"posam/util/slide"
 	"strconv"
 	"strings"
+	//"time"
 )
 
 const (
@@ -31,54 +33,56 @@ const (
 	SEQUENCE_EXAMPLE = `GGGTCGGATGATCGGACACT
 CATCATCTGGGTACAGCGGG
 ATTATACAGTTTTGTCCAAT
-CTATCTTGGAGGGGTAGGCG
-AGGCTGGCCATGTTGTCTTA
-ACTTTATGATGCGTAAGCAC
-CAGCCTCAACCGCTCTGCAA
-CATGCTCCTATCGTAGGAAG
-CAGGAGTCCATTCCGTGCTG
-ATTGCCGTTAATCGGCAGGA
-AGAGTGCCGGAACACTGTTG
-TCACGAGGGGGCAAAGAAAG
-ATTTGCCGGGGCGTGTCCTG
-GGATGCTGACACGTCGTGTT
-GTATCTACTTGACTACGGCC
-GGTTTGAAGTAAGACCCCCC
-CGTCTCGGCCCGTAATCTCC
-TGATCCAAATCGATTAATGT
-AAGATCCCAGTTTTTTAGAG
-AATCACTGCATTGCGAAAAA
-CTGCACGATTATGGGGTGAG
-GTCCGACCAGGGGTCTATCT
-CTGGAAATGCCTGGGCGGTG
-TTCCAAGTGATAGCTACGAA
-GTTCCGTTATGCCGAGGAAG
-AGATCCACGGCTCGTCAGAC
-GATGAATTAGCGGAGGATCC
-GGCACGGTAAGTTCCCACGC
-GCGCTCGAGACGAACACTAA
-CGATAGATGAATGGGCACCT
-CCAGACCGGAGTTGGAGGAG
-GTTTGCTCCTCTTCACTCCG
-TCAAGGCTGATATCACCAAT
-CAGCATCTTAACTCCAGGAC
-GTATCTCTCGTAACATGCTA
-ATCACGAGATGAAAGTCTGG
-TTCTCGTTCCACCCAGTCGT
-GAAGCTCAACACATAGCAAC
-GACCGGACGAGAAAACTCCG
-TACTCCCTCAAGTAAGTCTA
-CTAGACCGCAGCAAAATCGT
-TCACTTTCGCGCGCACAGGG
-AGGGTCGGACTTCTAGGTAG
-GATCAGACACCTCATCACGA
-GTGCCTCCTGCCCTAGTCGA
-CCAACATGTGCCAACGATTA
-ATGAGCTGAAGACAGAGGGC
-ATAGCCGCTGGCGTTCGTGG
-GCGTAGCAAAGGGGCGGAGT
-CAGTTATTTCAGAGGTACCG
 `
+
+//CTATCTTGGAGGGGTAGGCG
+//AGGCTGGCCATGTTGTCTTA
+//ACTTTATGATGCGTAAGCAC
+//CAGCCTCAACCGCTCTGCAA
+//CATGCTCCTATCGTAGGAAG
+//CAGGAGTCCATTCCGTGCTG
+//ATTGCCGTTAATCGGCAGGA
+//AGAGTGCCGGAACACTGTTG
+//TCACGAGGGGGCAAAGAAAG
+//ATTTGCCGGGGCGTGTCCTG
+//GGATGCTGACACGTCGTGTT
+//GTATCTACTTGACTACGGCC
+//GGTTTGAAGTAAGACCCCCC
+//CGTCTCGGCCCGTAATCTCC
+//TGATCCAAATCGATTAATGT
+//AAGATCCCAGTTTTTTAGAG
+//AATCACTGCATTGCGAAAAA
+//CTGCACGATTATGGGGTGAG
+//GTCCGACCAGGGGTCTATCT
+//CTGGAAATGCCTGGGCGGTG
+//TTCCAAGTGATAGCTACGAA
+//GTTCCGTTATGCCGAGGAAG
+//AGATCCACGGCTCGTCAGAC
+//GATGAATTAGCGGAGGATCC
+//GGCACGGTAAGTTCCCACGC
+//GCGCTCGAGACGAACACTAA
+//CGATAGATGAATGGGCACCT
+//CCAGACCGGAGTTGGAGGAG
+//GTTTGCTCCTCTTCACTCCG
+//TCAAGGCTGATATCACCAAT
+//CAGCATCTTAACTCCAGGAC
+//GTATCTCTCGTAACATGCTA
+//ATCACGAGATGAAAGTCTGG
+//TTCTCGTTCCACCCAGTCGT
+//GAAGCTCAACACATAGCAAC
+//GACCGGACGAGAAAACTCCG
+//TACTCCCTCAAGTAAGTCTA
+//CTAGACCGCAGCAAAATCGT
+//TCACTTTCGCGCGCACAGGG
+//AGGGTCGGACTTCTAGGTAG
+//GATCAGACACCTCATCACGA
+//GTGCCTCCTGCCCTAGTCGA
+//CCAACATGTGCCAACGATTA
+//ATGAGCTGAAGACAGAGGGC
+//ATAGCCGCTGGCGTTCGTGG
+//GCGTAGCAAAGGGGCGGAGT
+//CAGTTATTTCAGAGGTACCG
+//`
 )
 
 // }}}
@@ -530,10 +534,15 @@ func NewInputGroup() *widgets.QGroupBox {
 				//}
 			}
 			slideArray.AddSpot(spot)
-			fmt.Println(spot.Pos.X, spot.Pos.Y, spot.Reagents)
-			fmt.Println(">>", spot.Reagents[0].Reagent.Name)
+			//fmt.Println(spot.Pos.X, spot.Pos.Y, spot.Reagents)
+			//fmt.Println(">>", spot.Reagents[0].Reagent.Name)
 		}
-		fmt.Println(slideArray.ReagentMap)
+		//fmt.Println(slideArray.ReagentMap)
+		for c, spotmap := range slideArray.ReagentMap {
+			for _, spot := range spotmap["A"] {
+				fmt.Println(">>", c, spot.Pos.X, spot.Pos.Y)
+			}
+		}
 
 		// }}}
 		fmt.Println("create slide array", slideArray.AvailableSpots(), *slideArray.AvailableSpots()[0].Reagents[0])
@@ -787,73 +796,136 @@ func build(
 	go func() {
 		for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
 			fmt.Println("loop cycle", cycleIndex)
-			spot := slideArray.NextSpotInVert(cycleIndex)
-			if spot == nil {
-				break
-			}
-			fmt.Println("spot", spot.Pos.X, spot.Pos.Y)
-			x, y := RawPos(spot.Pos.X, spot.Pos.Y)
-			bin.AddFormation(
-				cycleIndex,
-				x, y,
-				"", "",
-			)
-			printheadArray.UpdatePos(spot.Pos.X, spot.Pos.Y)
 
-			for printheadArray.Top() > slideArray.Bottom() {
-				fmt.Println("downward")
-				for posy := spot.Pos.Y; printheadArray.Top() > slideArray.Bottom(); posy -= tolerance {
-					data, c := genData(cycleIndex, slideArray, printheadArray, tolerance)
-					if len(data) != 0 {
-						x, y := RawPos(spot.Pos.X, posy)
-						bin.AddFormation(
-							cycleIndex, x, y, data[0], data[1])
-						fmt.Println("spots detected", c)
-						count += c
-						buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
+			//var spot *slide.Spot
+			//spot = slideArray.NextSpotInVert(cycleIndex)
+			//if spot == nil {
+			//break
+			//}
+			//fmt.Println("spot", spot.Pos.X, spot.Pos.Y)
+			//x, y := RawPos(spot.Pos.X, spot.Pos.Y)
+			//bin.AddFormation( // move sight printhead to the top left of slide array
+			//cycleIndex,
+			//x, y,
+			//"", "",
+			//)
+			//printheadArray.UpdatePos(spot.Pos.X, spot.Pos.Y)
+
+			for pi, p := range printheadArray.Printheads {
+				dataMap := map[int]string{}
+				for _, row := range p.Rows {
+					spots := slideArray.ReagentMap[cycleIndex][row.Reagent.Name]
+					if len(spots) == 0 {
+						continue
 					}
-					printheadArray.UpdatePos(spot.Pos.X, posy)
-					//fmt.Println("next", spot.Pos.X, posy)
-				}
-
-				sight := printheadArray.SightPrinthead()
-				posx := spot.Pos.X + sight.RowOffset
-				printheadArray.UpdatePos(posx, sight.Pos.Y)
-
-				fmt.Println("upward", posx, sight.Pos.Y)
-				for posy := sight.Bottom(); sight.Bottom() <= slideArray.Top(); posy += tolerance {
-					data, c := genData(cycleIndex, slideArray, printheadArray, tolerance)
-					if len(data) != 0 {
-						x, y := RawPos(posx, posy)
-						bin.AddFormation(cycleIndex, x, y, data[0], data[1])
-						fmt.Println("spots detected", c)
-						count += c
-						buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
+					for _, v := range spots {
+						fmt.Println("s", v.Reagents[cycleIndex].Reagent.Name)
 					}
-					printheadArray.UpdatePos(posx, posy)
-					//fmt.Println("next", posx, posy)
-				}
+					target := MostLeftSpot(cycleIndex, spots)
+					fmt.Println("row", pi, row.Index, row.Reagent.Name)
+					for target != nil {
+						//time.Sleep(1 * time.Second)
+						fmt.Println("next spot", pi, row.Reagent.Name, target.Pos.X, target.Pos.Y)
+						//fmt.Println("before", row.Index, p.Pos.X, p.Pos.Y)
+						p.UpdatePos(target.Pos.X, target.Pos.Y, row)
+						//fmt.Println("after", row.Index, p.Pos.X, p.Pos.Y)
 
-				spot = slideArray.NextSpotInVert(cycleIndex)
-				if spot == nil {
-					break
+						dataBinSlice := make([]string, 1280)
+						printable := false
+						// try print
+						// spot over nozzel is more effective
+						// but the dataBinSlice is overwrite every time
+						for _, nozzle := range row.Nozzles {
+							dataBinSlice[nozzle.Index] = "0"
+							for _, spot := range spots {
+								if spot.Reagents[cycleIndex].Printed {
+									continue
+								}
+								if nozzle.Pos.Equal(spot.Pos) &&
+									row.Reagent.Equal(spot.Reagents[cycleIndex].Reagent) {
+									count += 1
+									printable = true
+									dataBinSlice[nozzle.Index] = "1"
+									spot.Reagents[cycleIndex].Printed = true
+									buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
+									fmt.Println("spot printed", spot.Reagents[cycleIndex].Reagent.Name, spot.Pos.X, spot.Pos.Y)
+								}
+							}
+						}
+						if printable {
+							dataHexSlice := make([]string, 160)
+							for i := 0; i < len(dataBinSlice); i += 8 {
+								value, _ := strconv.ParseInt(strings.Join(dataBinSlice[i:i+8], ""), 2, 64)
+								dataHexSlice = append(dataHexSlice, fmt.Sprintf("%02x", value))
+							}
+							dataMap[pi] = strings.Join(dataHexSlice, "")
+							x, y := RawPos(target.Pos.X, target.Pos.Y)
+							bin.AddFormation(
+								cycleIndex, x, y, dataMap[0], dataMap[1],
+							)
+						}
+						target = MostLeftSpot(cycleIndex, spots)
+					}
 				}
-				fmt.Println("spot", spot.Pos.X, spot.Pos.Y)
-				printheadArray.UpdatePos(spot.Pos.X, spot.Pos.Y)
 			}
+
+			//for printheadArray.Top() > slideArray.Bottom() {
+			//fmt.Println("downward")
+			//for posy := spot.Pos.Y; printheadArray.Top() > slideArray.Bottom(); posy -= tolerance {
+			//data, c := genData(cycleIndex, slideArray, printheadArray, tolerance)
+			//if len(data) != 0 {
+			//x, y := RawPos(spot.Pos.X, posy)
+			//bin.AddFormation(
+			//cycleIndex, x, y, data[0], data[1])
+			//fmt.Println("spots detected", c)
+			//count += c
+			//buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
+			//}
+			//printheadArray.UpdatePos(spot.Pos.X, posy)
+			////fmt.Println("next", spot.Pos.X, posy)
+			//}
+
+			//sight := printheadArray.SightPrinthead()
+			//posx := spot.Pos.X + sight.RowOffset
+			//printheadArray.UpdatePos(posx, sight.Pos.Y)
+
+			//fmt.Println("upward", posx, sight.Pos.Y)
+			//for posy := sight.Bottom(); sight.Bottom() <= slideArray.Top(); posy += tolerance {
+			//data, c := genData(cycleIndex, slideArray, printheadArray, tolerance)
+			//if len(data) != 0 {
+			//x, y := RawPos(posx, posy)
+			//bin.AddFormation(cycleIndex, x, y, data[0], data[1])
+			//fmt.Println("spots detected", c)
+			//count += c
+			//buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
+			//}
+			//printheadArray.UpdatePos(posx, posy)
+			////fmt.Println("next", posx, posy)
+			//}
+
+			//spot = slideArray.NextSpotInVert(cycleIndex)
+			//if spot == nil {
+			//break
+			//}
+			//fmt.Println("spot", spot.Pos.X, spot.Pos.Y)
+			//printheadArray.UpdatePos(spot.Pos.X, spot.Pos.Y)
+			//}
 		}
 		buildProgressbar.SetValue(buildProgressbar.Maximum())
+
+		filePath := "test.bin"
+		fmt.Printf("%#v\n", bin)
+		//go func() {
+		file, err := os.Create(filePath)
+		defer file.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(bin)
+		//}()
 	}()
 
-	//go func() {
-	//file, err := os.Create(filePath)
-	//defer file.Close()
-	//if err != nil {
-	//fmt.Println(err)
-	//}
-	//encoder := gob.NewEncoder(file)
-	//encoder.Encode(bin.Node)
-	//}()
 }
 
 func genData(
@@ -938,6 +1010,25 @@ func genData(
 func RawPos(
 	posx int,
 	posy int,
-) (string, string) {
-	return fmt.Sprintf("%v", posx-offsetX), fmt.Sprintf("%v", posy-offsetY)
+	//) (string, string) {
+) (int, int) {
+	return posx - offsetX, posy - offsetY
+	//return fmt.Sprintf("%v", posx-offsetX), fmt.Sprintf("%v", posy-offsetY)
+}
+
+func MostLeftSpot(cycleIndex int, spots []*slide.Spot) *slide.Spot {
+	var target *slide.Spot
+	for _, spot := range spots {
+		if spot.Reagents[cycleIndex].Printed {
+			continue
+		}
+		if target == nil {
+			target = spot
+		} else {
+			if spot.Pos.AtLeft(target.Pos) {
+				target = spot
+			}
+		}
+	}
+	return target
 }
