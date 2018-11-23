@@ -840,12 +840,14 @@ func build(
 						//fmt.Println("after", row.Index, p.Pos.X, p.Pos.Y)
 
 						dataBinSlice := make([]string, 1280)
+						for index := range dataBinSlice {
+							dataBinSlice[index] = "0"
+						}
 						printable := false
 						// try print
 						// spot over nozzel is more effective
 						// but the dataBinSlice is overwrite every time
 						for _, nozzle := range row.Nozzles {
-							dataBinSlice[nozzle.Index] = "0"
 							for _, spot := range spots {
 								if spot.Reagents[cycleIndex].Printed {
 									continue
