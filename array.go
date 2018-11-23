@@ -85,6 +85,7 @@ func (a *Array) AddSpot(spot *Spot) bool {
 				spot,
 			)
 		}
+		return true
 	}
 	return false
 }
