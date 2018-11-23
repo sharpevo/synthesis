@@ -849,6 +849,7 @@ func build(
 									spot.Reagents[cycleIndex].Printed = true
 									buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
 									fmt.Println("spot printed", spot.Reagents[cycleIndex].Reagent.Name, spot.Pos.X, spot.Pos.Y)
+									// TODO: check the nozzles in other row for high resolution printing
 								}
 							}
 						}
