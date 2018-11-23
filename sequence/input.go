@@ -30,11 +30,18 @@ var (
 // const{{{
 
 const (
-	SEQUENCE_EXAMPLE = `GGGTCGGATGATCGGACACT
-CATCATCTGGGTACAGCGGG
-ATTATACAGTTTTGTCCAAT
-`
+	SEQUENCE_EXAMPLE = `GGT
+	CAT
+	ATC
+	`
+	//SEQUENCE_EXAMPLE = `GGGTCGGATGATCGGACACT
+	//CATCATCTGGGTACAGCGGG
+	//ATTATACAGTTTTGTCCAAT
+	//`
 
+	//SEQUENCE_EXAMPLE = `GGGTCGGATGATCGGACACT
+//CATCATCTGGGTACAGCGGG
+//ATTATACAGTTTTGTCCAAT
 //CTATCTTGGAGGGGTAGGCG
 //AGGCTGGCCATGTTGTCTTA
 //ACTTTATGATGCGTAAGCAC
@@ -807,27 +814,12 @@ func build(
 	)
 	fmt.Println("create bin", bin)
 
-	count := 0
+	count := -1
 	sum := slideArray.ReagentCount()
 	fmt.Println("reagents sum:", sum)
 	go func() {
 		for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
 			fmt.Println("loop cycle", cycleIndex)
-
-			//var spot *slide.Spot
-			//spot = slideArray.NextSpotInVert(cycleIndex)
-			//if spot == nil {
-			//break
-			//}
-			//fmt.Println("spot", spot.Pos.X, spot.Pos.Y)
-			//x, y := RawPos(spot.Pos.X, spot.Pos.Y)
-			//bin.AddFormation( // move sight printhead to the top left of slide array
-			//cycleIndex,
-			//x, y,
-			//"", "",
-			//)
-			//printheadArray.UpdatePos(spot.Pos.X, spot.Pos.Y)
-
 			for pi, p := range printheadArray.Printheads {
 				dataMap := map[int]string{}
 				for _, row := range p.Rows {
@@ -886,48 +878,6 @@ func build(
 					}
 				}
 			}
-
-			//for printheadArray.Top() > slideArray.Bottom() {
-			//fmt.Println("downward")
-			//for posy := spot.Pos.Y; printheadArray.Top() > slideArray.Bottom(); posy -= tolerance {
-			//data, c := genData(cycleIndex, slideArray, printheadArray, tolerance)
-			//if len(data) != 0 {
-			//x, y := RawPos(spot.Pos.X, posy)
-			//bin.AddFormation(
-			//cycleIndex, x, y, data[0], data[1])
-			//fmt.Println("spots detected", c)
-			//count += c
-			//buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
-			//}
-			//printheadArray.UpdatePos(spot.Pos.X, posy)
-			////fmt.Println("next", spot.Pos.X, posy)
-			//}
-
-			//sight := printheadArray.SightPrinthead()
-			//posx := spot.Pos.X + sight.RowOffset
-			//printheadArray.UpdatePos(posx, sight.Pos.Y)
-
-			//fmt.Println("upward", posx, sight.Pos.Y)
-			//for posy := sight.Bottom(); sight.Bottom() <= slideArray.Top(); posy += tolerance {
-			//data, c := genData(cycleIndex, slideArray, printheadArray, tolerance)
-			//if len(data) != 0 {
-			//x, y := RawPos(posx, posy)
-			//bin.AddFormation(cycleIndex, x, y, data[0], data[1])
-			//fmt.Println("spots detected", c)
-			//count += c
-			//buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
-			//}
-			//printheadArray.UpdatePos(posx, posy)
-			////fmt.Println("next", posx, posy)
-			//}
-
-			//spot = slideArray.NextSpotInVert(cycleIndex)
-			//if spot == nil {
-			//break
-			//}
-			//fmt.Println("spot", spot.Pos.X, spot.Pos.Y)
-			//printheadArray.UpdatePos(spot.Pos.X, spot.Pos.Y)
-			//}
 		}
 		buildProgressbar.SetValue(buildProgressbar.Maximum())
 
