@@ -13,6 +13,20 @@ type Position struct {
 	Y int
 }
 
+func NewPosition(posx int, posy int) *Position {
+	return &Position{
+		X: posx,
+		Y: posy,
+	}
+}
+
+func (p *Position) Sub(q *Position) *Position {
+	return &Position{
+		X: p.X - q.X,
+		Y: p.Y - q.Y,
+	}
+}
+
 type Area struct {
 	Top    int
 	Right  int
