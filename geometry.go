@@ -6,6 +6,8 @@ const (
 	NM = 1
 	UM = 1e3
 	MM = 1e6
+
+	UNIT = 1
 )
 
 type Position struct {
