@@ -20,6 +20,14 @@ func NewPosition(posx int, posy int) *Position {
 	}
 }
 
+func (p *Position) Equal(q *Position) bool {
+	return p.X == q.X && p.Y == q.Y
+}
+
+func (p *Position) AtLeft(q *Position) bool {
+	return p.X < q.X
+}
+
 func (p *Position) Sub(q *Position) *Position {
 	return &Position{
 		X: p.X - q.X,
