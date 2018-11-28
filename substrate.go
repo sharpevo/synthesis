@@ -86,7 +86,7 @@ func (s *Substrate) Right() int {
 }
 
 func (s *Substrate) Bottom() int {
-	return 0
+	return (s.Height - 1) % 4
 }
 
 func (s *Substrate) Left() int {
