@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+var ACTIVATABLE = false
+
 type Spot struct {
 	Pos      *geometry.Position
 	Reagents []*reagent.Reagent
@@ -35,11 +37,16 @@ func ParseSpots(input string) ([]*Spot, int) {
 		for _, name := range reagents {
 			r := reagent.NewReagent(name)
 			spot.AddReagent(r)
-			//if r.Name != reagent.Nil.Name{
-			//spot.AddReagent(reagent.Activator)
-			//}
+			if ACTIVATABLE {
+				if r.Name != reagent.Nil.Name {
+					spot.AddReagent(reagent.Activator)
+				}
+			}
 		}
 		spots = append(spots, spot)
+	}
+	if ACTIVATABLE {
+		return spots, cycleCount * 2
 	}
 	return spots, cycleCount
 }
