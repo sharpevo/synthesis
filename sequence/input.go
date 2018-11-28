@@ -30,7 +30,11 @@ var offsetX, offsetY float64 // mm
 //offsetX = 0.0 //mm
 //offsetY = 0.0 //mm
 //)
-var IMAGABLE = true
+var (
+	IMAGABLE  = true
+	DEBUGABLE = false
+	//DEBUGABLE = true
+)
 
 // const{{{
 
@@ -549,10 +553,12 @@ func NewInputGroup() *widgets.QGroupBox {
 			return
 		}
 		fmt.Println("substrate", subs.Top(), subs.Bottom())
-		for _, spot := range spots {
-			fmt.Println(spot.Pos.X, spot.Pos.Y)
-			for _, r := range spot.Reagents {
-				fmt.Println(r.Name)
+		if DEBUGABLE {
+			for _, spot := range spots {
+				fmt.Println(spot.Pos.X, spot.Pos.Y)
+				for _, r := range spot.Reagents {
+					fmt.Println(r.Name)
+				}
 			}
 		}
 
@@ -1058,9 +1064,9 @@ func genData(
 			nozzle.Reagent.Equal(spot.Reagents[cycleIndex]) {
 			count += 1
 			dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "1"
-			fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
 
 			if IMAGABLE {
+				fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
 				img.Set(nozzle.Pos.X, subs.Height-nozzle.Pos.Y, nozzle.Reagent.Color)
 			}
 		}
