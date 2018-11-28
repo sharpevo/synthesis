@@ -1,6 +1,9 @@
 package formation
 
-import ()
+import (
+	"fmt"
+	"sync"
+)
 
 type MotorConf struct {
 	Path  string
@@ -55,15 +58,22 @@ type PrintInstruction struct {
 type Formation struct {
 	CycleIndex int
 	Move       MoveInstruction
-	Print0     PrintInstruction
-	Print1     PrintInstruction
+	Prints     []PrintInstruction
+}
+
+type Cycle struct {
+	CycleIndex     int
+	ReagentCycle   Formation
+	ActivatorCycle Formation
 }
 
 type Bin struct {
+	sync.RWMutex
 	CycleCount     int
 	MotorConf      MotorConf
-	PrintheadConfs map[int]PrintheadConf
+	PrintheadConfs map[string]PrintheadConf
 	Formations     map[int][]Formation
+	CycleMap       map[int]Cycle
 }
 
 func NewBin(
@@ -75,9 +85,9 @@ func NewBin(
 	return &Bin{
 		CycleCount: cycleCount,
 		MotorConf:  motorConf,
-		PrintheadConfs: map[int]PrintheadConf{
-			0: printhead0Conf,
-			1: printhead1Conf,
+		PrintheadConfs: map[string]PrintheadConf{
+			printhead0Conf.Path: printhead0Conf,
+			printhead1Conf.Path: printhead1Conf,
 		},
 	}
 }
@@ -86,32 +96,32 @@ func (b *Bin) AddFormation(
 	cycleIndex int,
 	posx string,
 	posy string,
-	print0Data string,
-	print1Data string,
+	dataMap map[string]string,
 ) {
+	b.Lock()
+	defer b.Unlock()
 	formation := Formation{
 		CycleIndex: cycleIndex,
 	}
+	//x := fmt.Sprintf("%.6f", float64(posx)/float64(geometry.MM))
+	//y := fmt.Sprintf("%.6f", float64(posy)/float64(geometry.MM))
+	x, y := posx, posy
+	fmt.Println("motion in aoztech", x, y)
 	moveIns := MoveInstruction{
 		MotorConf: b.MotorConf,
-		PositionX: posx,
-		PositionY: posy,
+		PositionX: x,
+		PositionY: y,
 	}
 	formation.Move = moveIns
-	if print0Data != "" {
-		print0Ins := PrintInstruction{
-			PrintheadConf: b.PrintheadConfs[0],
-			LineBuffer:    print0Data,
+
+	for devicePath, data := range dataMap {
+		ins := PrintInstruction{
+			PrintheadConf: b.PrintheadConfs[devicePath],
+			LineBuffer:    data,
 		}
-		formation.Print0 = print0Ins
+		formation.Prints = append(formation.Prints, ins)
 	}
-	if print1Data != "" {
-		print1Ins := PrintInstruction{
-			PrintheadConf: b.PrintheadConfs[1],
-			LineBuffer:    print1Data,
-		}
-		formation.Print1 = print1Ins
-	}
+
 	if b.Formations == nil {
 		b.Formations = make(map[int][]Formation)
 	}
