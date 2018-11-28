@@ -4,6 +4,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"github.com/therecipe/qt/widgets"
+	"image"
+	"image/png"
 	"os"
 	"posam/gui/uiutil"
 	"posam/util/formation"
@@ -28,6 +30,7 @@ var offsetX, offsetY float64 // mm
 //offsetX = 0.0 //mm
 //offsetY = 0.0 //mm
 //)
+var IMAGABLE = true
 
 // const{{{
 
@@ -908,8 +911,11 @@ func build(
 
 	// normal mode
 
+	imageIndex := 0
+
 	go func() {
 		for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
+			img := image.NewRGBA(image.Rect(0, 0, subs.Width, subs.Height))
 			fmt.Println(">>>> cycle ", cycleIndex)
 			for stripCount := 0; stripCount < subs.Strip(); stripCount++ {
 
@@ -923,7 +929,7 @@ func build(
 				fmt.Println("move row 0 to ", posx, posy)
 
 				for printheadArray.Top() >= subs.Bottom() {
-					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
 						fmt.Println("data downward #1", count, dataMap)
 						x, y := RawPos(posx, posy)
@@ -948,7 +954,7 @@ func build(
 				fmt.Println("move row 1 to ", posx, posy)
 
 				for printheadArray.Bottom() <= subs.Top() {
-					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
 						fmt.Println("data upward #2", count, dataMap)
 						// use the bottom position
@@ -973,7 +979,7 @@ func build(
 				fmt.Println("move row 2 to ", posx, posy)
 
 				for printheadArray.Top() >= subs.Bottom() {
-					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
 						fmt.Println("data downward #3", count, dataMap)
 						x, y := RawPos(posx, posy)
@@ -992,7 +998,7 @@ func build(
 				fmt.Println("move row 3 to ", posx, posy)
 
 				for printheadArray.Bottom() <= subs.Top() {
-					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
 						fmt.Println("data upward #4", count, dataMap)
 						// use the bottom position
@@ -1030,6 +1036,8 @@ func genData(
 	cycleIndex int,
 	printheadArray *printhead.Array,
 	subs *substrate.Substrate,
+	img *image.RGBA,
+	imageIndex *int,
 ) (map[string]string, int) {
 	count := 0
 	dataMap := make(map[string][]string)
@@ -1051,6 +1059,10 @@ func genData(
 			count += 1
 			dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "1"
 			fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
+
+			if IMAGABLE {
+				img.Set(nozzle.Pos.X, subs.Height-nozzle.Pos.Y, nozzle.Reagent.Color)
+			}
 		}
 	}
 
@@ -1063,6 +1075,13 @@ func genData(
 				dataHexSlice = append(dataHexSlice, fmt.Sprintf("%02x", value))
 			}
 			output[devicePath] = strings.Join(dataHexSlice, "")
+		}
+
+		if IMAGABLE {
+			outputFile, _ := os.Create(fmt.Sprintf("output/%04d.%03d.png", *imageIndex, cycleIndex))
+			png.Encode(outputFile, img)
+			outputFile.Close()
+			*imageIndex = *imageIndex + 1
 		}
 	}
 	return output, count
