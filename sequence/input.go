@@ -11,6 +11,7 @@ import (
 	"posam/util/printhead"
 	"posam/util/reagent"
 	"posam/util/slide"
+	"posam/util/substrate"
 	"strconv"
 	"strings"
 	//"time"
@@ -311,8 +312,8 @@ func NewInputGroup() *widgets.QGroupBox {
 	printhead1OffsetLabel := widgets.NewQLabel2("offset #1 (mm)", nil, 0)
 	printhead1OffsetXInput := widgets.NewQLineEdit(nil)
 	printhead1OffsetYInput := widgets.NewQLineEdit(nil)
-	printhead1OffsetXInput.SetText("10")
-	printhead1OffsetYInput.SetText("20")
+	printhead1OffsetXInput.SetText("90")
+	printhead1OffsetYInput.SetText("65")
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
@@ -407,176 +408,131 @@ func NewInputGroup() *widgets.QGroupBox {
 			slide2PositionY,
 			spacex,
 			spacey,
+			slideAreaSpace,
 		)
 
 		seqText := sequenceInput.ToPlainText()
-		offsetX = printhead1OffsetX
-		offsetY = printhead1OffsetY
+		offsetX = geometry.Unit(printhead1OffsetX)
+		offsetY = geometry.Unit(printhead1OffsetY)
 
 		var step int
 		var space int
 		switch dpiInput.CurrentText() {
 		case DPI_300:
-			step = 126.975 * geometry.UM
-			space = 84.65 * geometry.UM
+			step = 4
+			space = 2
+			//step = 126.975 * geometry.UM
+			//space = 84.65 * geometry.UM
 		case DPI_600:
-			step = 169.3 * geometry.UM
-			space = 42.325 * geometry.UM
+			step = 1
+			space = 1
+			//step = 169.3 * geometry.UM
+			//space = 42.325 * geometry.UM
 		default:
-			step = 42.325 * geometry.UM
-			space = 169.3 * geometry.UM
+			step = 4
+			space = 4
+			//step = 42.325 * geometry.UM
+			//space = 169.3 * geometry.UM
 		}
 
 		// create printhead{{{
 
-		// rows of printhead 0
+		p0 := printhead.NewPrinthead(
+			printhead0PathInput.Text(),
+			[]*reagent.Reagent{
+				reagent.NewReagent(printhead0Line0Input.Text()),
+				reagent.NewReagent(printhead0Line1Input.Text()),
+				reagent.NewReagent(printhead0Line2Input.Text()),
+				reagent.NewReagent(printhead0Line3Input.Text()),
+			},
+		)
+		nozzles0 := p0.MakeNozzles(0, 0)
 
-		nozzleSpace := int(169.3 * geometry.UM)
+		p1 := printhead.NewPrinthead(
+			printhead1PathInput.Text(),
+			[]*reagent.Reagent{
+				reagent.NewReagent(printhead1Line0Input.Text()),
+				reagent.NewReagent(printhead1Line1Input.Text()),
+				reagent.NewReagent(printhead1Line2Input.Text()),
+				reagent.NewReagent(printhead1Line3Input.Text()),
+			},
+		)
 
-		row00 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead0Line0Input.Text()),
-		)
-		row01 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead0Line1Input.Text()),
-		)
-		row02 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead0Line2Input.Text()),
-		)
-		row03 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead0Line3Input.Text()),
-		)
-		rows0 := []*printhead.Row{row00, row01, row02, row03}
+		// automatically adujstment for different row alignment
+		px := geometry.Unit((printhead1OffsetX - printhead0OffsetX) / geometry.MM)
+		xrem := px % 4
+		py := geometry.Unit((printhead1OffsetY - printhead0OffsetY) / geometry.MM)
+		yrem := py % 4
+		fmt.Println("printhead 1", px, py)
+		if xrem != 0 {
+			px -= xrem
+		}
+		if yrem != 0 {
+			py -= yrem
+		}
+		fmt.Println("printhead 1 adjusted", px, py)
+		nozzles1 := p1.MakeNozzles(0, py)
 
-		// rows of printhead 1
+		printheadArray := printhead.NewArray(
+			append(nozzles0, nozzles1...),
+		)
+		fmt.Println(
+			"sights",
+			printheadArray.SightTop.Pos.X,
+			printheadArray.SightTop.Pos.Y,
+			printheadArray.SightBottom.Pos.X,
+			printheadArray.SightBottom.Pos.Y,
+		)
+		fmt.Println(
+			"nozzles",
+			printheadArray.Nozzles[0].Reagent.Name,
+			printheadArray.Nozzles[0].RowIndex,
 
-		row10 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead1Line0Input.Text()),
-		)
-		row11 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead1Line1Input.Text()),
-		)
-		row12 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead1Line2Input.Text()),
-		)
-		row13 := printhead.NewRow(
-			nozzleSpace,
-			reagent.NewReagent(printhead1Line3Input.Text()),
-		)
-		rows1 := []*printhead.Row{row10, row11, row12, row13}
+			printheadArray.Nozzles[1].Reagent.Name,
+			printheadArray.Nozzles[1].RowIndex,
 
-		printhead0, err := printhead.NewPrinthead(
-			printhead0OffsetX,
-			printhead0OffsetY,
-			//printhead0PositionX,
-			//printhead0PositionY,
-			rows0,
-			nozzleSpace,
-			550.3*geometry.UM,
-			11.811*geometry.UM,
+			printheadArray.Nozzles[2].Reagent.Name,
+			printheadArray.Nozzles[2].RowIndex,
+
+			printheadArray.Nozzles[3].Reagent.Name,
+			printheadArray.Nozzles[3].RowIndex,
+		)
+
+		// }}}
+
+		// create substrate{{{
+
+		spots, cycleCount := substrate.ParseSpots(seqText)
+		subs, err := substrate.NewSubstrate(
+			space,
+			3,
+			20, // width
+			50, // height
+			5,  // slide space
+			spots,
 		)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-
-		printhead1, err := printhead.NewPrinthead(
-			//printhead1PositionX,
-			//printhead1PositionY,
-			printhead1OffsetX,
-			printhead1OffsetY,
-			rows1,
-			nozzleSpace,
-			550.3*geometry.UM,
-			11.811*geometry.UM,
-		)
-		if err != nil {
-			uiutil.MessageBoxError(err.Error())
-			return
-		}
-		printheadArray := printhead.NewArray(printhead0, printhead1)
-
-		for _, row := range printhead0.Rows {
-			fmt.Println("---- row", row.Index, row.Reagent.Name)
-			for index, nozzle := range row.Nozzles[:8] {
-				fmt.Printf("nozzle %d at row index %d\n", nozzle.Index, index)
+		fmt.Println("substrate", subs.Top(), subs.Bottom())
+		for _, spot := range spots {
+			fmt.Println(spot.Pos.X, spot.Pos.Y)
+			for _, r := range spot.Reagents {
+				fmt.Println(r.Name)
 			}
 		}
 
 		// }}}
-		fmt.Println("create printhead array", *printheadArray)
-
-		// create slide array{{{
-
-		//slide0 := slide.NewSlide(
-		//slide0PositionX,
-		//slide0PositionY,
-		//spacex,
-		//spacey,
-		//)
-		//slide1 := slide.NewSlide(
-		//slide1PositionX,
-		//slide1PositionY,
-		//spacex,
-		//spacey,
-		//)
-		//slide2 := slide.NewSlide(
-		//slide2PositionX,
-		//slide2PositionY,
-		//spacex,
-		//spacey,
-		//)
-		//slideArray := slide.NewArray(slide0, slide1, slide2)
-		//slideArray := slide.NewDefaultArray(spacex, spacey, 3)
-		slideArray := slide.NewDefaultArray(space, slideAreaSpace, 3)
-
-		cycleCount := 0
-		for _, lineRaw := range strings.Split(seqText, "\n") {
-			if lineRaw == "" {
-				continue
-			}
-			spot := slide.NewSpot()
-			line := strings.Trim(lineRaw, " ")
-			bases := strings.Split(line, "")
-			length := len(bases)
-			if length > cycleCount {
-				cycleCount = length
-			}
-			for _, base := range bases {
-				r := reagent.NewReagent(base)
-				spot.AddReagent(r)
-				//if r.Name != reagent.Nil.Name {
-				//spot.AddReagent(reagent.Activator)
-				//}
-			}
-			slideArray.AddSpot(spot)
-			//fmt.Println(spot.Pos.X, spot.Pos.Y, spot.Reagents)
-			//fmt.Println(">>", spot.Reagents[0].Reagent.Name)
-		}
-		//fmt.Println(slideArray.ReagentMap)
-		for c, spotmap := range slideArray.ReagentMap {
-			for _, spot := range spotmap["A"] {
-				fmt.Println(">>", c, spot.Pos.X, spot.Pos.Y)
-			}
-		}
-
-		// }}}
-		fmt.Println("create slide array", slideArray.AvailableSpots(), *slideArray.AvailableSpots()[0].Reagents[0])
 
 		buildButton.SetVisible(false)
 		buildProgressbar.SetVisible(true)
 
 		build(
-			space,
+			step,
 			cycleCount,
 			printheadArray,
-			slideArray,
+			subs,
 			tolerance,
 			motorPathInput.Text(),
 			motorSpeedInput.Text(),
@@ -778,7 +734,7 @@ func build(
 	step int,
 	cycleCount int,
 	printheadArray *printhead.Array,
-	slideArray *slide.Array,
+	subs *substrate.Substrate,
 	tolerance int,
 	motorPath string,
 	motorSpeed string,
@@ -823,128 +779,195 @@ func build(
 
 	// reagent first mode{{{
 
-	count := -1
-	sum := slideArray.ReagentCount()
-	fmt.Println("reagents sum:", sum)
-	go func() {
-		for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
-			fmt.Println("loop cycle", cycleIndex)
-			for pi, p := range printheadArray.Printheads {
-				dataMap := map[int]string{}
-				for _, row := range p.Rows {
-					spots := slideArray.ReagentMap[cycleIndex][row.Reagent.Name]
-					if len(spots) == 0 {
-						continue
-					}
-					for _, v := range spots {
-						fmt.Println("s", v.Reagents[cycleIndex].Reagent.Name)
-					}
-					target := MostLeftSpot(cycleIndex, spots)
-					fmt.Println("row", pi, row.Index, row.Reagent.Name)
-					for target != nil {
-						//time.Sleep(1 * time.Second)
-						fmt.Println("next spot", pi, row.Reagent.Name, target.Pos.X, target.Pos.Y)
-						//fmt.Println("before", row.Index, p.Pos.X, p.Pos.Y)
-						p.UpdatePos(target.Pos.X, target.Pos.Y, row)
-						//fmt.Println("after", row.Index, p.Pos.X, p.Pos.Y)
+	//count := -1
+	//sum := slideArray.ReagentCount()
+	//fmt.Println("reagents sum:", sum)
+	//go func() {
+	//for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
+	//fmt.Println("loop cycle", cycleIndex)
+	//for pi, p := range printheadArray.Printheads {
+	//dataMap := map[int]string{}
+	//for _, row := range p.Rows {
+	//spots := slideArray.ReagentMap[cycleIndex][row.Reagent.Name]
+	//if len(spots) == 0 {
+	//continue
+	//}
+	//for _, v := range spots {
+	//fmt.Println("s", v.Reagents[cycleIndex].Reagent.Name)
+	//}
+	//target := MostLeftSpot(cycleIndex, spots)
+	//fmt.Println("row", pi, row.Index, row.Reagent.Name)
+	//for target != nil {
+	////time.Sleep(1 * time.Second)
+	//fmt.Println("next spot", pi, row.Reagent.Name, target.Pos.X, target.Pos.Y)
+	////fmt.Println("before", row.Index, p.Pos.X, p.Pos.Y)
+	//p.UpdatePos(target.Pos.X, target.Pos.Y, row)
+	////fmt.Println("after", row.Index, p.Pos.X, p.Pos.Y)
 
-						dataBinSlice := make([]string, 1280)
-						for index := range dataBinSlice {
-							dataBinSlice[index] = "0"
-						}
-						printable := false
-						// try print
-						// spot over nozzel is more effective
-						// but the dataBinSlice is overwrite every time
-						for _, nozzle := range row.Nozzles {
-							for _, spot := range spots {
-								if spot.Reagents[cycleIndex].Printed {
-									continue
-								}
-								if nozzle.Pos.Equal(spot.Pos) &&
-									row.Reagent.Equal(spot.Reagents[cycleIndex].Reagent) {
-									count += 1
-									printable = true
-									dataBinSlice[nozzle.Index] = "1"
-									spot.Reagents[cycleIndex].Printed = true
-									buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
-									fmt.Printf(
-										"spot printed: at(%d, %d), reagent %q, nozzle %v\n",
-										spot.Pos.X, spot.Pos.Y,
-										spot.Reagents[cycleIndex].Reagent.Name,
-										nozzle.Index,
-									)
-									// TODO: check the nozzles in other row for high resolution printing
-								}
-							}
-						}
-						if printable {
-							dataHexSlice := make([]string, 160)
-							for i := 0; i < len(dataBinSlice); i += 8 {
-								value, _ := strconv.ParseInt(strings.Join(dataBinSlice[i:i+8], ""), 2, 64)
-								dataHexSlice = append(dataHexSlice, fmt.Sprintf("%02x", value))
-							}
-							data := strings.Join(dataHexSlice, "")
-							dataMap[pi] = data
-							x, y := RawPos(target.Pos.X, target.Pos.Y)
-							bin.AddFormation(
-								cycleIndex, x, y, dataMap[0], dataMap[1],
-							)
-							fmt.Printf(">>> move to (%d, %d)\n", target.Pos.X, target.Pos.Y)
-							fmt.Printf(">>> print: row: %d, data: %#v\n", row.Index, dataBinSlice[:8])
-							fmt.Printf(">>> data: %#v\n", data[:5])
-						}
-						target = MostLeftSpot(cycleIndex, spots)
-					}
-				}
-			}
-		}
-		buildProgressbar.SetValue(buildProgressbar.Maximum())
+	//dataBinSlice := make([]string, 1280)
+	//for index := range dataBinSlice {
+	//dataBinSlice[index] = "0"
+	//}
+	//printable := false
+	//// try print
+	//// spot over nozzel is more effective
+	//// but the dataBinSlice is overwrite every time
+	//for _, nozzle := range row.Nozzles {
+	//for _, spot := range spots {
+	//if spot.Reagents[cycleIndex].Printed {
+	//continue
+	//}
+	//if nozzle.Pos.Equal(spot.Pos) &&
+	//row.Reagent.Equal(spot.Reagents[cycleIndex].Reagent) {
+	//count += 1
+	//printable = true
+	//dataBinSlice[nozzle.Index] = "1"
+	//spot.Reagents[cycleIndex].Printed = true
+	//buildProgressbar.SetValue(count * buildProgressbar.Maximum() / sum)
+	//fmt.Printf(
+	//"spot printed: at(%d, %d), reagent %q, nozzle %v\n",
+	//spot.Pos.X, spot.Pos.Y,
+	//spot.Reagents[cycleIndex].Reagent.Name,
+	//nozzle.Index,
+	//)
+	//// TODO: check the nozzles in other row for high resolution printing
+	//}
+	//}
+	//}
+	//if printable {
+	//dataHexSlice := make([]string, 160)
+	//for i := 0; i < len(dataBinSlice); i += 8 {
+	//value, _ := strconv.ParseInt(strings.Join(dataBinSlice[i:i+8], ""), 2, 64)
+	//dataHexSlice = append(dataHexSlice, fmt.Sprintf("%02x", value))
+	//}
+	//data := strings.Join(dataHexSlice, "")
+	//dataMap[pi] = data
+	//x, y := RawPos(target.Pos.X, target.Pos.Y)
+	//bin.AddFormation(
+	//cycleIndex, x, y, dataMap[0], dataMap[1],
+	//)
+	//fmt.Printf(">>> move to (%d, %d)\n", target.Pos.X, target.Pos.Y)
+	//fmt.Printf(">>> print: row: %d, data: %#v\n", row.Index, dataBinSlice[:8])
+	//fmt.Printf(">>> data: %#v\n", data[:5])
+	//}
+	//target = MostLeftSpot(cycleIndex, spots)
+	//}
+	//}
+	//}
+	//}
+	//buildProgressbar.SetValue(buildProgressbar.Maximum())
 
-		filePath := "test.bin"
-		fmt.Printf("%#v\n", bin)
-		//go func() {
-		file, err := os.Create(filePath)
-		defer file.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-		encoder := gob.NewEncoder(file)
-		encoder.Encode(bin)
-		//}()
-	}()
+	//filePath := "test.bin"
+	//fmt.Printf("%#v\n", bin)
+	////go func() {
+	//file, err := os.Create(filePath)
+	//defer file.Close()
+	//if err != nil {
+	//fmt.Println(err)
+	//}
+	//encoder := gob.NewEncoder(file)
+	//encoder.Encode(bin)
+	////}()
+	//}()
 
 	// }}}
 
 	// normal mode
 
-	count := -1
-	sum := slideArray.ReagentCount()
 	go func() {
 		for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
-			fmt.Println("loop cycle", cycleIndex)
+			fmt.Println(">>>> cycle ", cycleIndex)
+			for stripCount := 0; stripCount < subs.Strip(); stripCount++ {
 
-			slideIndex := 0
-			spotRowIndex := 0
-			spotColIndex := 0
-			spot := slideArray.Slides[slideIndex].Spots[spotRowIndex][spotColIndex]
-			//spot := slideArray.NextSpotInVert(cycleIndex)
-			//if spot == nil {
-			//break
-			//}
+				fmt.Println("strip ", stripCount)
+				posx := stripCount * 1280
+				posy := subs.Top()
 
-			fmt.Println("first spot", spot.Pos.X, spot.Pos.Y)
-			printheadArray.UpdatePos(spot.Pos.X, spot.Pos.Y)
-			for printheadArray.Top() > slideArray.Bottom() {
-				for posy := spot.Pos.Y; printheadArray.Top() > slideArray.Bottom(); posy -= step {
+				rowIndex := 0
 
+				printheadArray.MoveBottomRow(rowIndex, posx, posy)
+				fmt.Println("move row 0 to ", posx, posy)
+
+				for printheadArray.Top() >= subs.Bottom() {
+					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					if count > 0 {
+						fmt.Println("data downward #1", count, dataMap)
+						x, y := RawPos(posx, posy)
+						bin.AddFormation(
+							cycleIndex, x, y, dataMap,
+						)
+					}
+					posy -= step
+					printheadArray.MoveBottomRow(rowIndex, posx, posy)
+				}
+
+				if step == 1 {
+					continue
+				}
+
+				//posx -= 1
+				posy = subs.Bottom()
+				// distance is integer multiple of 4
+				// so that move one row will match the others
+				rowIndex = 1
+				printheadArray.MoveTopRow(rowIndex, posx, posy)
+				fmt.Println("move row 1 to ", posx, posy)
+
+				for printheadArray.Bottom() <= subs.Top() {
+					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					if count > 0 {
+						fmt.Println("data upward #2", count, dataMap)
+						x, y := RawPos(posx, posy)
+						bin.AddFormation(
+							cycleIndex, x, y, dataMap,
+						)
+					}
+					posy += step
+					printheadArray.MoveTopRow(rowIndex, posx, posy)
+				}
+
+				//posx -= 1
+				posy = subs.Top()
+				rowIndex = 2
+				printheadArray.MoveBottomRow(rowIndex, posx, posy)
+				fmt.Println("move row 2 to ", posx, posy)
+
+				for printheadArray.Top() >= subs.Bottom() {
+					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					if count > 0 {
+						fmt.Println("data downward #3", count, dataMap)
+						x, y := RawPos(posx, posy)
+						bin.AddFormation(
+							cycleIndex, x, y, dataMap,
+						)
+					}
+					posy -= step
+					printheadArray.MoveBottomRow(rowIndex, posx, posy)
+				}
+
+				//posx -= 1
+				posy = subs.Bottom()
+				rowIndex = 3
+				printheadArray.MoveTopRow(rowIndex, posx, posy)
+				fmt.Println("move row 3 to ", posx, posy)
+
+				for printheadArray.Bottom() <= subs.Top() {
+					dataMap, count := genData(cycleIndex, printheadArray, subs)
+					if count > 0 {
+						fmt.Println("data upward #4", count, dataMap)
+						x, y := RawPos(posx, posy)
+						bin.AddFormation(
+							cycleIndex, x, y, dataMap,
+						)
+					}
+					posy += step
+					printheadArray.MoveTopRow(rowIndex, posx, posy)
 				}
 			}
+			buildProgressbar.SetValue((cycleIndex + 1) * buildProgressbar.Maximum() / cycleCount)
 		}
-
-		buildProgressbar.SetValue(buildProgressbar.Maximum())
 		filePath := "test.bin"
-		fmt.Printf("%#v\n", bin)
+		//fmt.Printf("%#v\n", bin)
 		//go func() {
 		file, err := os.Create(filePath)
 		defer file.Close()
@@ -955,6 +978,48 @@ func build(
 		encoder.Encode(bin)
 	}()
 
+}
+
+func genData(
+	cycleIndex int,
+	printheadArray *printhead.Array,
+	subs *substrate.Substrate,
+) (map[string]string, int) {
+	count := 0
+	dataMap := make(map[string][]string)
+	for _, nozzle := range printheadArray.Nozzles {
+		if dataMap[nozzle.Printhead.DevicePath] == nil {
+			dataMap[nozzle.Printhead.DevicePath] = make([]string, 1280)
+		}
+		dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "0"
+		//fmt.Println(nozzle.Pos.X, nozzle.Pos.Y, subs.Width, subs.Height)
+		if nozzle.Pos.Y >= subs.Height ||
+			nozzle.Pos.Y < 0 ||
+			nozzle.Pos.X >= subs.Width ||
+			nozzle.Pos.X < 0 {
+			continue
+		}
+		spot := subs.Spots[nozzle.Pos.Y][nozzle.Pos.X]
+		if spot != nil &&
+			nozzle.Reagent.Equal(spot.Reagents[cycleIndex]) {
+			count += 1
+			dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "1"
+			fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
+		}
+	}
+
+	output := make(map[string]string)
+	if count > 0 {
+		for devicePath, dataBinSlice := range dataMap {
+			dataHexSlice := make([]string, 160)
+			for i := 0; i < len(dataBinSlice); i += 8 {
+				value, _ := strconv.ParseInt(strings.Join(dataBinSlice[i:i+8], ""), 2, 64)
+				dataHexSlice = append(dataHexSlice, fmt.Sprintf("%02x", value))
+			}
+			output[devicePath] = strings.Join(dataHexSlice, "")
+		}
+	}
+	return output, count
 }
 
 // genData{{{
@@ -1036,16 +1101,14 @@ func build(
 //}
 //return dataSlice, count
 //}
+
 // }}}
 
 func RawPos(
 	posx int,
 	posy int,
-	//) (string, string) {
-) (int, int) {
-	//return posx - offsetX, posy - offsetY
-	return offsetX + posx, offsetY + posy
-	//return fmt.Sprintf("%v", posx-offsetX), fmt.Sprintf("%v", posy-offsetY)
+) (string, string) {
+	return geometry.Mm(posx + offsetX), geometry.Mm(posy + offsetY)
 }
 
 func MostLeftSpot(cycleIndex int, spots []*slide.Spot) *slide.Spot {
