@@ -124,10 +124,10 @@ func NewInputGroup() *widgets.QGroupBox {
 	motorAccelInput.SetText("100")
 	printhead0PathLabel := widgets.NewQLabel2("Printhead #1 path", nil, 0)
 	printhead0PathInput := widgets.NewQLineEdit(nil)
-	printhead0PathInput.SetText("/Ricoh-G5/Printer#1")
+	printhead0PathInput.SetText("/Ricoh-G5/Printer#0")
 	printhead1PathLabel := widgets.NewQLabel2("Printhead #2 path", nil, 0)
 	printhead1PathInput := widgets.NewQLineEdit(nil)
-	printhead1PathInput.SetText("/Ricoh-G5/Printer#2")
+	printhead1PathInput.SetText("/Ricoh-G5/Printer#1")
 
 	deviceLayout.AddWidget(motorPathLabel, 0, 0, 0)
 	deviceLayout.AddWidget(motorPathInput, 0, 1, 0)
@@ -401,6 +401,10 @@ func NewInputGroup() *widgets.QGroupBox {
 			printhead0PositionY,
 			printhead1PositionX,
 			printhead1PositionY,
+			printhead0OffsetX,
+			printhead0OffsetY,
+			printhead1OffsetX,
+			printhead1OffsetY,
 			slide0PositionX,
 			slide0PositionY,
 			slide1PositionX,
@@ -413,11 +417,6 @@ func NewInputGroup() *widgets.QGroupBox {
 		)
 
 		seqText := sequenceInput.ToPlainText()
-		//offsetX = geometry.Unit(float64(printhead0OffsetX / geometry.MM))
-		//offsetY = geometry.Unit(float64(printhead0OffsetY / geometry.MM))
-		offsetX = float64(printhead0OffsetX / geometry.MM)
-		offsetY = float64(printhead0OffsetY / geometry.MM)
-		fmt.Println("offsets", offsetX, offsetY)
 
 		var step int
 		var space int
@@ -441,6 +440,30 @@ func NewInputGroup() *widgets.QGroupBox {
 
 		// create printhead{{{
 
+		printhead0OffsetXFloat, err := ToFloat(printhead0OffsetXInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		printhead0OffsetYFloat, err := ToFloat(printhead0OffsetYInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		printhead1OffsetXFloat, err := ToFloat(printhead1OffsetXInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		printhead1OffsetYFloat, err := ToFloat(printhead1OffsetYInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		offsetX = printhead0OffsetXFloat
+		offsetY = printhead0OffsetYFloat
+		fmt.Println("offsets", offsetX, offsetY)
+
 		p0 := printhead.NewPrinthead(
 			printhead0PathInput.Text(),
 			[]*reagent.Reagent{
@@ -450,8 +473,8 @@ func NewInputGroup() *widgets.QGroupBox {
 				reagent.NewReagent(printhead0Line3Input.Text()),
 			},
 		)
-		p0x := geometry.Unit(float64(printhead0OffsetX / geometry.MM))
-		p0y := geometry.Unit(float64(printhead0OffsetY / geometry.MM))
+		p0x := geometry.Unit(printhead0OffsetXFloat)
+		p0y := geometry.Unit(printhead0OffsetYFloat)
 		nozzles0 := p0.MakeNozzles(p0x, p0y)
 		fmt.Println("printhead 0", p0x, p0y)
 
@@ -466,8 +489,8 @@ func NewInputGroup() *widgets.QGroupBox {
 		)
 
 		// automatically adujstment for different row alignment
-		p1x := geometry.Unit(float64(printhead1OffsetX / geometry.MM))
-		deltay := geometry.Unit(float64((printhead1OffsetY - printhead0OffsetY) / geometry.MM))
+		p1x := geometry.Unit(printhead1OffsetXFloat)
+		deltay := geometry.Unit(printhead1OffsetYFloat - printhead0OffsetYFloat)
 		yrem := deltay % 4
 		if yrem != 0 {
 			deltay -= yrem
@@ -503,6 +526,11 @@ func NewInputGroup() *widgets.QGroupBox {
 		// }}}
 
 		// create substrate{{{
+		slideAreaSpaceFloat, err := ToFloat(slideAreaSpaceInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
 
 		spots, cycleCount := substrate.ParseSpots(seqText)
 		subs, err := substrate.NewSubstrate(
@@ -510,7 +538,7 @@ func NewInputGroup() *widgets.QGroupBox {
 			3,
 			20.0, // width
 			50.0, // height
-			5.0,  // slide space
+			slideAreaSpaceFloat,
 			spots,
 		)
 		if err != nil {
@@ -555,7 +583,11 @@ func ToFloat(inputString string) (float64, error) {
 	}
 	inputFloat, err := strconv.ParseFloat(inputString, 64)
 	if err != nil {
-		return 0.0, err
+		return 0.0, fmt.Errorf(
+			"failed to convert %q to float: %v",
+			inputString,
+			err.Error(),
+		)
 	}
 	return inputFloat, nil
 }
@@ -919,7 +951,13 @@ func build(
 					dataMap, count := genData(cycleIndex, printheadArray, subs)
 					if count > 0 {
 						fmt.Println("data upward #2", count, dataMap)
-						x, y := RawPos(posx, posy)
+						// use the bottom position
+						// sinc the offset is bottomed
+						//x, y := RawPos(posx, posy)
+						x, y := RawPos(
+							printheadArray.SightBottom.Pos.X,
+							printheadArray.SightBottom.Pos.Y,
+						)
 						bin.AddFormation(
 							cycleIndex, x, y, dataMap,
 						)
@@ -957,7 +995,13 @@ func build(
 					dataMap, count := genData(cycleIndex, printheadArray, subs)
 					if count > 0 {
 						fmt.Println("data upward #4", count, dataMap)
-						x, y := RawPos(posx, posy)
+						// use the bottom position
+						// sinc the offset is bottomed
+						//x, y := RawPos(posx, posy)
+						x, y := RawPos(
+							printheadArray.SightBottom.Pos.X,
+							printheadArray.SightBottom.Pos.Y,
+						)
 						bin.AddFormation(
 							cycleIndex, x, y, dataMap,
 						)
