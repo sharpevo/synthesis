@@ -72,3 +72,8 @@ func NewReagent(name string) *Reagent {
 	}
 	return reagent
 }
+
+func (r *Reagent) Equal(reagent *Reagent) bool {
+	// TODO: color equal
+	return r.Name == reagent.Name
+}
