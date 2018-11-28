@@ -21,9 +21,9 @@ type Substrate struct {
 func NewSubstrate(
 	spotSpaceUnit int, // unit
 	slideNum int,
-	slideWidth int, // mm
-	slideHeight int, // mm
-	slideSpace int, // mm
+	slideWidth float64, // mm
+	slideHeight float64, // mm
+	slideSpace float64, // mm
 	spots []*Spot,
 ) (*Substrate, error) {
 	s := &Substrate{
@@ -77,18 +77,33 @@ func NewSubstrate(
 	return s, nil
 }
 
-func (s *Substrate) Top() {
-	return s.Height
+func (s *Substrate) Top() int {
+	return s.Height - 1
 }
 
-func (s *Substrate) Right() {
-	return s.Width
+func (s *Substrate) Right() int {
+	return s.Width - 1
 }
 
-func (s *Substrate) Bottom() {
+func (s *Substrate) Bottom() int {
 	return 0
 }
 
-func (s *Substrate) Left() {
+func (s *Substrate) Left() int {
 	return 0
+}
+
+func (s *Substrate) Strip() (count int) {
+	quo, rem := s.Width/1280, s.Width%1280
+	if rem != 0 {
+		count = quo + 1
+	} else {
+		count = quo
+	}
+
+	// TODO: segs
+	//for i := 0; i < s.Width; i += 1280{
+	//}
+
+	return count
 }
