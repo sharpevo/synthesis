@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestNewSubstrate(t *testing.T) {
+func xTestNewSubstrate(t *testing.T) {
 	spots := []*substrate.Spot{}
 	for _ = range [50]int{} {
 		spots = append(spots, substrate.NewSpot())
@@ -119,4 +119,41 @@ func TestNewSubstrate(t *testing.T) {
 	//S---S---S---S---S---S-------------------------S---S---S---S---S---S------------------------------------------------
 
 	//S---S---S---S---S---S-------------------------S---S----------------------------------------------------------------
+}
+
+func TestNewSubstrate2(t *testing.T) {
+	spots := []*substrate.Spot{}
+	for _ = range [40000]int{} {
+		spots = append(spots, substrate.NewSpot())
+	}
+	s, err := substrate.NewSubstrate(
+		600/150,
+		3,
+		20, // 10 * 4 * 25.4 / 600
+		25, // 4 * 4 * 25.4 / 600
+		2,  // 5 * 600 / 25.4
+		spots,
+	)
+	fmt.Println(err)
+	for y := range s.Spots {
+		for _, spot := range s.Spots[y] {
+			//fmt.Printf("[%d %d", x, y)
+			if spot != nil {
+				fmt.Printf("S")
+			} else {
+				fmt.Printf("-")
+			}
+
+		}
+		fmt.Println()
+	}
+	fmt.Println()
+
+	for _, spot := range s.Spots[14] {
+		if spot != nil {
+			fmt.Printf("S")
+		} else {
+			fmt.Printf("-")
+		}
+	}
 }
