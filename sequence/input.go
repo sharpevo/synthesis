@@ -23,10 +23,11 @@ const (
 	DPI_600 = "42.325"
 )
 
-var (
-	offsetX = 0
-	offsetY = 0
-)
+var offsetX, offsetY float64 // mm
+//var (
+//offsetX = 0.0 //mm
+//offsetY = 0.0 //mm
+//)
 
 // const{{{
 
@@ -306,13 +307,13 @@ func NewInputGroup() *widgets.QGroupBox {
 	printhead0OffsetLabel := widgets.NewQLabel2("offset #0 (mm)", nil, 0)
 	printhead0OffsetXInput := widgets.NewQLineEdit(nil)
 	printhead0OffsetYInput := widgets.NewQLineEdit(nil)
-	printhead0OffsetXInput.SetText("90")
+	printhead0OffsetXInput.SetText("35")
 	printhead0OffsetYInput.SetText("20")
 
 	printhead1OffsetLabel := widgets.NewQLabel2("offset #1 (mm)", nil, 0)
 	printhead1OffsetXInput := widgets.NewQLineEdit(nil)
 	printhead1OffsetYInput := widgets.NewQLineEdit(nil)
-	printhead1OffsetXInput.SetText("90")
+	printhead1OffsetXInput.SetText("35")
 	printhead1OffsetYInput.SetText("65")
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
@@ -412,8 +413,11 @@ func NewInputGroup() *widgets.QGroupBox {
 		)
 
 		seqText := sequenceInput.ToPlainText()
-		offsetX = geometry.Unit(printhead1OffsetX)
-		offsetY = geometry.Unit(printhead1OffsetY)
+		//offsetX = geometry.Unit(float64(printhead0OffsetX / geometry.MM))
+		//offsetY = geometry.Unit(float64(printhead0OffsetY / geometry.MM))
+		offsetX = float64(printhead0OffsetX / geometry.MM)
+		offsetY = float64(printhead0OffsetY / geometry.MM)
+		fmt.Println("offsets", offsetX, offsetY)
 
 		var step int
 		var space int
@@ -446,7 +450,10 @@ func NewInputGroup() *widgets.QGroupBox {
 				reagent.NewReagent(printhead0Line3Input.Text()),
 			},
 		)
-		nozzles0 := p0.MakeNozzles(0, 0)
+		p0x := geometry.Unit(float64(printhead0OffsetX / geometry.MM))
+		p0y := geometry.Unit(float64(printhead0OffsetY / geometry.MM))
+		nozzles0 := p0.MakeNozzles(p0x, p0y)
+		fmt.Println("printhead 0", p0x, p0y)
 
 		p1 := printhead.NewPrinthead(
 			printhead1PathInput.Text(),
@@ -459,19 +466,14 @@ func NewInputGroup() *widgets.QGroupBox {
 		)
 
 		// automatically adujstment for different row alignment
-		px := geometry.Unit((printhead1OffsetX - printhead0OffsetX) / geometry.MM)
-		xrem := px % 4
-		py := geometry.Unit((printhead1OffsetY - printhead0OffsetY) / geometry.MM)
-		yrem := py % 4
-		fmt.Println("printhead 1", px, py)
-		if xrem != 0 {
-			px -= xrem
-		}
+		p1x := geometry.Unit(float64(printhead1OffsetX / geometry.MM))
+		deltay := geometry.Unit(float64((printhead1OffsetY - printhead0OffsetY) / geometry.MM))
+		yrem := deltay % 4
 		if yrem != 0 {
-			py -= yrem
+			deltay -= yrem
 		}
-		fmt.Println("printhead 1 adjusted", px, py)
-		nozzles1 := p1.MakeNozzles(0, py)
+		fmt.Println("printhead 1", p1x, p0y+deltay)
+		nozzles1 := p1.MakeNozzles(p1x, p0y+deltay)
 
 		printheadArray := printhead.NewArray(
 			append(nozzles0, nozzles1...),
@@ -506,9 +508,9 @@ func NewInputGroup() *widgets.QGroupBox {
 		subs, err := substrate.NewSubstrate(
 			space,
 			3,
-			20, // width
-			50, // height
-			5,  // slide space
+			20.0, // width
+			50.0, // height
+			5.0,  // slide space
 			spots,
 		)
 		if err != nil {
@@ -1108,7 +1110,11 @@ func RawPos(
 	posx int,
 	posy int,
 ) (string, string) {
-	return geometry.Mm(posx + offsetX), geometry.Mm(posy + offsetY)
+	//x := geometry.Mm(posx) + offsetX
+	//y := geometry.Mm(posy) + offsetY
+	x := offsetX - geometry.Mm(posx)
+	y := offsetY - geometry.Mm(posy)
+	return fmt.Sprintf("%.6f", x), fmt.Sprintf("%.6f", y)
 }
 
 func MostLeftSpot(cycleIndex int, spots []*slide.Spot) *slide.Spot {
