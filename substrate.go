@@ -33,7 +33,7 @@ func NewSubstrate(
 	slideHeightUnit := geometry.Unit(slideHeight)
 	slideSpaceUnit := geometry.Unit(slideSpace)
 
-	maxSpotsHori := slideWidthUnit*slideNum + slideSpaceUnit*(slideNum-1)
+	maxSpotsHori := geometry.Unit(slideWidth*float64(slideNum) + slideSpace*float64(slideNum-1))
 	s.Width = maxSpotsHori
 	s.Height = slideHeightUnit
 	s.Spots = make([][]*Spot, slideHeightUnit)
