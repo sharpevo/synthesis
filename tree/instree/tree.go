@@ -39,11 +39,13 @@ func NewTree(
 	treeWidget.SetContextMenuPolicy(core.Qt__CustomContextMenu)
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
 	treeWidget.ConnectItemClicked(treeWidget.customItemClicked)
+	treeWidget.ConnectItemDoubleClicked(treeWidget.customItemDoubleClicked)
 
 	treeWidget.ImportPreviousFile()
 
 	treeWidget.SetAcceptDrops(true)
 	treeWidget.SetDragEnabled(true)
+	treeWidget.SetExpandsOnDoubleClick(false)
 	treeWidget.ConnectDropEvent(treeWidget.customDropEvent)
 	treeWidget.ExpandAll()
 
@@ -201,6 +203,18 @@ func (t *InstructionTree) WriteInputEdit(filePath string) {
 
 func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, column int) {
 	t.detail.Refresh(item)
+}
+
+func (t *InstructionTree) customItemDoubleClicked(item *widgets.QTreeWidgetItem, column int) {
+	node := t.ExportNode(item)
+	pseudop := Node{}
+	pseudop.Children = []Node{node}
+	filePath, err := pseudop.Generate()
+	if err != nil {
+		uiutil.MessageBoxError(err.Error())
+	}
+	t.WriteInputEdit(filePath)
+	t.runButton.Click()
 }
 
 func (t *InstructionTree) Generate() (string, error) {
