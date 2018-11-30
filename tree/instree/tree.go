@@ -57,6 +57,9 @@ func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
 	index := t.IndexAt(e.Pos())
 	item := t.CurrentItem()
 	target := t.ItemFromIndex(index)
+	if target.IsSelected() {
+		return
+	}
 	if !index.IsValid() ||
 		item.Pointer() == nil {
 		return
