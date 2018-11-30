@@ -64,23 +64,7 @@ func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
 		item.Pointer() == nil {
 		return
 	}
-	indic := t.DropIndicatorPosition()
-	isAbove := false
-	switch indic {
-	case widgets.QAbstractItemView__OnItem:
-		fmt.Println("on")
-		isAbove = true
-		break
-	case widgets.QAbstractItemView__AboveItem:
-		fmt.Println("above")
-		break
-	case widgets.QAbstractItemView__BelowItem:
-		fmt.Println("below")
-		break
-	case widgets.QAbstractItemView__OnViewport:
-		fmt.Println("viewport")
-		break
-	}
+
 	parent := item.Parent()
 	if parent.Pointer() == nil {
 		fmt.Println("nil pointer")
@@ -88,18 +72,31 @@ func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
 	}
 	parent.RemoveChild(item)
 
-	if isAbove {
+	tparent := target.Parent()
+	if tparent.Pointer() == nil {
+		fmt.Println("nil pointer")
+		tparent = t.InvisibleRootItem()
+	}
+
+	indic := t.DropIndicatorPosition()
+
+	switch indic {
+	case widgets.QAbstractItemView__OnItem:
 		target.AddChild(item)
 		target.SetExpanded(true)
-	} else {
-
-		tparent := target.Parent()
-		if tparent.Pointer() == nil {
-			fmt.Println("nil pointer")
-			tparent = t.InvisibleRootItem()
-		}
-		tparent.InsertChild(index.Row(), item)
+		break
+	case widgets.QAbstractItemView__AboveItem:
+		tparent.InsertChild(tparent.IndexOfChild(target), item)
+		break
+	case widgets.QAbstractItemView__BelowItem:
+		tparent.InsertChild(tparent.IndexOfChild(target)+1, item)
+		break
+	case widgets.QAbstractItemView__OnViewport:
+		fmt.Println("viewport")
+		break
 	}
+	t.SetCurrentItem(item)
+	//item.SetExpanded(true)
 }
 
 func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
