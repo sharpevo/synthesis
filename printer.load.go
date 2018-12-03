@@ -20,3 +20,12 @@ func (i *InstructionPrinterLoad) ParseFormations(filePath string) (*formation.Bi
 	}
 	return formation.ParseBin(filePathString)
 }
+
+func (i *InstructionPrinterLoad) ParseIndex(variableName string) (int, error) {
+	indexVariable, err := i.ParseIntVariable(variableName)
+	if err != nil {
+		return 0, err
+	}
+	index64, _ := indexVariable.Value.(int64)
+	return int(index64), nil
+}
