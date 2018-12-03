@@ -3,7 +3,6 @@ package instruction
 import (
 	"fmt"
 	"posam/dao"
-	"strconv"
 )
 
 func init() {
@@ -22,7 +21,7 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 	if err != nil {
 		return resp, err
 	}
-	cycleIndex, err := strconv.Atoi(args[1])
+	cycleIndex, err := i.ParseIndex(args[1])
 	if err != nil {
 		return resp, err
 	}
@@ -31,7 +30,7 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 			"invalid cycle index %v (%v)", cycleIndex, bin.CycleCount)
 	}
 	formations := bin.Formations[cycleIndex]
-	groupIndex, err := strconv.Atoi(args[2])
+	groupIndex, err := i.ParseIndex(args[2])
 	if err != nil {
 		return resp, err
 	}

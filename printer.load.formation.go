@@ -3,7 +3,6 @@ package instruction
 import (
 	"fmt"
 	"posam/dao"
-	"strconv"
 )
 
 func init() {
@@ -26,7 +25,7 @@ func (i *InstructionPrinterLoadFormation) Execute(args ...string) (resp interfac
 	if err != nil {
 		return 0, err
 	}
-	cycleIndex, err := strconv.Atoi(args[2])
+	cycleIndex, err := i.ParseIndex(args[2])
 	if err != nil {
 		return 0, err
 	}
