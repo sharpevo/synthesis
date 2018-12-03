@@ -31,7 +31,7 @@ func (i *InstructionControlFlowLessThanGoto) Execute(args ...string) (resp inter
 	if v.Value == vrb.LESS {
 		i.Goto(index)
 		resp = fmt.Sprintf(
-			"condition 'less that' is satisfied and go to %d", index)
+			"condition 'less than' is satisfied and go to %d", index)
 	}
 	return resp, nil
 }
