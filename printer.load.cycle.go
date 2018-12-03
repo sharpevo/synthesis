@@ -25,6 +25,6 @@ func (i *InstructionPrinterLoadCycle) Execute(args ...string) (resp interface{},
 	if err != nil {
 		return resp, err
 	}
-	variable.Value = bin.CycleCount
+	variable.Value = int64(bin.CycleCount)
 	return bin.CycleCount, err
 }

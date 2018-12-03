@@ -34,7 +34,7 @@ func (i *InstructionPrinterLoadFormation) Execute(args ...string) (resp interfac
 		return 0, fmt.Errorf(
 			"invalid cycle index %v (%v)", cycleIndex, bin.CycleCount)
 	}
-	variable.Value = len(bin.Formations[cycleIndex])
+	variable.Value = int64(len(bin.Formations[cycleIndex]))
 	//fmt.Printf("%#v\n", bin.Formations[cycleIndex])
 	return len(bin.Formations[cycleIndex]), err
 }
