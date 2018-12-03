@@ -38,6 +38,7 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 		return resp, fmt.Errorf(
 			"invalid cycle index %v (%v)", cycleIndex, bin.CycleCount)
 	}
+
 	moveArgs := formations[groupIndex].Move
 	fmt.Println(
 		"move",
@@ -58,6 +59,7 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 	if err != nil {
 		return resp, err
 	}
+	lineBuffers := ""
 	for _, printArgs := range formations[groupIndex].Prints {
 		fmt.Println(
 			"print",
@@ -67,6 +69,7 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 			printArgs.PrintheadConf.BufferSize,
 			printArgs.LineBuffer,
 		)
+		lineBuffers += " | " + printArgs.LineBuffer
 		printIns := InstructionPrinterHeadPrintData{}
 		resp, err = printIns.Execute(
 			printArgs.PrintheadConf.Path,
@@ -80,8 +83,11 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 		}
 	}
 	return fmt.Sprintf(
-		"group %v of cycle %v completed",
-		groupIndex,
+		"cycle %v group %v: move (%v, %v), print %v",
 		cycleIndex,
+		groupIndex,
+		moveArgs.PositionX,
+		moveArgs.PositionY,
+		lineBuffers,
 	), err
 }
