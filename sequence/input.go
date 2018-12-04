@@ -1041,7 +1041,11 @@ func genData(
 ) (map[string]string, int) {
 	count := 0
 	dataMap := make(map[string][]string)
+	printableMap := make(map[string]bool)
 	for _, nozzle := range printheadArray.Nozzles {
+		if nozzle.Reagent.Equal(reagent.Nil) {
+			continue
+		}
 		if dataMap[nozzle.Printhead.DevicePath] == nil {
 			dataMap[nozzle.Printhead.DevicePath] = make([]string, 1280)
 		}
@@ -1058,6 +1062,7 @@ func genData(
 			nozzle.Reagent.Equal(spot.Reagents[cycleIndex]) {
 			count += 1
 			dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "1"
+			printableMap[nozzle.Printhead.DevicePath] = true
 
 			if IMAGABLE {
 				fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
