@@ -1,7 +1,6 @@
 package sequence
 
 import (
-	"encoding/gob"
 	"fmt"
 	"github.com/therecipe/qt/widgets"
 	"image"
@@ -1024,16 +1023,11 @@ func build(
 			}
 			buildProgressbar.SetValue((cycleIndex + 1) * buildProgressbar.Maximum() / cycleCount)
 		}
-		filePath := "test.bin"
-		//fmt.Printf("%#v\n", bin)
-		//go func() {
-		file, err := os.Create(filePath)
-		defer file.Close()
+		err := bin.SaveToFile("test.bin")
 		if err != nil {
 			fmt.Println(err)
+			//uiutil.MessageBoxError(err.Error())
 		}
-		encoder := gob.NewEncoder(file)
-		encoder.Encode(bin)
 	}()
 
 }
