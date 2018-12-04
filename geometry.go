@@ -46,9 +46,8 @@ type Area struct {
 	Left   int
 }
 
-func Unit(input float64) int { // mm
-	// to pixels
-	return int(input * 600 / 25.4)
+func Unit(input float64) int {
+	return int(input*600/25.4 + 0.5)
 }
 
 func Mm2(input int) string {
