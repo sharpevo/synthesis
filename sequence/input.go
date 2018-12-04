@@ -30,7 +30,8 @@ var offsetX, offsetY float64 // mm
 //offsetY = 0.0 //mm
 //)
 var (
-	IMAGABLE  = true
+	IMAGABLE = false
+	//IMAGABLE  = true
 	DEBUGABLE = false
 	//DEBUGABLE = true
 )
@@ -542,8 +543,8 @@ func NewInputGroup() *widgets.QGroupBox {
 		subs, err := substrate.NewSubstrate(
 			space,
 			3,
-			20.0, // width
-			50.0, // height
+			20.0, // width // 20
+			50.0, // height // 25
 			slideAreaSpaceFloat,
 			spots,
 		)
@@ -551,7 +552,7 @@ func NewInputGroup() *widgets.QGroupBox {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
-		fmt.Println("substrate", subs.Top(), subs.Bottom())
+		fmt.Println("substrate", subs.Top(), subs.Bottom(), subs.Width, subs.Height)
 		if DEBUGABLE {
 			for _, spot := range spots {
 				fmt.Println(spot.Pos.X, spot.Pos.Y)
@@ -920,9 +921,11 @@ func build(
 
 	go func() {
 		for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
+			//for cycleIndex := 0; cycleIndex < 2; cycleIndex++ {
 			img := image.NewRGBA(image.Rect(0, 0, subs.Width, subs.Height))
-			fmt.Println(">>>> cycle ", cycleIndex)
-			for stripCount := 0; stripCount < subs.Strip(); stripCount++ {
+			fmt.Println("cycle ", cycleIndex)
+			stripSum := subs.Strip()
+			for stripCount := 0; stripCount < stripSum; stripCount++ {
 
 				fmt.Println("strip ", stripCount)
 				posx := stripCount * 1280
@@ -936,7 +939,9 @@ func build(
 				for printheadArray.Top() >= subs.Bottom() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
-						fmt.Println("data downward #1", count, dataMap)
+						if DEBUGABLE {
+							fmt.Println("data downward #1", count, dataMap)
+						}
 						x, y := RawPos(posx, posy)
 						bin.AddFormation(
 							cycleIndex, x, y, dataMap,
@@ -961,7 +966,9 @@ func build(
 				for printheadArray.Bottom() <= subs.Top() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
-						fmt.Println("data upward #2", count, dataMap)
+						if DEBUGABLE {
+							fmt.Println("data upward #2", count, dataMap)
+						}
 						// use the bottom position
 						// sinc the offset is bottomed
 						//x, y := RawPos(posx, posy)
@@ -986,7 +993,9 @@ func build(
 				for printheadArray.Top() >= subs.Bottom() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
-						fmt.Println("data downward #3", count, dataMap)
+						if DEBUGABLE {
+							fmt.Println("data downward #3", count, dataMap)
+						}
 						x, y := RawPos(posx, posy)
 						bin.AddFormation(
 							cycleIndex, x, y, dataMap,
@@ -1005,7 +1014,9 @@ func build(
 				for printheadArray.Bottom() <= subs.Top() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
 					if count > 0 {
-						fmt.Println("data upward #4", count, dataMap)
+						if DEBUGABLE {
+							fmt.Println("data upward #4", count, dataMap)
+						}
 						// use the bottom position
 						// sinc the offset is bottomed
 						//x, y := RawPos(posx, posy)
@@ -1064,8 +1075,10 @@ func genData(
 			dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "1"
 			printableMap[nozzle.Printhead.DevicePath] = true
 
-			if IMAGABLE {
+			if DEBUGABLE {
 				fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
+			}
+			if IMAGABLE {
 				img.Set(nozzle.Pos.X, subs.Height-nozzle.Pos.Y, nozzle.Reagent.Color)
 			}
 		}
@@ -1074,16 +1087,24 @@ func genData(
 	output := make(map[string]string)
 	if count > 0 {
 		for devicePath, dataBinSlice := range dataMap {
+			if !printableMap[devicePath] {
+				continue
+			}
 			dataHexSlice := make([]string, 160)
 			for i := 0; i < len(dataBinSlice); i += 8 {
 				value, _ := strconv.ParseInt(strings.Join(dataBinSlice[i:i+8], ""), 2, 64)
 				dataHexSlice = append(dataHexSlice, fmt.Sprintf("%02x", value))
 			}
 			output[devicePath] = strings.Join(dataHexSlice, "")
+			if DEBUGABLE {
+				fmt.Println("print device", devicePath)
+				fmt.Printf("data: %#v\n", dataBinSlice[:16])
+				fmt.Printf("linebuffer: %#v\n", output[devicePath][:8])
+			}
 		}
 
 		if IMAGABLE {
-			outputFile, _ := os.Create(fmt.Sprintf("output/%04d.%03d.png", *imageIndex, cycleIndex))
+			outputFile, _ := os.Create(fmt.Sprintf("output/%06d.%03d.png", *imageIndex, cycleIndex))
 			png.Encode(outputFile, img)
 			outputFile.Close()
 			*imageIndex = *imageIndex + 1
