@@ -520,8 +520,10 @@ func NewInputGroup() *widgets.QGroupBox {
 		// automatically adujstment for different row alignment
 		p1x := geometry.Unit(printhead1OffsetXFloat)
 		deltay := geometry.Unit(printhead1OffsetYFloat - printhead0OffsetYFloat)
-		yrem := deltay % 4
-		if yrem != 0 {
+		yrem := deltay % step
+		if yrem > step/2 {
+			deltay += step - yrem
+		} else {
 			deltay -= yrem
 		}
 		fmt.Println("printhead 1", p1x, p0y+deltay)
