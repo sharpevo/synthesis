@@ -46,24 +46,6 @@ func (a *Array) sights() (top *Nozzle, bottom *Nozzle) {
 	return top, bottom
 }
 
-func (a *Array) MoveTop(posx int, posy int) {
-	deltax := posx - a.SightTop.Pos.X
-	deltay := posy - a.SightTop.Pos.Y
-	for _, n := range a.Nozzles {
-		n.Pos.X = n.Pos.X + deltax
-		n.Pos.Y = n.Pos.Y + deltay
-	}
-}
-
-func (a *Array) MoveBottom(posx int, posy int) {
-	deltax := posx - a.SightBottom.Pos.X
-	deltay := posy - a.SightBottom.Pos.Y
-	for _, n := range a.Nozzles {
-		n.Pos.X = n.Pos.X + deltax
-		n.Pos.Y = n.Pos.Y + deltay
-	}
-}
-
 func (a *Array) MoveBottomRow(rowIndex, posx int, posy int) {
 	var deltax, deltay int
 	switch rowIndex {
