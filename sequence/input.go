@@ -494,7 +494,7 @@ func NewInputGroup() *widgets.QGroupBox {
 		fmt.Println("offsets", offsetX, offsetY)
 
 		p0 := printhead.NewPrinthead(
-			printhead0PathInput.Text(),
+			0,
 			[]*reagent.Reagent{
 				reagent.NewReagent(printhead0Line0Input.Text()),
 				reagent.NewReagent(printhead0Line1Input.Text()),
@@ -508,7 +508,7 @@ func NewInputGroup() *widgets.QGroupBox {
 		fmt.Println("printhead 0", p0x, p0y)
 
 		p1 := printhead.NewPrinthead(
-			printhead1PathInput.Text(),
+			1,
 			[]*reagent.Reagent{
 				reagent.NewReagent(printhead1Line0Input.Text()),
 				reagent.NewReagent(printhead1Line1Input.Text()),
@@ -531,6 +531,7 @@ func NewInputGroup() *widgets.QGroupBox {
 
 		printheadArray := printhead.NewArray(
 			append(nozzles0, nozzles1...),
+			2,
 		)
 		fmt.Println(
 			"sights",
@@ -601,7 +602,6 @@ func NewInputGroup() *widgets.QGroupBox {
 			motorSpeedInput.Text(),
 			motorAccelInput.Text(),
 			printhead0PathInput.Text(),
-			printhead1PathInput.Text(),
 			buildProgressbar,
 		)
 
@@ -807,7 +807,6 @@ func build(
 	motorSpeed string,
 	motorAccel string,
 	printhead0Path string,
-	printhead1Path string,
 	buildProgressbar *widgets.QProgressBar,
 ) {
 	//filePath, err := uiutil.FilePath()
@@ -832,14 +831,8 @@ func build(
 		formation.NewPrintheadConf(
 			printhead0Path,
 			"1",
-			"1280",
-			"160",
-		),
-		formation.NewPrintheadConf(
-			printhead1Path,
-			"1",
-			"1280",
-			"160",
+			"2560",
+			"320",
 		),
 	)
 	fmt.Println("create bin", bin)
@@ -1073,18 +1066,17 @@ func genData(
 	subs *substrate.Substrate,
 	img *image.RGBA,
 	imageIndex *int,
-) (map[string]string, int) {
+) ([]string, int) {
 	count := 0
-	dataMap := make(map[string][]string)
-	printableMap := make(map[string]bool)
+	dataSlice := make([][]string, printheadArray.PrintheadCount)
 	for _, nozzle := range printheadArray.Nozzles {
+		if dataSlice[nozzle.Printhead.Index] == nil {
+			dataSlice[nozzle.Printhead.Index] = make([]string, 1280)
+		}
+		dataSlice[nozzle.Printhead.Index][nozzle.Index] = "0"
 		if nozzle.Reagent.Equal(reagent.Nil) {
 			continue
 		}
-		if dataMap[nozzle.Printhead.DevicePath] == nil {
-			dataMap[nozzle.Printhead.DevicePath] = make([]string, 1280)
-		}
-		dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "0"
 		//fmt.Println(nozzle.Pos.X, nozzle.Pos.Y, subs.Width, subs.Height)
 		if nozzle.Pos.Y >= subs.Height ||
 			nozzle.Pos.Y < 0 ||
@@ -1093,11 +1085,14 @@ func genData(
 			continue
 		}
 		spot := subs.Spots[nozzle.Pos.Y][nozzle.Pos.X]
+		if spot == nil || cycleIndex > len(spot.Reagents)-1 {
+			//fmt.Println("not enough reagents")
+			continue
+		}
 		if spot != nil &&
 			nozzle.Reagent.Equal(spot.Reagents[cycleIndex]) {
 			count += 1
-			dataMap[nozzle.Printhead.DevicePath][nozzle.Index] = "1"
-			printableMap[nozzle.Printhead.DevicePath] = true
+			dataSlice[nozzle.Printhead.Index][nozzle.Index] = "1"
 
 			if DEBUGABLE {
 				fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
@@ -1108,22 +1103,19 @@ func genData(
 		}
 	}
 
-	output := make(map[string]string)
+	output := make([]string, printheadArray.PrintheadCount)
 	if count > 0 {
-		for devicePath, dataBinSlice := range dataMap {
-			if !printableMap[devicePath] {
-				continue
-			}
+		for deviceIndex, dataBinSlice := range dataSlice {
 			dataHexSlice := make([]string, 160)
 			for i := 0; i < len(dataBinSlice); i += 8 {
 				value, _ := strconv.ParseInt(strings.Join(dataBinSlice[i:i+8], ""), 2, 64)
 				dataHexSlice = append(dataHexSlice, fmt.Sprintf("%02x", value))
 			}
-			output[devicePath] = strings.Join(dataHexSlice, "")
+			output[deviceIndex] = strings.Join(dataHexSlice, "")
 			if DEBUGABLE {
-				fmt.Println("print device", devicePath)
+				fmt.Println("print device", deviceIndex)
 				fmt.Printf("data: %#v\n", dataBinSlice[:16])
-				fmt.Printf("linebuffer: %#v\n", output[devicePath][:8])
+				fmt.Printf("linebuffer: %#v\n", output[deviceIndex][:8])
 			}
 		}
 
