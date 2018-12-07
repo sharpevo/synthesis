@@ -324,17 +324,23 @@ func NewInputGroup() *widgets.QGroupBox {
 	slideAreaSpaceInput := widgets.NewQLineEdit(nil)
 	slideAreaSpaceInput.SetText("5")
 
-	printhead0OffsetLabel := widgets.NewQLabel2("offset #0 (mm)", nil, 0)
-	printhead0OffsetXInput := widgets.NewQLineEdit(nil)
-	printhead0OffsetYInput := widgets.NewQLineEdit(nil)
-	printhead0OffsetXInput.SetText("35")
-	printhead0OffsetYInput.SetText("20")
-
 	printhead1OffsetLabel := widgets.NewQLabel2("offset #1 (mm)", nil, 0)
 	printhead1OffsetXInput := widgets.NewQLineEdit(nil)
 	printhead1OffsetYInput := widgets.NewQLineEdit(nil)
-	printhead1OffsetXInput.SetText("35")
-	printhead1OffsetYInput.SetText("65")
+	printhead1OffsetXInput.SetText("49.8") // 35
+	printhead1OffsetYInput.SetText("23")   // 65
+
+	printhead0OffsetLabel := widgets.NewQLabel2("offset #0 (mm)", nil, 0)
+	printhead0OffsetXInput := widgets.NewQLineEdit(nil)
+	printhead0OffsetYInput := widgets.NewQLineEdit(nil)
+	printhead0OffsetXInput.SetText("49.8") // 35
+	printhead0OffsetYInput.SetText("-22")  // 20
+
+	slideGeometryLabel := widgets.NewQLabel2("slide (mm)", nil, 0)
+	slideGeometryWidthInput := widgets.NewQLineEdit(nil)
+	slideGeometryHeightInput := widgets.NewQLineEdit(nil)
+	slideGeometryWidthInput.SetText("20")
+	slideGeometryHeightInput.SetText("27")
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
@@ -342,12 +348,15 @@ func NewInputGroup() *widgets.QGroupBox {
 	miscLayout.AddWidget3(dpiInput, 1, 1, 1, 2, 0)
 	miscLayout.AddWidget(slideAreaSpaceLabel, 2, 0, 0)
 	miscLayout.AddWidget3(slideAreaSpaceInput, 2, 1, 1, 2, 0)
-	miscLayout.AddWidget(printhead0OffsetLabel, 3, 0, 0)
-	miscLayout.AddWidget(printhead0OffsetXInput, 3, 1, 0)
-	miscLayout.AddWidget(printhead0OffsetYInput, 3, 2, 0)
+	miscLayout.AddWidget(slideGeometryLabel, 3, 0, 0)
+	miscLayout.AddWidget(slideGeometryWidthInput, 3, 1, 0)
+	miscLayout.AddWidget(slideGeometryHeightInput, 3, 2, 0)
 	miscLayout.AddWidget(printhead1OffsetLabel, 4, 0, 0)
 	miscLayout.AddWidget(printhead1OffsetXInput, 4, 1, 0)
 	miscLayout.AddWidget(printhead1OffsetYInput, 4, 2, 0)
+	miscLayout.AddWidget(printhead0OffsetLabel, 5, 0, 0)
+	miscLayout.AddWidget(printhead0OffsetXInput, 5, 1, 0)
+	miscLayout.AddWidget(printhead0OffsetYInput, 5, 2, 0)
 
 	// }}}
 
@@ -474,6 +483,17 @@ func NewInputGroup() *widgets.QGroupBox {
 			uiutil.MessageBoxError(err.Error())
 			return
 		}
+
+		var maxOffsetX = 50 - 4*25.4/600
+		if printhead0OffsetXFloat > maxOffsetX {
+			uiutil.MessageBoxError(fmt.Sprintf(
+				"invalid offset of printhead #0: %v > %v",
+				printhead0OffsetXFloat,
+				maxOffsetX,
+			))
+			return
+		}
+
 		printhead0OffsetYFloat, err := ToFloat(printhead0OffsetYInput.Text())
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
@@ -564,12 +584,39 @@ func NewInputGroup() *widgets.QGroupBox {
 			return
 		}
 
+		slideGeometryWidthFloat, err := ToFloat(slideGeometryWidthInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		slideGeometryHeightFloat, err := ToFloat(slideGeometryHeightInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+
+		maxY := slideGeometryHeightFloat + printhead0OffsetYFloat
+		if printhead0OffsetYFloat < 0 {
+			maxY = slideGeometryHeightFloat - printhead0OffsetYFloat
+		}
+		if maxY >= 50.0 {
+			uiutil.MessageBoxError(
+				fmt.Sprintf(
+					"invalid slide height: %v + %v > 50.0",
+					slideGeometryHeightFloat,
+					printhead0OffsetYFloat,
+				))
+			return
+		}
+
 		spots, cycleCount := substrate.ParseSpots(seqText)
 		subs, err := substrate.NewSubstrate(
 			space,
 			3,
-			20.0, // width // 20
-			50.0, // height // 25
+			slideGeometryWidthFloat,
+			slideGeometryHeightFloat,
+			//20.0, // width // 20
+			//50.0, // height // 25
 			slideAreaSpaceFloat,
 			spots,
 		)
