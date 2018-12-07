@@ -1262,10 +1262,11 @@ func RawPos(
 	posx int,
 	posy int,
 ) (string, string) {
-	//x := geometry.Mm(posx) + offsetX
-	//y := geometry.Mm(posy) + offsetY
 	x := offsetX - geometry.Mm(posx)
 	y := offsetY - geometry.Mm(posy)
+	if DEBUGABLE {
+		fmt.Println("move to", x, y)
+	}
 	return fmt.Sprintf("%.6f", x), fmt.Sprintf("%.6f", y)
 }
 
