@@ -167,7 +167,7 @@ func NewInputGroup() *widgets.QGroupBox {
 	positionGroup := widgets.NewQGroupBox2("Position (unit: mm)", nil)
 	positionLayout := widgets.NewQGridLayout2()
 	positionGroup.SetLayout(positionLayout)
-	layout.AddWidget(positionGroup, 3, 0, 0)
+	//layout.AddWidget(positionGroup, 3, 0, 0)
 
 	printhead0PositionLabel := widgets.NewQLabel2("Printhead #0", nil, 0)
 	printhead1PositionLabel := widgets.NewQLabel2("Printhead #1", nil, 0)
@@ -226,7 +226,7 @@ func NewInputGroup() *widgets.QGroupBox {
 	spaceGroup := widgets.NewQGroupBox2("Space (unit: um)", nil)
 	spaceLayout := widgets.NewQGridLayout2()
 	spaceGroup.SetLayout(spaceLayout)
-	layout.AddWidget(spaceGroup, 4, 0, 0)
+	layout.AddWidget(spaceGroup, 3, 0, 0)
 
 	spaceLabel := widgets.NewQLabel2("Spot space", nil, 0)
 	spacexInput := widgets.NewQLineEdit(nil)
@@ -246,7 +246,7 @@ func NewInputGroup() *widgets.QGroupBox {
 	reagentGroup := widgets.NewQGroupBox2("Reagent", nil)
 	reagentLayout := widgets.NewQGridLayout2()
 	reagentGroup.SetLayout(reagentLayout)
-	layout.AddWidget(reagentGroup, 5, 0, 0)
+	layout.AddWidget(reagentGroup, 4, 0, 0)
 
 	printhead0Line0Label := widgets.NewQLabel2("Row A of Printhead #0", nil, 0)
 	printhead0Line1Label := widgets.NewQLabel2("Row B of Printhead #0", nil, 0)
@@ -308,7 +308,7 @@ func NewInputGroup() *widgets.QGroupBox {
 	miscGroup := widgets.NewQGroupBox2("Misc", nil)
 	miscLayout := widgets.NewQGridLayout2()
 	miscGroup.SetLayout(miscLayout)
-	layout.AddWidget(miscGroup, 6, 0, 0)
+	layout.AddWidget(miscGroup, 5, 0, 0)
 
 	toleranceLabel := widgets.NewQLabel2("Tolerance (um)", nil, 0)
 	toleranceInput := widgets.NewQLineEdit(nil)
@@ -363,10 +363,10 @@ func NewInputGroup() *widgets.QGroupBox {
 	// build button
 
 	buildButton := widgets.NewQPushButton2("BUILD", nil)
-	layout.AddWidget(buildButton, 7, 0, 0)
+	layout.AddWidget(buildButton, 6, 0, 0)
 
 	buildProgressbar := widgets.NewQProgressBar(nil)
-	layout.AddWidget(buildProgressbar, 8, 0, 0)
+	layout.AddWidget(buildProgressbar, 7, 0, 0)
 
 	buildProgressbar.SetWindowTitle("building...")
 	buildProgressbar.SetMinimum(0)
