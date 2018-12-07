@@ -52,13 +52,14 @@ func NewPrintheadConf(
 
 type PrintInstruction struct {
 	PrintheadConf PrintheadConf
-	LineBuffer    string
+	LineBuffers   []string
 }
 
 type Formation struct {
 	CycleIndex int
 	Move       MoveInstruction
 	Prints     []PrintInstruction
+	Print      PrintInstruction
 }
 
 type Cycle struct {
@@ -114,12 +115,9 @@ func (b *Bin) AddFormation(
 	}
 	formation.Move = moveIns
 
-	for devicePath, data := range dataMap {
-		ins := PrintInstruction{
-			PrintheadConf: b.PrintheadConfs[devicePath],
-			LineBuffer:    data,
-		}
-		formation.Prints = append(formation.Prints, ins)
+	formation.Print = PrintInstruction{
+		PrintheadConf: b.PrintheadConf,
+		LineBuffers:   dataSlice,
 	}
 
 	if b.Formations == nil {
