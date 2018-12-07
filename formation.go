@@ -1,8 +1,10 @@
 package formation
 
 import (
+	"encoding/gob"
 	"fmt"
-	"sync"
+	"os"
+	//"sync"
 )
 
 type MotorConf struct {
