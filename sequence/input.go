@@ -270,9 +270,9 @@ func NewInputGroup() *widgets.QGroupBox {
 
 	printhead0Line0Input.SetText("A")
 	printhead0Line1Input.SetText("C")
-	printhead0Line2Input.SetText("G")
+	printhead0Line2Input.SetText("Z")
 	printhead0Line3Input.SetText("T")
-	printhead1Line0Input.SetText("Z")
+	printhead1Line0Input.SetText("-")
 	printhead1Line1Input.SetText("-")
 	printhead1Line2Input.SetText("-")
 	printhead1Line3Input.SetText("-")
