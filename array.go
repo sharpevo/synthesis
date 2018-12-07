@@ -3,16 +3,19 @@ package printhead
 import ()
 
 type Array struct {
-	Nozzles     []*Nozzle
-	SightBottom *Nozzle
-	SightTop    *Nozzle
+	Nozzles        []*Nozzle
+	SightBottom    *Nozzle
+	SightTop       *Nozzle
+	PrintheadCount int
 }
 
 func NewArray(
 	nozzles []*Nozzle,
+	printheadCount int,
 ) *Array {
 	a := &Array{
-		Nozzles: nozzles,
+		Nozzles:        nozzles,
+		PrintheadCount: printheadCount,
 	}
 	a.SightTop, a.SightBottom = a.sights()
 	return a

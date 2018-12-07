@@ -6,17 +6,17 @@ import (
 )
 
 type Printhead struct {
-	DevicePath string
-	Reagents   []*reagent.Reagent
+	Index    int
+	Reagents []*reagent.Reagent
 }
 
 func NewPrinthead(
-	devicePath string,
+	index int,
 	reagents []*reagent.Reagent,
 ) *Printhead {
 	p := &Printhead{
-		DevicePath: devicePath,
-		Reagents:   reagents,
+		Index:    index,
+		Reagents: reagents,
 	}
 	return p
 }
