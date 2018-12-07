@@ -122,3 +122,29 @@ func (b *Bin) AddFormation(
 	}
 	b.Formations[cycleIndex] = append(b.Formations[cycleIndex], formation)
 }
+
+func (b *Bin) SaveToFile(filePath string) error {
+	file, err := os.Create(filePath)
+	defer file.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	encoder := gob.NewEncoder(file)
+	err = encoder.Encode(b)
+	return err
+}
+
+func ParseBin(filePath string) (*Bin, error) {
+	file, err := os.Open(filePath)
+	defer file.Close()
+	if err != nil {
+		return nil, err
+	}
+	decoder := gob.NewDecoder(file)
+	bin := &Bin{}
+	err = decoder.Decode(bin)
+	if err != nil {
+		return nil, err
+	}
+	return bin, nil
+}
