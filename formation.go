@@ -69,27 +69,23 @@ type Cycle struct {
 }
 
 type Bin struct {
-	sync.RWMutex
-	CycleCount     int
-	MotorConf      MotorConf
-	PrintheadConfs map[string]PrintheadConf
-	Formations     map[int][]Formation
-	CycleMap       map[int]Cycle
+	//sync.RWMutex
+	CycleCount    int
+	MotorConf     MotorConf
+	PrintheadConf PrintheadConf
+	Formations    map[int][]Formation
+	CycleMap      map[int]Cycle
 }
 
 func NewBin(
 	cycleCount int,
 	motorConf MotorConf,
-	printhead0Conf PrintheadConf,
-	printhead1Conf PrintheadConf,
+	printheadConf PrintheadConf,
 ) *Bin {
 	return &Bin{
-		CycleCount: cycleCount,
-		MotorConf:  motorConf,
-		PrintheadConfs: map[string]PrintheadConf{
-			printhead0Conf.Path: printhead0Conf,
-			printhead1Conf.Path: printhead1Conf,
-		},
+		CycleCount:    cycleCount,
+		MotorConf:     motorConf,
+		PrintheadConf: printheadConf,
 	}
 }
 
@@ -97,17 +93,15 @@ func (b *Bin) AddFormation(
 	cycleIndex int,
 	posx string,
 	posy string,
-	dataMap map[string]string,
+	dataSlice []string,
 ) {
-	b.Lock()
-	defer b.Unlock()
+	//b.Lock()
+	//defer b.Unlock()
 	formation := Formation{
 		CycleIndex: cycleIndex,
 	}
-	//x := fmt.Sprintf("%.6f", float64(posx)/float64(geometry.MM))
-	//y := fmt.Sprintf("%.6f", float64(posy)/float64(geometry.MM))
 	x, y := posx, posy
-	fmt.Println("motion in aoztech", x, y)
+	//fmt.Println("move to", x, y)
 	moveIns := MoveInstruction{
 		MotorConf: b.MotorConf,
 		PositionX: x,
