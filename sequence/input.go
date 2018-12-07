@@ -327,20 +327,20 @@ func NewInputGroup() *widgets.QGroupBox {
 	printhead1OffsetLabel := widgets.NewQLabel2("offset #1 (mm)", nil, 0)
 	printhead1OffsetXInput := widgets.NewQLineEdit(nil)
 	printhead1OffsetYInput := widgets.NewQLineEdit(nil)
-	printhead1OffsetXInput.SetText("49.8") // 35
-	printhead1OffsetYInput.SetText("23")   // 65
+	printhead1OffsetXInput.SetText("35") // 35
+	printhead1OffsetYInput.SetText("65") // 65
 
 	printhead0OffsetLabel := widgets.NewQLabel2("offset #0 (mm)", nil, 0)
 	printhead0OffsetXInput := widgets.NewQLineEdit(nil)
 	printhead0OffsetYInput := widgets.NewQLineEdit(nil)
-	printhead0OffsetXInput.SetText("49.8") // 35
-	printhead0OffsetYInput.SetText("-22")  // 20
+	printhead0OffsetXInput.SetText("35") // 35
+	printhead0OffsetYInput.SetText("20") // 20
 
 	slideGeometryLabel := widgets.NewQLabel2("slide (mm)", nil, 0)
 	slideGeometryWidthInput := widgets.NewQLineEdit(nil)
 	slideGeometryHeightInput := widgets.NewQLineEdit(nil)
 	slideGeometryWidthInput.SetText("20")
-	slideGeometryHeightInput.SetText("27")
+	slideGeometryHeightInput.SetText("30")
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
