@@ -17,7 +17,7 @@ func NewMotorConf(
 	accel string,
 ) MotorConf {
 	return MotorConf{
-		Path:  path,
+		Path:  fmt.Sprintf("%s/CONN/DEVICE_NAME", path),
 		Speed: speed,
 		Accel: accel,
 	}
@@ -43,7 +43,7 @@ func NewPrintheadConf(
 	bufferSize string,
 ) PrintheadConf {
 	return PrintheadConf{
-		Path:         path,
+		Path:         fmt.Sprintf("%s/CONN/ADDRESS", path),
 		BitsPerPixel: bitsPerPixel,
 		Width:        width,
 		BufferSize:   bufferSize,
