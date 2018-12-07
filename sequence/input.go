@@ -986,7 +986,7 @@ func build(
 	go func() {
 		for cycleIndex := 0; cycleIndex < cycleCount; cycleIndex++ {
 			//for cycleIndex := 0; cycleIndex < 2; cycleIndex++ {
-			img := image.NewRGBA(image.Rect(0, 0, subs.Width, subs.Height))
+			img := image.NewRGBA(image.Rect(0, 0, subs.Width, subs.Height+1))
 			fmt.Println("cycle ", cycleIndex)
 			stripSum := subs.Strip()
 			for stripCount := 0; stripCount < stripSum; stripCount++ {
