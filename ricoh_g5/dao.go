@@ -129,7 +129,8 @@ func (d *Dao) PrintData(
 	bitsPerPixel string,
 	width string,
 	lineBufferSize string,
-	lineBuffer string,
+	lineBuffer0 string,
+	lineBuffer1 string,
 ) (resp interface{}, err error) {
 
 	bitsPerPixelBytes, err := Int32ByteSequence(bitsPerPixel)
@@ -149,7 +150,14 @@ func (d *Dao) PrintData(
 		return resp, err
 	}
 	length := lineBufferSizeArgument.Value.(int32)
-	lineBufferBytes, err := VariantByteSequence(lineBuffer, int(length))
+	if length != 320 {
+		return resp, fmt.Errorf("not enough size of line buffer %v", length)
+	}
+	lineBuffer0Bytes, err := VariantByteSequence(lineBuffer0, 160)
+	if err != nil {
+		return resp, err
+	}
+	lineBuffer1Bytes, err := VariantByteSequence(lineBuffer1, 160)
 	if err != nil {
 		return resp, err
 	}
@@ -159,7 +167,8 @@ func (d *Dao) PrintData(
 	reqBytes = append(reqBytes, bitsPerPixelBytes...)
 	reqBytes = append(reqBytes, widthBytes...)
 	reqBytes = append(reqBytes, lineBufferSizeBytes...)
-	reqBytes = append(reqBytes, lineBufferBytes...)
+	reqBytes = append(reqBytes, lineBuffer0Bytes...)
+	reqBytes = append(reqBytes, lineBuffer1Bytes...)
 	resp, err = d.TCPClient.Send(
 		reqBytes,
 		PrintDataUnit.ComResp(),
