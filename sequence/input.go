@@ -142,12 +142,12 @@ func NewInputGroup() *widgets.QGroupBox {
 	motorAccelLabel := widgets.NewQLabel2("Motor acceleration", nil, 0)
 	motorAccelInput := widgets.NewQLineEdit(nil)
 	motorAccelInput.SetText("100")
-	printhead0PathLabel := widgets.NewQLabel2("Printhead #1 path", nil, 0)
+	printhead0PathLabel := widgets.NewQLabel2("Printhead path", nil, 0)
 	printhead0PathInput := widgets.NewQLineEdit(nil)
-	printhead0PathInput.SetText("/Ricoh-G5/Printer#0")
-	printhead1PathLabel := widgets.NewQLabel2("Printhead #2 path", nil, 0)
-	printhead1PathInput := widgets.NewQLineEdit(nil)
-	printhead1PathInput.SetText("/Ricoh-G5/Printer#1")
+	printhead0PathInput.SetText("/Ricoh-G5/Printer#2")
+	//printhead1PathLabel := widgets.NewQLabel2("Printhead #2 path", nil, 0)
+	//printhead1PathInput := widgets.NewQLineEdit(nil)
+	//printhead1PathInput.SetText("/Ricoh-G5/Printer#1")
 
 	deviceLayout.AddWidget(motorPathLabel, 0, 0, 0)
 	deviceLayout.AddWidget(motorPathInput, 0, 1, 0)
@@ -157,8 +157,8 @@ func NewInputGroup() *widgets.QGroupBox {
 	deviceLayout.AddWidget(motorAccelInput, 2, 1, 0)
 	deviceLayout.AddWidget(printhead0PathLabel, 3, 0, 0)
 	deviceLayout.AddWidget(printhead0PathInput, 3, 1, 0)
-	deviceLayout.AddWidget(printhead1PathLabel, 4, 0, 0)
-	deviceLayout.AddWidget(printhead1PathInput, 4, 1, 0)
+	//deviceLayout.AddWidget(printhead1PathLabel, 4, 0, 0)
+	//deviceLayout.AddWidget(printhead1PathInput, 4, 1, 0)
 
 	// }}}
 
