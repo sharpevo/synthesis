@@ -55,10 +55,10 @@ func (a *Array) MoveBottomRow(rowIndex, posx int, posy int) {
 	case 0:
 		deltax = posx - a.SightBottom.Pos.X
 		deltay = posy - a.SightBottom.Pos.Y
-	case 1: // 3rd
+	case 1:
 		deltax = posx - (a.SightBottom.Pos.X + 1)
 		deltay = posy - (a.SightBottom.Pos.Y + 279)
-	case 2: // 2nd
+	case 2:
 		deltax = posx - (a.SightBottom.Pos.X + 2)
 		deltay = posy - (a.SightBottom.Pos.Y + 13)
 	case 3:
@@ -77,10 +77,10 @@ func (a *Array) MoveTopRow(rowIndex, posx int, posy int) {
 	case 0:
 		deltax = posx - (a.SightTop.Pos.X - 3)
 		deltay = posy - (a.SightTop.Pos.Y - 292)
-	case 1: // 3rd
+	case 1:
 		deltax = posx - (a.SightTop.Pos.X - 2)
 		deltay = posy - (a.SightTop.Pos.Y - 13)
-	case 2: // 2nd
+	case 2:
 		deltax = posx - (a.SightTop.Pos.X - 1)
 		deltay = posy - (a.SightTop.Pos.Y - 279)
 	case 3:
