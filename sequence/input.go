@@ -340,7 +340,7 @@ func NewInputGroup() *widgets.QGroupBox {
 	slideGeometryWidthInput := widgets.NewQLineEdit(nil)
 	slideGeometryHeightInput := widgets.NewQLineEdit(nil)
 	slideGeometryWidthInput.SetText("20")
-	slideGeometryHeightInput.SetText("30")
+	slideGeometryHeightInput.SetText("29")
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
