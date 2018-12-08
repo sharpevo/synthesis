@@ -33,7 +33,7 @@ var offsetX, offsetY float64 // mm
 //)
 var (
 	IMAGABLE = false
-	//IMAGABLE  = true
+	//IMAGABLE = true
 	DEBUGABLE = false
 	//DEBUGABLE = true
 )
