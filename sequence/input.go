@@ -995,10 +995,10 @@ func build(
 				posx := stripCount * 1280
 				posy := subs.Top()
 
-				rowIndex := 0
+				rowIndex := 3
 
 				printheadArray.MoveBottomRow(rowIndex, posx, posy)
-				fmt.Println("move row 0 to ", posx, posy)
+				fmt.Printf("move row %v to %v %v\n", rowIndex, posx, posy)
 
 				for printheadArray.Top() >= subs.Bottom() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
@@ -1026,9 +1026,9 @@ func build(
 				posy = subs.Bottom()
 				// distance is integer multiple of 4
 				// so that move one row will match the others
-				rowIndex = 1
+				rowIndex = 2
 				printheadArray.MoveTopRow(rowIndex, posx, posy)
-				fmt.Println("move row 1 to ", posx, posy)
+				fmt.Printf("move row %v to %v %v\n", rowIndex, posx, posy)
 
 				for printheadArray.Bottom() <= subs.Top() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
@@ -1052,9 +1052,9 @@ func build(
 
 				//posx -= 1
 				posy = subs.Top()
-				rowIndex = 2
+				rowIndex = 1
 				printheadArray.MoveBottomRow(rowIndex, posx, posy)
-				fmt.Println("move row 2 to ", posx, posy)
+				fmt.Printf("move row %v to %v %v\n", rowIndex, posx, posy)
 
 				for printheadArray.Top() >= subs.Bottom() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
@@ -1076,9 +1076,9 @@ func build(
 
 				//posx -= 1
 				posy = subs.Bottom()
-				rowIndex = 3
+				rowIndex = 0
 				printheadArray.MoveTopRow(rowIndex, posx, posy)
-				fmt.Println("move row 3 to ", posx, posy)
+				fmt.Printf("move row %v to %v %v\n", rowIndex, posx, posy)
 
 				for printheadArray.Bottom() <= subs.Top() {
 					dataMap, count := genData(cycleIndex, printheadArray, subs, img, &imageIndex)
