@@ -1006,7 +1006,10 @@ func build(
 						if DEBUGABLE {
 							fmt.Println("data downward #1", count, dataMap)
 						}
-						x, y := RawPos(posx, posy)
+						x, y := RawPos(
+							printheadArray.SightBottom.Pos.X,
+							printheadArray.SightBottom.Pos.Y,
+						)
 						bin.AddFormation(
 							cycleIndex, x, y, dataMap,
 						)
@@ -1035,7 +1038,6 @@ func build(
 						}
 						// use the bottom position
 						// sinc the offset is bottomed
-						//x, y := RawPos(posx, posy)
 						x, y := RawPos(
 							printheadArray.SightBottom.Pos.X,
 							printheadArray.SightBottom.Pos.Y,
@@ -1060,7 +1062,10 @@ func build(
 						if DEBUGABLE {
 							fmt.Println("data downward #3", count, dataMap)
 						}
-						x, y := RawPos(posx, posy)
+						x, y := RawPos(
+							printheadArray.SightBottom.Pos.X,
+							printheadArray.SightBottom.Pos.Y,
+						)
 						bin.AddFormation(
 							cycleIndex, x, y, dataMap,
 						)
@@ -1083,7 +1088,6 @@ func build(
 						}
 						// use the bottom position
 						// sinc the offset is bottomed
-						//x, y := RawPos(posx, posy)
 						x, y := RawPos(
 							printheadArray.SightBottom.Pos.X,
 							printheadArray.SightBottom.Pos.Y,
