@@ -34,23 +34,22 @@ func (p *Printhead) MakeNozzles(
 		case 0:
 			nozzle.Pos = geometry.NewPosition(
 				posx+nozzle.Index,
-				posy,
+				posy+292,
 			)
 		case 1:
 			nozzle.Pos = geometry.NewPosition(
 				posx+nozzle.Index,
-				posy+279,
+				posy+13,
 			)
 		case 2:
 			nozzle.Pos = geometry.NewPosition(
 				posx+nozzle.Index,
-				posy+13,
+				posy+279,
 			)
 		case 3:
 			nozzle.Pos = geometry.NewPosition(
 				posx+nozzle.Index,
-				//posy+305,
-				posy+292,
+				posy,
 			)
 		}
 		nozzles = append(nozzles, nozzle)
