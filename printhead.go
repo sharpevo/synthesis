@@ -33,22 +33,58 @@ func (p *Printhead) MakeNozzles(
 		switch nozzle.RowIndex {
 		case 0:
 			nozzle.Pos = geometry.NewPosition(
-				posx+nozzle.Index,
+				posx-2+nozzle.Index,
 				posy+292,
 			)
 		case 1:
 			nozzle.Pos = geometry.NewPosition(
-				posx+nozzle.Index,
+				posx-2+nozzle.Index-1,
 				posy+13,
 			)
 		case 2:
 			nozzle.Pos = geometry.NewPosition(
-				posx+nozzle.Index,
+				posx-2+nozzle.Index,
 				posy+279,
 			)
 		case 3:
 			nozzle.Pos = geometry.NewPosition(
-				posx+nozzle.Index,
+				posx-2+nozzle.Index-1,
+				posy,
+			)
+		}
+		nozzles = append(nozzles, nozzle)
+	}
+	return nozzles
+}
+
+func (p *Printhead) MakeNozzlesMH5440(
+	posx int,
+	posy int,
+) []*Nozzle {
+	nozzles := []*Nozzle{}
+	for index := 0; index < 1280; index++ {
+		nozzle, _ := NewNozzle(index)
+		nozzle.Reagent = p.Reagents[nozzle.RowIndex]
+		nozzle.Printhead = p
+		switch nozzle.RowIndex {
+		case 0:
+			nozzle.Pos = geometry.NewPosition(
+				posx-3+nozzle.Index,
+				posy+292,
+			)
+		case 1:
+			nozzle.Pos = geometry.NewPosition(
+				posx-3+nozzle.Index,
+				posy+13,
+			)
+		case 2:
+			nozzle.Pos = geometry.NewPosition(
+				posx-3+nozzle.Index,
+				posy+279,
+			)
+		case 3:
+			nozzle.Pos = geometry.NewPosition(
+				posx-3+nozzle.Index,
 				posy,
 			)
 		}
