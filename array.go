@@ -54,13 +54,13 @@ func (a *Array) MoveBottomRow(rowIndex, posx int, posy int) {
 	deltay := posy - a.SightBottom.Pos.Y
 	switch rowIndex {
 	case 0:
-		deltax += 2
+		deltax += 1
 		deltay -= 292
 	case 1:
 		deltax += 2
 		deltay -= 13
 	case 2:
-		deltax += 0
+		deltax -= -1
 		deltay -= 279
 	}
 	for _, n := range a.Nozzles {
@@ -75,13 +75,13 @@ func (a *Array) MoveTopRow(rowIndex, posx int, posy int) {
 	deltay := posy - a.SightBottom.Pos.Y
 	switch rowIndex {
 	case 0:
-		deltax += 2
+		deltax += 1
 		deltay -= distance
 	case 1:
 		deltax += 2
 		deltay -= distance - 279
 	case 2:
-		deltax += 0
+		deltax += -1
 		deltay -= distance - 13
 	case 3:
 		//deltax = deltax

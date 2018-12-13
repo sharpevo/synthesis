@@ -22,33 +22,35 @@ func NewPrinthead(
 }
 
 func (p *Printhead) MakeNozzles(
-	posx int,
-	posy int,
+	posbx int,
+	posby int,
 ) []*Nozzle {
 	nozzles := []*Nozzle{}
 	for index := 0; index < 1280; index++ {
 		nozzle, _ := NewNozzle(index)
 		nozzle.Reagent = p.Reagents[nozzle.RowIndex]
 		nozzle.Printhead = p
+		posx := posbx - 1
+		posy := posby
 		switch nozzle.RowIndex {
 		case 0:
 			nozzle.Pos = geometry.NewPosition(
-				posx-2+nozzle.Index,
+				posx+nozzle.Index,
 				posy+292,
 			)
 		case 1:
 			nozzle.Pos = geometry.NewPosition(
-				posx-2+nozzle.Index-1,
+				posx+nozzle.Index-2,
 				posy+13,
 			)
 		case 2:
 			nozzle.Pos = geometry.NewPosition(
-				posx-2+nozzle.Index,
+				posx+nozzle.Index,
 				posy+279,
 			)
 		case 3:
 			nozzle.Pos = geometry.NewPosition(
-				posx-2+nozzle.Index-1,
+				posx+nozzle.Index-2,
 				posy,
 			)
 		}
