@@ -32,10 +32,8 @@ var offsetX, offsetY float64 // mm
 //offsetY = 0.0 //mm
 //)
 var (
-	IMAGABLE = false
-	//IMAGABLE = true
-	DEBUGABLE = false
-	//DEBUGABLE = true
+	IMAGABLE  = os.Getenv("IMG") == "true"
+	DEBUGABLE = os.Getenv("DBG") == "true"
 )
 
 // const{{{
