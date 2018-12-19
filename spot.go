@@ -1,12 +1,11 @@
 package substrate
 
 import (
+	"fmt"
 	"posam/util/geometry"
 	"posam/util/reagent"
 	"strings"
 )
-
-var ACTIVATABLE = false
 
 type Spot struct {
 	Pos      *geometry.Position
@@ -21,7 +20,8 @@ func (s *Spot) AddReagent(r *reagent.Reagent) {
 	s.Reagents = append(s.Reagents, r)
 }
 
-func ParseSpots(input string) ([]*Spot, int) {
+func ParseSpots(input string, activatable bool) ([]*Spot, int) {
+	fmt.Println("activatable", activatable)
 	spots := []*Spot{}
 	cycleCount := 0
 	for _, line := range strings.Split(input, "\n") {
@@ -34,18 +34,20 @@ func ParseSpots(input string) ([]*Spot, int) {
 		if length > cycleCount {
 			cycleCount = length
 		}
+		//fmt.Println(line)
 		for _, name := range reagents {
 			r := reagent.NewReagent(name)
 			spot.AddReagent(r)
-			if ACTIVATABLE {
+			if activatable {
 				if r.Name != reagent.Nil.Name {
 					spot.AddReagent(reagent.Activator)
 				}
 			}
+			//fmt.Printf("'%#v'\n", name)
 		}
 		spots = append(spots, spot)
 	}
-	if ACTIVATABLE {
+	if activatable {
 		return spots, cycleCount * 2
 	}
 	return spots, cycleCount
