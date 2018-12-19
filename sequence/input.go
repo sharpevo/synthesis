@@ -2,6 +2,7 @@ package sequence
 
 import (
 	"fmt"
+	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"image"
@@ -340,6 +341,8 @@ func NewInputGroup() *widgets.QGroupBox {
 	slideGeometryWidthInput.SetText("20")
 	slideGeometryHeightInput.SetText("29")
 
+	activatorInput := widgets.NewQCheckBox2("Activator", nil)
+
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
 	miscLayout.AddWidget(dpiLabel, 1, 0, 0)
@@ -355,6 +358,7 @@ func NewInputGroup() *widgets.QGroupBox {
 	miscLayout.AddWidget(printhead0OffsetLabel, 5, 0, 0)
 	miscLayout.AddWidget(printhead0OffsetXInput, 5, 1, 0)
 	miscLayout.AddWidget(printhead0OffsetYInput, 5, 2, 0)
+	miscLayout.AddWidget(activatorInput, 6, 0, 0)
 
 	// }}}
 
@@ -607,7 +611,10 @@ func NewInputGroup() *widgets.QGroupBox {
 			return
 		}
 
-		spots, cycleCount := substrate.ParseSpots(seqText)
+		spots, cycleCount := substrate.ParseSpots(
+			seqText,
+			activatorInput.CheckState() == core.Qt__Checked,
+		)
 		subs, err := substrate.NewSubstrate(
 			space,
 			3,
