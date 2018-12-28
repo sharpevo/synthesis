@@ -14,6 +14,10 @@ type Tree struct {
 	ContextMenu *widgets.QMenu
 }
 
+func (t *Tree) CustomDragMoveEvent(e *gui.QDragMoveEvent) {
+	t.CurrentItem().SetExpanded(false)
+}
+
 func (t *Tree) CustomDropEvent(e *gui.QDropEvent) {
 	index := t.IndexAt(e.Pos())
 	item := t.CurrentItem()

@@ -40,6 +40,7 @@ func NewTree(
 
 	treeWidget.SetAcceptDrops(true)
 	treeWidget.SetDragEnabled(true)
+	treeWidget.ConnectDragMoveEvent(treeWidget.CustomDragMoveEvent)
 	treeWidget.ConnectDropEvent(treeWidget.CustomDropEvent)
 	treeWidget.ExpandAll()
 
