@@ -46,15 +46,16 @@ func NewTree(
 	treeWidget.SetAcceptDrops(true)
 	treeWidget.SetDragEnabled(true)
 	treeWidget.SetExpandsOnDoubleClick(false)
-	treeWidget.ConnectDragMoveEvent(treeWidget.customDragMoveEvent)
+	treeWidget.ConnectDragEnterEvent(treeWidget.customDragEnterEvent)
 	treeWidget.ConnectDropEvent(treeWidget.customDropEvent)
 	treeWidget.ExpandAll()
 
 	return treeWidget
 }
 
-func (t *InstructionTree) customDragMoveEvent(e *gui.QDragMoveEvent) {
+func (t *InstructionTree) customDragEnterEvent(e *gui.QDragEnterEvent) {
 	t.CurrentItem().SetExpanded(false)
+	e.AcceptProposedAction()
 }
 
 func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {

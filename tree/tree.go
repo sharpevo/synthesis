@@ -14,8 +14,9 @@ type Tree struct {
 	ContextMenu *widgets.QMenu
 }
 
-func (t *Tree) CustomDragMoveEvent(e *gui.QDragMoveEvent) {
+func (t *Tree) CustomDragEnterEvent(e *gui.QDragEnterEvent) {
 	t.CurrentItem().SetExpanded(false)
+	e.AcceptProposedAction()
 }
 
 func (t *Tree) CustomDropEvent(e *gui.QDropEvent) {
