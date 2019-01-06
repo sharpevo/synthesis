@@ -230,8 +230,8 @@ func (c *Client) launch() {
 
 func (c *Client) receive() {
 	log.Printf("listening %v...\n", c.deviceKey())
-	for {
-		time.Sleep(100 * time.Millisecond)
+	ticker := time.NewTicker(100 * time.Millisecond)
+	for _ = range ticker.C {
 		pReceive := make([]controlcan.CanObj, controlcan.FRAME_LENGTH_OF_RECEPTION)
 		count, err := controlcan.Receive(
 			c.DevType,
