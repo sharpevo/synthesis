@@ -21,6 +21,7 @@ func (i *InstructionSleep) Execute(args ...string) (interface{}, error) {
 		return nil, err
 	}
 	duration := time.Duration(seconds*1000) * time.Millisecond
-	time.Sleep(duration)
+	timer := time.NewTimer(duration)
+	<-timer.C
 	return fmt.Sprintf("sleep in %v", duration), nil
 }
