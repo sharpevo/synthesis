@@ -21,10 +21,12 @@ const (
 
 var deviceMap *concurrentmap.ConcurrentMap
 var clientMap *concurrentmap.ConcurrentMap
+var receptMap map[string]*Client
 
 func init() {
 	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
+	receptMap = make(map[string]*Client)
 }
 
 func Instance(key string) *Client {
@@ -60,6 +62,65 @@ func ResetInstance() {
 	}
 	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
+	receptMap = make(map[string]*Client)
+}
+
+func receive() {
+	if len(receptMap) != 1 {
+		return
+	}
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	for _ = range ticker.C {
+		for _, oneClient := range receptMap {
+			if oneClient == nil {
+				// should never happen
+				continue
+			}
+			pReceive := make(
+				[]controlcan.CanObj,
+				controlcan.FRAME_LENGTH_OF_RECEPTION,
+			)
+			count, err := controlcan.Receive(
+				oneClient.DevType,
+				oneClient.DevIndex,
+				oneClient.CanIndex,
+				pReceive,
+				100,
+			)
+			if err != nil || count < 0 {
+				log.Printf(
+					"canalyst client receiver %v terminated\n",
+					oneClient.deviceKey(),
+				)
+				return
+			}
+			if count == 0 {
+				continue
+			}
+			log.Printf("data received: %#v\n", pReceive[:count])
+
+			for _, canObj := range pReceive[:count] {
+				devId := string(canObj.ID)
+				client := Instance(devId)
+				if client == nil {
+					log.Printf("invalid frame id: %v\n", devId)
+					continue
+				}
+				data := make([]byte, len(canObj.Data))
+				copy(data, canObj.Data[:])
+				resp := Response{}
+				req, err := client.findRequestByResponse(data)
+				if err != nil {
+					log.Println(err)
+					// TODO: notification
+					continue
+				}
+				resp.Message = data
+				req.Responsec <- resp
+			}
+		}
+	}
 }
 
 type Clienter interface {
@@ -263,6 +324,14 @@ func (c *Client) receive() {
 			req.Responsec <- resp
 		}
 	}
+}
+
+func (c *Client) receiveOneshot() {
+	key := fmt.Sprintf("%v-%v", c.DevIndex, c.CanIndex)
+	if _, found := receptMap[key]; !found {
+		receptMap[key] = c
+	}
+	receive()
 }
 
 func (c *Client) parseFunctionCode(data []byte) (byte, error) {
