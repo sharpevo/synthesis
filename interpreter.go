@@ -183,12 +183,14 @@ func bridge(terminatec <-chan interface{}, chanc <-chan <-chan Response) <-chan 
 				}
 				stream = mayStream
 			}
-			for val := range tryRead(terminatec, stream) {
-				select {
-				case valStream <- val:
-				case <-terminatec:
+			go func() {
+				for val := range tryRead(terminatec, stream) {
+					select {
+					case valStream <- val:
+					case <-terminatec:
+					}
 				}
-			}
+			}()
 
 		}
 	}()
