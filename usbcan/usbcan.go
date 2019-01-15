@@ -7,6 +7,7 @@ import (
 	"log"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
+	"sync"
 	"time"
 )
 
@@ -22,11 +23,13 @@ const (
 var deviceMap *concurrentmap.ConcurrentMap
 var clientMap *concurrentmap.ConcurrentMap
 var receptMap map[string]*Client
+var connMap map[string]*Client
 
 func init() {
 	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
 	receptMap = make(map[string]*Client)
+	connMap = make(map[string]*Client)
 }
 
 func Instance(key string) *Client {
@@ -63,6 +66,7 @@ func ResetInstance() {
 	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
 	receptMap = make(map[string]*Client)
+	connMap = make(map[string]*Client)
 }
 
 func receive() {
@@ -129,6 +133,7 @@ type Clienter interface {
 }
 
 type Client struct {
+	lock     sync.Mutex
 	DevType  int
 	DevIndex int
 	DevID    int // used as frame id
@@ -264,13 +269,15 @@ type Response struct {
 	Error   error
 }
 
-func (c *Client) launch() {
+func (c *Client) launchDepr() {
 	log.Println("canalyst client launched")
-	err := c.connect()
-	if err != nil {
-		// TODO: notification
-		log.Println("Connect Error: ", err)
-		return
+	if _, found := receptMap[c.ReceptKey()]; !found {
+		err := c.connect()
+		if err != nil {
+			// TODO: notification
+			log.Println("Connect Error: ", err)
+			return
+		}
 	}
 	go c.receive()
 	for {
@@ -289,9 +296,40 @@ func (c *Client) launch() {
 	}
 }
 
-func (c *Client) receive() {
+func (c *Client) launch() {
+	log.Println("canalyst client launched")
+	if _, found := connMap[c.ConnKey()]; !found {
+		connMap[c.ConnKey()] = c
+		err := c.connect()
+		if err != nil {
+			// TODO: notification
+			log.Println("Connect Error: ", err)
+			return
+		}
+	}
+	go c.receive()
+	for {
+		reqi, err := c.RequestQueue.Pop()
+		log.Println("processing", reqi)
+		if err != nil {
+			log.Printf("canalyst client sender %v terminated\n", c.deviceKey())
+			return
+		}
+		req := reqi.(*Request)
+		c.ReceptionMap.Set(
+			hex.EncodeToString([]byte{req.InstructionCode}),
+			req,
+		)
+		c.send(req)
+	}
+}
+
+// receives{{{
+
+func (c *Client) receiveRaw() {
 	log.Printf("listening %v...\n", c.deviceKey())
 	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
 	for _ = range ticker.C {
 		pReceive := make([]controlcan.CanObj, controlcan.FRAME_LENGTH_OF_RECEPTION)
 		count, err := controlcan.Receive(
@@ -326,12 +364,66 @@ func (c *Client) receive() {
 	}
 }
 
-func (c *Client) receiveOneshot() {
-	key := fmt.Sprintf("%v-%v", c.DevIndex, c.CanIndex)
+func (c *Client) receiveSep() {
+	log.Printf("listening %v...\n", c.deviceKey())
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	for _ = range ticker.C {
+		pReceive := make([]controlcan.CanObj, controlcan.FRAME_LENGTH_OF_RECEPTION)
+		count, err := controlcan.Receive(
+			c.DevType,
+			c.DevIndex,
+			c.CanIndex,
+			pReceive,
+			100,
+		)
+		if err != nil || count < 0 {
+			log.Printf("canalyst client receiver %v terminated\n", c.deviceKey())
+			return
+		}
+		if count == 0 {
+			continue
+		}
+		log.Printf("data received: %#v\n", pReceive[:count])
+		for _, canObj := range pReceive[:count] {
+			devId := string(canObj.ID)
+			client := Instance(devId)
+			if client == nil {
+				log.Printf("invalid frame id: %v\n", devId)
+				continue
+			}
+			data := make([]byte, len(canObj.Data))
+			copy(data, canObj.Data[:])
+			resp := Response{}
+			// TODO: ? filter based on frame id
+			req, err := client.findRequestByResponse(data)
+			if err != nil {
+				log.Println(err)
+				// TODO: notification
+				continue
+			}
+			resp.Message = data
+			req.Responsec <- resp
+		}
+	}
+}
+
+// }}}
+
+//func (c *Client) receiveOneshot() {
+func (c *Client) receive() {
+	key := c.ReceptKey()
 	if _, found := receptMap[key]; !found {
 		receptMap[key] = c
 	}
 	receive()
+}
+
+func (c *Client) ReceptKey() string {
+	return fmt.Sprintf("%v-%v", c.DevIndex, c.CanIndex)
+}
+func (c *Client) ConnKey() string {
+	return fmt.Sprintf("%v-%v", c.DevType, c.DevIndex)
 }
 
 func (c *Client) parseFunctionCode(data []byte) (byte, error) {
@@ -390,11 +482,13 @@ func (c *Client) findRequestByResponse(data []byte) (request *Request, err error
 }
 
 func (c *Client) send(req *Request) {
-	for {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	for _ = range ticker.C {
 		if c.Sendable {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		//time.Sleep(100 * time.Millisecond)
 	}
 	respc := req.Responsec
 	resp := Response{}
@@ -479,11 +573,15 @@ func (c *Client) Send(
 	return resp.Message, resp.Error
 }
 
-func (c *Client) getInstructionCode() (code byte, err error) {
+func (c *Client) getInstructionCodeDepreciated() (code byte, err error) {
 	var origin, update interface{}
 	origin = false
 	update = true
-	for {
+	c.lock.Lock()
+	ticker := time.NewTicker(1000 * time.Millisecond)
+	c.lock.Unlock()
+	defer ticker.Stop()
+	for _ = range ticker.C {
 		log.Printf("allocating instruction code...")
 		key, err := c.InstructionCodeMap.Replace(origin, update)
 		if err == nil {
@@ -496,7 +594,66 @@ func (c *Client) getInstructionCode() (code byte, err error) {
 			return code, nil
 		}
 		log.Printf("not enough instruction code, wait 5 seconds\n")
-		time.Sleep(1000 * time.Millisecond)
+		//time.Sleep(1000 * time.Millisecond)
+	}
+	return code, fmt.Errorf("not valid instruction code")
+}
+
+func (c *Client) getInstructionCodeDepr() (code byte, err error) {
+	var origin, update interface{}
+	origin = false
+	update = true
+	ticker := time.NewTicker(1000 * time.Millisecond)
+	defer ticker.Stop()
+	for _ = range ticker.C {
+		log.Printf("allocating instruction code...")
+		key, err := c.InstructionCodeMap.Replace(origin, update)
+		if err == nil {
+			codeSlice, err := hex.DecodeString(key)
+			if err != nil {
+				log.Println(err)
+				return code, err
+			}
+			code = codeSlice[0]
+			return code, nil
+		}
+		log.Printf("not enough instruction code, wait 5 seconds\n")
+		//time.Sleep(1000 * time.Millisecond)
+	}
+	return code, fmt.Errorf("not valid instruction code")
+}
+
+func (c *Client) getInstructionCode() (code byte, err error) {
+	var origin, update interface{}
+	origin = false
+	update = true
+	log.Printf("allocating instruction code...")
+	key, err := c.InstructionCodeMap.Replace(origin, update)
+	if err == nil {
+		codeSlice, err := hex.DecodeString(key)
+		if err != nil {
+			log.Println(err)
+			return code, err
+		}
+		code = codeSlice[0]
+		return code, nil
+	}
+	ticker := time.NewTicker(1000 * time.Millisecond)
+	defer ticker.Stop()
+	for _ = range ticker.C {
+		log.Printf("waiting for instruction code...")
+		key, err := c.InstructionCodeMap.Replace(origin, update)
+		if err == nil {
+			codeSlice, err := hex.DecodeString(key)
+			if err != nil {
+				log.Println(err)
+				return code, err
+			}
+			code = codeSlice[0]
+			return code, nil
+		}
+		log.Printf("not enough instruction code, wait 5 seconds\n")
+		//time.Sleep(1000 * time.Millisecond)
 	}
 	return code, fmt.Errorf("not valid instruction code")
 }
