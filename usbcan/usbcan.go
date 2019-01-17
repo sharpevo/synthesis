@@ -136,8 +136,10 @@ type Channel struct {
 
 	Sendable bool
 
-	//receive sync.Once
-	//send    sync.Once
+	//receiveo sync.Once
+	//sendo    sync.Once
+	senderLaunched   bool
+	receiverLaunched bool
 }
 
 func NewChannel(
@@ -211,7 +213,7 @@ func (c *Channel) Start() error {
 	); err != nil {
 		return err
 	}
-	log.Printf("Starting CAN(type %v, index %v)...\n", c.DevType, c.DevIndex)
+	log.Printf("Starting CAN(type %v, index %v, can %v)...\n", c.DevType, c.DevIndex, c.CanIndex)
 	if err := controlcan.StartCAN(
 		c.DevType,
 		c.DevIndex,
@@ -228,8 +230,13 @@ func (c *Channel) ChannelKey() string {
 	return fmt.Sprintf("%v-%v-%v", c.DevType, c.DevIndex, c.CanIndex)
 }
 
-func (c *Channel) send() error {
-	//send.Do(func() {
+func (c *Channel) send() error { // {{{
+	//func (c *Channel) send() { // {{{
+	//c.sendo.Do(func() {
+	//if c.senderLaunched {
+	//return nil
+	//}
+	//c.senderLaunched = true
 	for {
 		reqi, err := c.RequestQueue.Pop()
 		log.Println("processing", reqi)
@@ -282,12 +289,14 @@ func (c *Channel) transmit(req *Request) {
 	}
 	log.Printf("request sent: %v\n", pSend)
 	return
-}
+} // }}}
 
+// Transmit{{{
 // no ack, com: message, [], 0x01
 // ack com: message, 0x00, 0x01
 // no ack, no com: message, [], []
 func (c *Channel) Transmit(
+	frameId int,
 	message []byte,
 	recExpected []byte,
 	recIndex int,
@@ -301,6 +310,7 @@ func (c *Channel) Transmit(
 	defer c.releaseInstructionCode(code)
 	message = append(message, code)
 	req := Request{
+		FrameId:         frameId,
 		InstructionCode: code,
 		Message:         message,
 		RecExpected:     recExpected,
@@ -335,10 +345,14 @@ func (c *Channel) Transmit(
 	}
 	c.ReceptionMap.Del(hex.EncodeToString([]byte{req.InstructionCode}))
 	return resp.Message, resp.Error
-}
+} // }}}
 
 func (c *Channel) receive() {
-	//c.receive.Do(func() {
+	//if c.receiverLaunched {
+	//return
+	//}
+	//c.receiverLaunched = true
+	//c.receiveo.Do(func() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for _ = range ticker.C {
@@ -383,6 +397,8 @@ func (c *Channel) receive() {
 	}
 	//})
 }
+
+// Helpers{{{
 
 func (c *Channel) parseFunctionCode(data []byte) (byte, error) {
 	code := data[0]
@@ -483,7 +499,7 @@ func (c *Channel) releaseInstructionCode(code byte) {
 		false,
 	)
 	log.Println("release instruction code: ", code)
-}
+} // }}}
 
 type Clienter interface {
 	//connect() error
@@ -524,10 +540,17 @@ func NewClient(
 		return client, err
 	}
 	client.DevID = devID
+	if c, found := channelMap.Get(
+		fmt.Sprintf("%v-%v-%v", devType, devIndex, canIndex),
+	); found {
+		channel = c.(*Channel)
+	}
 	client.Channel = channel
 	if c, found := addInstance(client); found {
 		return c, fmt.Errorf("client existed")
 	}
+	//go client.Channel.receive()
+	//go client.Channel.send()
 	return client, nil
 }
 
@@ -556,6 +579,7 @@ func (c *Client) Send(
 	comIndex int,
 ) ([]byte, error) {
 	return c.Channel.Transmit(
+		c.DevID,
 		message,
 		recExpected,
 		recIndex,
