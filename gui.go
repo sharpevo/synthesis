@@ -340,7 +340,7 @@ func main() {
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
 		)
-		resultList := []string{}
+		var resultBuilder strings.Builder
 
 		go func() {
 			completec := make(chan interface{})
@@ -367,10 +367,12 @@ func main() {
 					}
 					resp.Completec <- true
 				}
-				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
-				result.SetText(strings.Join(resultList, "\n"))
+
+				insertString(fmt.Sprintf("%v", resp.Output), &resultBuilder)
+				result.SetText(resultBuilder.String())
 			}
-			result.SetText(strings.Join(resultList, "\n") + "\n\nDONE")
+			insertString("DONE\n\n", &resultBuilder)
+			result.SetText(resultBuilder.String())
 			if len(terminatecc) == 1 {
 				t := <-terminatecc
 				close(t)
@@ -640,4 +642,12 @@ func buildInstructionMap() {
 			InstructionMap[k] = v
 		}
 	}
+}
+
+func insertString(str string, builder *strings.Builder) {
+	var tmp strings.Builder
+	fmt.Fprintf(&tmp, "%v\n%v", str, builder.String())
+	builder.Reset()
+	builder.WriteString(tmp.String())
+	tmp.Reset()
 }
