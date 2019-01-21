@@ -19,10 +19,14 @@ func (i *InstructionDivision) Execute(args ...string) (resp interface{}, err err
 	if len(args) < 2 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	variable, v1v, v2v, err := i.ParseOperands(args[0], args[1])
+	cm, v1v, v2v, err := i.ParseOperands(args[0], args[1])
 	if err != nil {
 		return resp, err
 	}
+	cm.Lock()
+	defer cm.Unlock()
+	variablei, _ := cm.GetLockless(args[0])
+	variable, _ := variablei.(*vrb.Variable)
 	switch variable.Type {
 	case vrb.FLOAT:
 		v1 := v1v.(*big.Float)
@@ -31,7 +35,7 @@ func (i *InstructionDivision) Execute(args ...string) (resp interface{}, err err
 		if v1.IsInf() {
 			return resp, fmt.Errorf("inf quotition")
 		}
-		variable.Value = v1
+		variable.SetValue(v1)
 		return v1.String(), nil
 	case vrb.INT:
 		v1 := v1v.(int64)
@@ -40,7 +44,7 @@ func (i *InstructionDivision) Execute(args ...string) (resp interface{}, err err
 			return resp, fmt.Errorf("division by zero")
 		}
 		v1 /= v2
-		variable.Value = v1
+		variable.SetValue(v1)
 		return fmt.Sprintf("%v", v1), nil
 	default:
 		return "", fmt.Errorf("invalid variable type")
