@@ -17,7 +17,7 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 	if len(args) < 3 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	bin, err := i.ParseFormations(args[0])
+	bin, err := i.ParseBin(args[0])
 	if err != nil {
 		return resp, err
 	}

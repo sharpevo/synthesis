@@ -25,6 +25,29 @@ func (i *InstructionPrinterLoadCycle) Execute(args ...string) (resp interface{},
 	if err != nil {
 		return resp, err
 	}
-	variable.Value = int64(bin.CycleCount)
+
+	// save bin to the variable with the type of string
+	cm2, err := i.ParseVariable(args[1])
+	if err != nil {
+		return resp, err
+	}
+	isSameCM := cm == cm2
+
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, args[0])
+	variable.SetValue(int64(bin.CycleCount))
+
+	if !isSameCM {
+		cm2.Lock()
+	}
+	binVar, _ := i.GetVarLockless(cm, args[1])
+	binVar.SetValue(bin)
+	if !isSameCM {
+		cm2.Unlock()
+	}
+	cm.Unlock()
+
+	i.Env.Set(variable)
+
 	return bin.CycleCount, err
 }
