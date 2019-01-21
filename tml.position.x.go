@@ -24,7 +24,7 @@ func (i *InstructionTMLPositionX) Execute(args ...string) (
 	if err != nil {
 		return resp, err
 	}
-	variable, err := i.ParseVariable(args[1]) // overwritten
+	cm, err := i.ParseVariable(args[1]) // overwritten
 	if err != nil {
 		return resp, err
 	}
@@ -33,7 +33,10 @@ func (i *InstructionTMLPositionX) Execute(args ...string) (
 	if err != nil {
 		return resp, err
 	}
-	variable.Value = positionBigFloat
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, args[1])
+	variable.SetValue(positionBigFloat)
+	cm.Unlock()
 	resp = fmt.Sprintf("position x: %v", positionFloat)
 	return resp, nil
 }
