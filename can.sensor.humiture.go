@@ -21,11 +21,11 @@ func (i *InstructionCANSensorHumiture) Execute(args ...string) (resp interface{}
 	if err != nil {
 		return resp, err
 	}
-	tempVariable, err := i.ParseFloat64Variable(args[1])
+	tempCM, err := i.ParseFloat64Variable(args[1])
 	if err != nil {
 		return resp, err
 	}
-	humiVariable, err := i.ParseFloat64Variable(args[2])
+	humiCM, err := i.ParseFloat64Variable(args[2])
 	if err != nil {
 		return resp, err
 	}
@@ -37,7 +37,13 @@ func (i *InstructionCANSensorHumiture) Execute(args ...string) (resp interface{}
 	if !ok {
 		return resp, fmt.Errorf("invalid humiture response %#v", resp)
 	}
-	tempVariable.Value = humiture[0]
-	humiVariable.Value = humiture[1]
+	tempCM.Lock()
+	tempVariable, _ := i.GetVarLockless(tempCM, args[1])
+	tempVariable.SetValue(humiture[0])
+	tempCM.Unlock()
+	humiCM.Lock()
+	humiVariable, _ := i.GetVarLockless(humiCM, args[2])
+	humiVariable.SetValue(humiture[1])
+	humiCM.Unlock()
 	return resp, err
 }
