@@ -3,7 +3,6 @@ package instruction
 import (
 	"fmt"
 	"log"
-	"posam/interpreter"
 	"posam/interpreter/vrb"
 	"posam/util/concurrentmap"
 	"strconv"
@@ -15,7 +14,7 @@ type Instructioner interface {
 }
 
 type Instruction struct {
-	Env   *interpreter.Stack
+	Env   *Stack
 	title string
 	path  string
 }
