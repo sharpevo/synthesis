@@ -10,11 +10,14 @@ type InstructionPrinterLoad struct {
 }
 
 func (i *InstructionPrinterLoad) ParseFormations(filePath string) (*formation.Bin, error) {
-	variable, found := i.Env.Get(filePath)
+	cm, found := i.Env.Get(filePath)
 	if !found {
 		return formation.ParseBin(filePath)
 	}
-	filePathString, ok := variable.Value.(string)
+	cm.Lock()
+	defer cm.Unlock()
+	variable, _ := i.GetVarLockless(cm, filePath)
+	filePathString, ok := variable.GetValue().(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid string variable", filePath)
 	}
@@ -22,10 +25,13 @@ func (i *InstructionPrinterLoad) ParseFormations(filePath string) (*formation.Bi
 }
 
 func (i *InstructionPrinterLoad) ParseIndex(variableName string) (int, error) {
-	indexVariable, err := i.ParseIntVariable(variableName)
+	cm, err := i.ParseIntVariable(variableName)
 	if err != nil {
 		return 0, err
 	}
-	index64, _ := indexVariable.Value.(int64)
+	cm.Lock()
+	indexVariable, _ := i.GetVarLockless(cm, variableName)
+	index64, _ := indexVariable.GetValue().(int64)
+	cm.Unlock()
 	return int(index64), nil
 }

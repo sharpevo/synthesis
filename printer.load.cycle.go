@@ -17,7 +17,7 @@ func (i *InstructionPrinterLoadCycle) Execute(args ...string) (resp interface{},
 	if len(args) < 2 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	variable, err := i.ParseIntVariable(args[0])
+	cm, err := i.ParseIntVariable(args[0])
 	if err != nil {
 		return resp, err
 	}

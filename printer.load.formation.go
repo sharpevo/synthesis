@@ -17,11 +17,11 @@ func (i *InstructionPrinterLoadFormation) Execute(args ...string) (resp interfac
 	if len(args) < 3 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	variable, err := i.ParseIntVariable(args[0])
+	cm, err := i.ParseIntVariable(args[0])
 	if err != nil {
 		return resp, err
 	}
-	bin, err := i.ParseFormations(args[1])
+	bin, err := i.ParseBin(args[1])
 	if err != nil {
 		return 0, err
 	}
@@ -33,7 +33,9 @@ func (i *InstructionPrinterLoadFormation) Execute(args ...string) (resp interfac
 		return 0, fmt.Errorf(
 			"invalid cycle index %v (%v)", cycleIndex, bin.CycleCount)
 	}
-	variable.Value = int64(len(bin.Formations[cycleIndex]))
-	//fmt.Printf("%#v\n", bin.Formations[cycleIndex])
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, args[0])
+	variable.SetValue(int64(len(bin.Formations[cycleIndex])))
+	cm.Unlock()
 	return len(bin.Formations[cycleIndex]), err
 }
