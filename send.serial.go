@@ -18,12 +18,15 @@ func (i *InstructionSendSerial) Execute(args ...string) (resp interface{}, err e
 	if len(args) < 3 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	variable, found := i.Env.Get(args[0])
+	cm, found := i.Env.Get(args[0])
 	if !found {
 		resp = fmt.Sprintf("device %q is not defined", args[0])
 		return
 	}
-	deviceCode := variable.Value.(string)
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, args[0])
+	deviceCode := variable.GetValue().(string)
+	cm.Unlock()
 	instruction := args[1]
 	doneResp := args[2]
 	sentResp := ""

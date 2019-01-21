@@ -22,12 +22,16 @@ func (i *InstructionControlFlowErrGoto) Execute(args ...string) (resp interface{
 	if err != nil {
 		return resp, fmt.Errorf("invalid argument %q: %s", args[0], err.Error())
 	}
-	v, found := i.Env.Get("SYS_ERR")
+	cm, found := i.Env.Get("SYS_ERR")
 	if !found {
 		return resp, fmt.Errorf("failed to load variable ERR")
 	}
 	resp = fmt.Sprintf("error check failed and continue")
-	if v.Value.(string) != "" {
+	cm.Lock()
+	v, _ := i.GetVarLockless(cm, "SYS_ERR")
+	isValid := v.GetValue().(string) != ""
+	cm.Unlock()
+	if isValid {
 		i.Goto(index)
 		resp = fmt.Sprintf("error detected and go to %d", index)
 	}

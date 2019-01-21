@@ -23,15 +23,19 @@ func (i *InstructionControlFlowLessThanGoto) Execute(args ...string) (resp inter
 	if err != nil {
 		return resp, fmt.Errorf("invalid argument %q: %s", args[0], err.Error())
 	}
-	v, found := i.Env.Get("SYS_CMP")
+	cm, found := i.Env.Get("SYS_CMP")
 	if !found {
 		return resp, fmt.Errorf("failed to load variable CMP")
 	}
 	resp = fmt.Sprintf("condition 'less than' check failed and continue")
-	if v.Value == vrb.LESS {
+	cm.Lock()
+	v, _ := i.GetVarLockless(cm, "SYS_CMP")
+	isLess := v.GetValue() == vrb.LESS
+	cm.Unlock()
+	if isLess {
 		i.Goto(index)
 		resp = fmt.Sprintf(
-			"condition 'less that' is satisfied and go to %d", index)
+			"condition 'less than' is satisfied and go to %d", index)
 	}
 	return resp, nil
 }

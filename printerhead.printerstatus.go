@@ -17,11 +17,14 @@ func (i *InstructionPrinterHeadPrinterStatus) Execute(args ...string) (resp inte
 	if len(args) < 1 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
-	variable, found := i.Env.Get(args[0])
+	cm, found := i.Env.Get(args[0])
 	if !found {
 		return resp, fmt.Errorf("device %q is not defined", args[0])
 	}
-	address := variable.Value.(string)
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, args[0])
+	address := variable.GetValue().(string)
+	cm.Unlock()
 	fmt.Printf("%q\n", address)
 	instance := ricoh_g5.Instance(address)
 	if instance == nil {

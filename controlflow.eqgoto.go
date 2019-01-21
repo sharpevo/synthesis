@@ -23,12 +23,16 @@ func (i *InstructionControlFlowEqualGoto) Execute(args ...string) (resp interfac
 	if err != nil {
 		return resp, fmt.Errorf("invalid argument %q: %s", args[0], err.Error())
 	}
-	v, found := i.Env.Get("SYS_CMP")
+	cm, found := i.Env.Get("SYS_CMP")
 	if !found {
 		return resp, fmt.Errorf("failed to load variable CMP")
 	}
 	resp = fmt.Sprintf("condition 'equal to' check failed and continue")
-	if v.Value == vrb.EQUAL {
+	cm.Lock()
+	v, _ := i.GetVarLockless(cm, "SYS_CMP")
+	isEqual := v.GetValue() == vrb.EQUAL
+	cm.Unlock()
+	if isEqual {
 		i.Goto(index)
 		resp = fmt.Sprintf(
 			"condition 'equal to' is satisfied and go to %d", index)

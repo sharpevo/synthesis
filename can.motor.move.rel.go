@@ -21,7 +21,7 @@ func (i *InstructionCANMotorMoveRelative) Execute(args ...string) (resp interfac
 	if err != nil {
 		return resp, err
 	}
-	variable, err := i.ParseIntVariable(args[1])
+	cm, err := i.ParseIntVariable(args[1])
 	if err != nil {
 		return resp, err
 	}
@@ -50,6 +50,9 @@ func (i *InstructionCANMotorMoveRelative) Execute(args ...string) (resp interfac
 	if err != nil {
 		return resp, err
 	}
-	variable.Value = resp
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, args[1])
+	variable.SetValue(resp)
+	cm.Unlock()
 	return resp, err
 }

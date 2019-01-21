@@ -3,8 +3,8 @@ package instruction
 import (
 	"fmt"
 	"log"
-	"posam/interpreter"
 	"posam/interpreter/vrb"
+	"posam/util/concurrentmap"
 	"strconv"
 )
 
@@ -14,7 +14,7 @@ type Instructioner interface {
 }
 
 type Instruction struct {
-	Env   *interpreter.Stack
+	Env   *Stack
 	title string
 	path  string
 }
@@ -31,59 +31,69 @@ func (i *Instruction) Execute(args ...string) (interface{}, error) {
 	return "", nil
 }
 
-func (i *Instruction) ParseVariable(name string) (*vrb.Variable, error) {
-	variable, found := i.Env.Get(name)
+func (i *Instruction) ParseVariable(name string) (*concurrentmap.ConcurrentMap, error) {
+	cm, found := i.Env.Get(name)
 	if !found {
 		newVariable, err := vrb.NewVariable(name, name)
 		if err != nil {
-			return variable, err
+			return cm, err
 		}
-		variable = i.Env.Set(newVariable)
+		i.Env.Set(newVariable)
+		cm, found = i.Env.Get(name)
 	}
-	return variable, nil
+	return cm, nil
 }
 
-func (i *Instruction) ParseIntVariable(name string) (*vrb.Variable, error) {
-	variable, found := i.Env.Get(name)
+func (i *Instruction) ParseIntVariable(name string) (cm *concurrentmap.ConcurrentMap, err error) {
+	cm, found := i.Env.Get(name)
 	if !found {
 		newVariable, err := vrb.NewVariable(name, "0")
 		if err != nil {
-			return variable, err
+			return cm, err
 		}
-		variable = i.Env.Set(newVariable)
+		i.Env.Set(newVariable)
+		cm, found = i.Env.Get(name)
 	}
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, name)
 	if variable.Type != vrb.INT {
-		return variable,
-			fmt.Errorf("invalid type of int variable %s", vrb.INT)
+		err = fmt.Errorf("invalid type of int variable %s", vrb.INT)
 	}
-	return variable, nil
+	cm.Unlock()
+	return cm, err
 }
 
-func (i *Instruction) ParseFloat64Variable(name string) (*vrb.Variable, error) {
-	variable, found := i.Env.Get(name)
+func (i *Instruction) ParseFloat64Variable(name string) (cm *concurrentmap.ConcurrentMap, err error) {
+	cm, found := i.Env.Get(name)
 	if !found {
 		newVariable, err := vrb.NewVariable(name, "0.0")
 		if err != nil {
-			return variable, err
+			return cm, err
 		}
-		variable = i.Env.Set(newVariable)
+		i.Env.Set(newVariable)
+		cm, found = i.Env.Get(name)
 	}
+	cm.Lock()
+	variable, _ := i.GetVarLockless(cm, name)
 	if variable.Type != vrb.FLOAT {
-		return variable,
-			fmt.Errorf("invalid type of float variable %s", vrb.FLOAT)
+		err = fmt.Errorf("invalid type of float variable %s", vrb.FLOAT)
 	}
-	return variable, nil
+	cm.Unlock()
+	return cm, err
 }
 
 func (i *Instruction) ParseInt(input string) (output int, err error) {
-	outputVar, found := i.Env.Get(input)
+	cm, found := i.Env.Get(input)
 	if !found {
 		output, err = strconv.Atoi(input)
 		if err != nil {
 			return output, err
 		}
 	} else {
-		output, err = strconv.Atoi(fmt.Sprintf("%v", outputVar.Value))
+		cm.Lock()
+		defer cm.Unlock()
+		outputVar, _ := i.GetVarLockless(cm, input)
+		output, err = strconv.Atoi(fmt.Sprintf("%v", outputVar.GetValue()))
 		if err != nil {
 			return output,
 				fmt.Errorf(
@@ -97,14 +107,17 @@ func (i *Instruction) ParseInt(input string) (output int, err error) {
 }
 
 func (i *Instruction) ParseFloat(input string) (output float64, err error) {
-	outputVar, found := i.Env.Get(input)
+	cm, found := i.Env.Get(input)
 	if !found {
 		output, err = strconv.ParseFloat(input, 64)
 		if err != nil {
 			return output, err
 		}
 	} else {
-		output, err = strconv.ParseFloat(fmt.Sprintf("%v", outputVar.Value), 64)
+		cm.Lock()
+		defer cm.Unlock()
+		outputVar, _ := i.GetVarLockless(cm, input)
+		output, err = strconv.ParseFloat(fmt.Sprintf("%v", outputVar.GetValue()), 64)
 		if err != nil {
 			return output,
 				fmt.Errorf(
@@ -118,13 +131,28 @@ func (i *Instruction) ParseFloat(input string) (output float64, err error) {
 }
 
 func (i *Instruction) IssueError(message string) {
-	varErr, found := i.Env.Get("SYS_ERR")
+	cm, found := i.Env.Get("SYS_ERR")
 	if !found {
 		log.Printf("invalid variable ERR")
 	}
+	cm.Lock()
+	defer cm.Unlock()
+	varErr, _ := i.GetVarLockless(cm, "SYS_ERR")
 	if message != "" {
-		varErr.Value = message
+		varErr.SetValue(message)
 	} else {
-		varErr.Value = ""
+		varErr.SetValue("")
 	}
+}
+
+func (i *Instruction) GetVarLockless(
+	cm *concurrentmap.ConcurrentMap,
+	key string,
+) (
+	variable *vrb.Variable,
+	err error,
+) {
+	variablei, _ := cm.GetLockless(key)
+	variable, _ = variablei.(*vrb.Variable)
+	return variable, nil
 }

@@ -23,12 +23,16 @@ func (i *InstructionControlFlowGreaterThanGoto) Execute(args ...string) (resp in
 	if err != nil {
 		return resp, fmt.Errorf("invalid argument %q: %s", args[0], err.Error())
 	}
-	v, found := i.Env.Get("SYS_CMP")
+	cm, found := i.Env.Get("SYS_CMP")
 	if !found {
 		return resp, fmt.Errorf("failed to load variable CMP")
 	}
 	resp = fmt.Sprintf("condition 'greater than' check failed and continue")
-	if v.Value == vrb.GREATER {
+	cm.Lock()
+	v, _ := i.GetVarLockless(cm, "SYS_CMP")
+	isGreater := v.GetValue() == vrb.GREATER
+	cm.Unlock()
+	if isGreater {
 		i.Goto(index)
 		resp = fmt.Sprintf(
 			"condition 'greater than' is satisfied and go to %d", index)

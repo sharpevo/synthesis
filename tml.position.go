@@ -1,9 +1,9 @@
 package instruction
 
 import (
-	"fmt"
 	"math/big"
 	"posam/interpreter/vrb"
+	"posam/util/concurrentmap"
 )
 
 type InstructionTMLPosition struct {
@@ -12,17 +12,17 @@ type InstructionTMLPosition struct {
 
 func (i *InstructionTMLPosition) ParseVariable(
 	variableString string,
-) (variable *vrb.Variable, err error) {
-	variable, found := i.Env.Get(variableString)
+) (cm *concurrentmap.ConcurrentMap, err error) {
+	cm, found := i.Env.Get(variableString)
 	if !found {
 		newVariable, err := vrb.NewVariable(variableString, "0.0")
 		if err != nil {
-			return variable, err
+			return cm, err
 		}
-		variable = i.Env.Set(newVariable)
-		fmt.Printf("%#v\n", variable)
+		i.Env.Set(newVariable)
+		cm, found = i.Env.Get(variableString)
 	}
-	return variable, nil
+	return cm, nil
 }
 
 func (i *InstructionTMLPosition) PositionToBigFloat(
