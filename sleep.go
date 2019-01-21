@@ -3,7 +3,6 @@ package instruction
 import (
 	"fmt"
 	"posam/dao"
-	"strconv"
 	"time"
 )
 
@@ -16,12 +15,14 @@ type InstructionSleep struct {
 }
 
 func (i *InstructionSleep) Execute(args ...string) (interface{}, error) {
-	seconds, err := strconv.ParseFloat(args[0], 64)
+	if len(args) < 1 {
+		return nil, fmt.Errorf("not enough arguments")
+	}
+	seconds, err := i.ParseFloat(args[0])
 	if err != nil {
-		return nil, err
+		return seconds, err
 	}
 	duration := time.Duration(seconds*1000) * time.Millisecond
-	timer := time.NewTimer(duration)
-	<-timer.C
+	<-time.After(duration)
 	return fmt.Sprintf("sleep in %v", duration), nil
 }
