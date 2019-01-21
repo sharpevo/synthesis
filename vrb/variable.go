@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type VariableType int
@@ -58,8 +59,22 @@ func (c ComparisonType) String() string {
 
 type Variable struct {
 	Name  string
-	Value interface{}
+	value interface{}
 	Type  VariableType
+
+	sync.Mutex
+}
+
+func (v *Variable) GetValue() interface{} {
+	v.Lock()
+	defer v.Unlock()
+	return v.value
+}
+
+func (v *Variable) SetValue(value interface{}) {
+	v.Lock()
+	defer v.Unlock()
+	v.value = value
 }
 
 var PreservedNames = map[string]bool{
@@ -99,7 +114,9 @@ func newVariable(name string, input string) (*Variable, error) {
 	variable := &Variable{
 		Name: name,
 	}
-	variable.Value, variable.Type, _ = ParseValue(input)
+	v, t, _ := ParseValue(input)
+	variable.Type = t
+	variable.SetValue(v)
 	return variable, nil
 }
 
@@ -136,8 +153,8 @@ func Compare(var1 *Variable, var2 *Variable) (ComparisonType, error) {
 	}
 	switch var1.Type {
 	case INT:
-		value1 := var1.Value.(int64)
-		value2 := var2.Value.(int64)
+		value1 := var1.GetValue().(int64)
+		value2 := var2.GetValue().(int64)
 		if value1 == value2 {
 			return EQUAL, nil
 		}
@@ -153,8 +170,8 @@ func Compare(var1 *Variable, var2 *Variable) (ComparisonType, error) {
 			var2.Name,
 		)
 	case FLOAT:
-		value1 := var1.Value.(*big.Float)
-		value2 := var2.Value.(*big.Float)
+		value1 := var1.GetValue().(*big.Float)
+		value2 := var2.GetValue().(*big.Float)
 		result := value1.Cmp(value2)
 		if result == 0 {
 			return EQUAL, nil
@@ -171,7 +188,7 @@ func Compare(var1 *Variable, var2 *Variable) (ComparisonType, error) {
 			var2.Name,
 		)
 	case STRING:
-		if var1.Value == var2.Value {
+		if var1.GetValue() == var2.GetValue() {
 			return EQUAL, nil
 		} else {
 			return UNEQUAL, nil
