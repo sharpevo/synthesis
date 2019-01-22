@@ -1,6 +1,7 @@
 package devtree
 
 import (
+	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"posam/gui/tree"
@@ -103,6 +104,7 @@ func (t *DeviceTree) Save() error {
 	node := t.ExportNode(item)
 	err := tree.ExportNode(node, DEVICE_CONF_FILE)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	t.instDetail.InitDevInput(ParseConnList())
