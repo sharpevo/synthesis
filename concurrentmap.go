@@ -6,8 +6,8 @@ import (
 )
 
 type ConcurrentMap struct {
-	sync.RWMutex
-	m map[string]interface{}
+	lock sync.Mutex
+	m    map[string]interface{}
 }
 
 type Item struct {
@@ -30,22 +30,27 @@ func NewConcurrentMap(cmaps ...*ConcurrentMap) *ConcurrentMap {
 }
 
 func (c *ConcurrentMap) Get(key string) (interface{}, bool) {
-	c.RLock()
-	defer c.RUnlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	value, ok := c.m[key]
+	return value, ok
+}
+
+func (c *ConcurrentMap) GetLockless(key string) (interface{}, bool) {
 	value, ok := c.m[key]
 	return value, ok
 }
 
 func (c *ConcurrentMap) Set(key string, value interface{}) interface{} {
-	c.Lock()
-	defer c.Unlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	c.m[key] = value
 	return value
 }
 
 func (c *ConcurrentMap) Del(key string) error {
-	c.Lock()
-	defer c.Unlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	if _, ok := c.m[key]; !ok {
 		return fmt.Errorf("failed to delete map entry due to invalid key %s", key)
 	}
@@ -54,9 +59,10 @@ func (c *ConcurrentMap) Del(key string) error {
 }
 
 func (c *ConcurrentMap) Replace(ori interface{}, value interface{}) (key string, err error) {
-	c.Lock()
-	defer c.Unlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	for k, v := range c.m {
+		fmt.Println("concurrentmap replace checking", k, v)
 		if ori == v {
 			c.m[k] = value
 			return k, nil
@@ -66,8 +72,8 @@ func (c *ConcurrentMap) Replace(ori interface{}, value interface{}) (key string,
 }
 
 func (c *ConcurrentMap) String() string {
-	c.RLock()
-	defer c.RUnlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	return fmt.Sprintf("%#v", c.m)
 }
 
@@ -75,11 +81,19 @@ func (c *ConcurrentMap) Iter() <-chan Item {
 	itemc := make(chan Item)
 	go func() {
 		defer close(itemc)
-		c.Lock() // more secure than RLock
-		defer c.Unlock()
+		c.lock.Lock() // more secure than RLock
+		defer c.lock.Unlock()
 		for k, v := range c.m {
 			itemc <- Item{k, v}
 		}
 	}()
 	return itemc
+}
+
+func (c *ConcurrentMap) Lock() {
+	c.lock.Lock()
+}
+
+func (c *ConcurrentMap) Unlock() {
+	c.lock.Unlock()
 }
