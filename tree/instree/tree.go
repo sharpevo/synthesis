@@ -148,7 +148,14 @@ func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
 	if t.ContextMenu == nil {
 		t.ContextMenu = widgets.NewQMenu(t)
 		menuAdd := t.ContextMenu.AddAction("Add child")
-		menuAdd.ConnectTriggered(func(checked bool) { t.AddItem(p, NewInstructionItem("print instruction", "PRINT")) })
+		menuAdd.ConnectTriggered(func(checked bool) {
+			newItem := NewInstructionItem("print instruction", "PRINT")
+			t.AddItem(p, newItem)
+			newItem.Parent().SetSelected(false)
+			newItem.SetSelected(true)
+			t.SetCurrentItem(newItem)
+			//t.detail.Refresh(newItem)
+		})
 		menuRemove := t.ContextMenu.AddAction("Remove node")
 		menuRemove.ConnectTriggered(func(checked bool) { t.RemoveItem(p) })
 		menuImport := t.ContextMenu.AddAction("Import as sub node")
@@ -157,6 +164,10 @@ func (t *InstructionTree) customContextMenuRequested(p *core.QPoint) {
 		menuExport.ConnectTriggered(func(checked bool) { t.exportCurItem(p) })
 		menuRun := t.ContextMenu.AddAction("Execute single step")
 		menuRun.ConnectTriggered(func(checked bool) { t.executeItem(p) })
+		menuCopy := t.ContextMenu.AddAction("Copy")
+		menuCopy.ConnectTriggered(func(checked bool) { t.copyItem(p) })
+		menuPaste := t.ContextMenu.AddAction("Paste")
+		menuPaste.ConnectTriggered(func(checked bool) { t.pasteItem(p) })
 	}
 	t.ContextMenu.Exec2(t.MapToGlobal(p), nil)
 }
@@ -204,6 +215,48 @@ func (t *InstructionTree) exportCurItem(p *core.QPoint) {
 		return
 	}
 	uiutil.MessageBoxInfo(fmt.Sprintf("exported to %q", filePath))
+}
+
+func (t *InstructionTree) pasteItem(p *core.QPoint) {
+	item := t.ItemAt(p)
+	if item.Pointer() == nil {
+		log.Println("invalid tree item")
+		return
+	}
+	filePath := "tmp.bin"
+	node := new(Node)
+	if err := tree.ImportNode(node, filePath); err != nil {
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
+	for i := 0; i < len(node.Children); i++ {
+		item.AddChild(t.ImportNode(node.Children[i]))
+	}
+	item.SetExpanded(true)
+}
+
+func (t *InstructionTree) copyItem(p *core.QPoint) {
+	item := t.ItemAt(p)
+	if item.Pointer() == nil {
+		log.Println("invalid tree item")
+		return
+	}
+	node := t.ExportNode(item)
+	step := new(Node)
+	step.Title = "step"
+	step.Children = append(step.Children, node)
+	filePath := "tmp.bin"
+	f, err := os.Create(filePath)
+	if err != nil {
+		fmt.Println("error", err)
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
+	f.Close()
+	if err := tree.ExportNode(step, filePath); err != nil {
+		uiutil.MessageBoxError(err.Error())
+		return
+	}
 }
 
 func (t *InstructionTree) executeItem(p *core.QPoint) {
