@@ -10,6 +10,7 @@ import (
 	"posam/dao/aoztech"
 	"posam/dao/canalystii"
 	"posam/dao/ricoh_g5"
+	"posam/gui/sequence"
 	"runtime"
 	"strconv"
 	"strings"
@@ -19,7 +20,7 @@ import (
 	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
 	"posam/gui/uiutil"
-	_ "posam/instruction"
+	"posam/instruction"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
 )
@@ -118,8 +119,8 @@ PRINT never executed
 PRINT never executed`
 )
 
-var InstructionMap = make(interpreter.InstructionMapt)
-var InstructionDaoMap = make(map[string]interpreter.InstructionMapt)
+var InstructionMap = dao.NewInstructionMap()
+var InstructionDaoMap = make(map[string]*dao.InstructionMapt)
 
 type QMessageBoxWithCustomSlot struct {
 	widgets.QMessageBox
@@ -197,7 +198,7 @@ func main() {
 		}
 		suspButton.SetEnabled(true)
 
-		stack := interpreter.NewStack()
+		stack := instruction.NewStack()
 
 		devtree.ParseDeviceConf()
 		for k, v := range devtree.ConfMap {
@@ -211,25 +212,25 @@ func main() {
 
 		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_ALT] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
-			name, _ := stack.Get(
+			name, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, alientek.DEVICE_NAME))
-			baud, _ := stack.Get(
+			baud, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, alientek.BAUD_RATE))
-			character, _ := stack.Get(
+			character, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, alientek.CHARACTER_BITS))
-			stop, _ := stack.Get(
+			stop, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, alientek.STOP_BITS))
-			parity, _ := stack.Get(
+			parity, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, alientek.PARITY))
-			deviceCode, _ := stack.Get(
+			deviceCode, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, alientek.DEVICE_CODE))
 			err := initSerialDevice(
-				fmt.Sprintf("%v", name.Value),
-				fmt.Sprintf("%v", baud.Value),
-				fmt.Sprintf("%v", character.Value),
-				fmt.Sprintf("%v", stop.Value),
-				fmt.Sprintf("%v", parity.Value),
-				fmt.Sprintf("%v", deviceCode.Value),
+				fmt.Sprintf("%v", name.GetValue()),
+				fmt.Sprintf("%v", baud.GetValue()),
+				fmt.Sprintf("%v", character.GetValue()),
+				fmt.Sprintf("%v", stop.GetValue()),
+				fmt.Sprintf("%v", parity.GetValue()),
+				fmt.Sprintf("%v", deviceCode.GetValue()),
 			)
 			if err != nil {
 				uiutil.MessageBoxError(err.Error())
@@ -238,16 +239,16 @@ func main() {
 
 		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_RCG] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
-			network, _ := stack.Get(
+			network, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, ricoh_g5.NETWORK))
-			address, _ := stack.Get(
+			address, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, ricoh_g5.ADDRESS))
-			timeout, _ := stack.Get(
+			timeout, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, ricoh_g5.TIMEOUT))
 			err := initTCPDevice(
-				fmt.Sprintf("%v", network.Value),
-				fmt.Sprintf("%v", address.Value),
-				fmt.Sprintf("%v", timeout.Value),
+				fmt.Sprintf("%v", network.GetValue()),
+				fmt.Sprintf("%v", address.GetValue()),
+				fmt.Sprintf("%v", timeout.GetValue()),
 			)
 			if err != nil {
 				uiutil.MessageBoxError(err.Error())
@@ -256,25 +257,25 @@ func main() {
 
 		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_AOZ] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
-			name, _ := stack.Get(
+			name, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, aoztech.DEVICE_NAME))
-			baud, _ := stack.Get(
+			baud, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, aoztech.BAUD_RATE))
-			axisXID, _ := stack.Get(
+			axisXID, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, aoztech.AXIS_X_ID))
-			axisXSetupFile, _ := stack.Get(
+			axisXSetupFile, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, aoztech.AXIS_X_SETUP_FILE))
-			axisYID, _ := stack.Get(
+			axisYID, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, aoztech.AXIS_Y_ID))
-			axisYSetupFile, _ := stack.Get(
+			axisYSetupFile, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, aoztech.AXIS_Y_SETUP_FILE))
 			err := initAozDevice(
-				fmt.Sprintf("%v", name.Value),
-				fmt.Sprintf("%v", baud.Value),
-				fmt.Sprintf("%v", axisXID.Value),
-				fmt.Sprintf("%v", axisXSetupFile.Value),
-				fmt.Sprintf("%v", axisYID.Value),
-				fmt.Sprintf("%v", axisYSetupFile.Value),
+				fmt.Sprintf("%v", name.GetValue()),
+				fmt.Sprintf("%v", baud.GetValue()),
+				fmt.Sprintf("%v", axisXID.GetValue()),
+				fmt.Sprintf("%v", axisXSetupFile.GetValue()),
+				fmt.Sprintf("%v", axisYID.GetValue()),
+				fmt.Sprintf("%v", axisYSetupFile.GetValue()),
 				motorStatusLabel,
 			)
 			if err != nil {
@@ -284,37 +285,37 @@ func main() {
 
 		for _, s := range devtree.ConnMap[devtree.DEV_TYPE_CAN] {
 			base := devtree.ComposeVarName(s, devtree.PRT_CONN)
-			devType, _ := stack.Get(
+			devType, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.DEVICE_TYPE))
-			devIndex, _ := stack.Get(
+			devIndex, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.DEVICE_INDEX))
-			devID, _ := stack.Get(
+			devID, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.FRAME_ID))
-			canIndex, _ := stack.Get(
+			canIndex, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.CAN_INDEX))
-			accCode, _ := stack.Get(
+			accCode, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.ACC_CODE))
-			accMask, _ := stack.Get(
+			accMask, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.ACC_MASK))
-			filter, _ := stack.Get(
+			filter, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.FILTER))
-			timing0, _ := stack.Get(
+			timing0, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.TIMING0))
-			timing1, _ := stack.Get(
+			timing1, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.TIMING1))
-			mode, _ := stack.Get(
+			mode, _ := stack.GetVariable(
 				devtree.ComposeVarName(base, canalystii.MODE))
 			err := initCANDevice(
-				fmt.Sprintf("%v", devType.Value),
-				fmt.Sprintf("%v", devIndex.Value),
-				fmt.Sprintf("%v", devID.Value),
-				fmt.Sprintf("%v", canIndex.Value),
-				fmt.Sprintf("%v", accCode.Value),
-				fmt.Sprintf("%v", accMask.Value),
-				fmt.Sprintf("%v", filter.Value),
-				fmt.Sprintf("%v", timing0.Value),
-				fmt.Sprintf("%v", timing1.Value),
-				fmt.Sprintf("%v", mode.Value),
+				fmt.Sprintf("%v", devType.GetValue()),
+				fmt.Sprintf("%v", devIndex.GetValue()),
+				fmt.Sprintf("%v", devID.GetValue()),
+				fmt.Sprintf("%v", canIndex.GetValue()),
+				fmt.Sprintf("%v", accCode.GetValue()),
+				fmt.Sprintf("%v", accMask.GetValue()),
+				fmt.Sprintf("%v", filter.GetValue()),
+				fmt.Sprintf("%v", timing0.GetValue()),
+				fmt.Sprintf("%v", timing1.GetValue()),
+				fmt.Sprintf("%v", mode.GetValue()),
 			)
 			if err != nil {
 				uiutil.MessageBoxError(err.Error())
@@ -339,13 +340,13 @@ func main() {
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
 		)
-		resultList := []string{}
+		//var resultBuilder strings.Builder
 
-		go func() {
+		util.Go(func() {
 			completec := make(chan interface{})
-			go func() {
+			util.Go(func() {
 				<-completec
-			}()
+			})
 			for resp := range statementGroup.Execute(terminatec, completec) {
 				if resp.Error != nil {
 					resumec = resp.Completec
@@ -361,15 +362,18 @@ func main() {
 							if !suspend {
 								break
 							}
-							time.Sleep(1 * time.Second)
+							<-time.After(1 * time.Second)
 						}
 					}
 					resp.Completec <- true
 				}
-				resultList = append(resultList, fmt.Sprintf("%v", resp.Output))
-				result.SetText(strings.Join(resultList, "\n"))
+
+				//insertString(fmt.Sprintf("%v", resp.Output), &resultBuilder)
+				//result.SetText(resultBuilder.String())
 			}
-			result.SetText(strings.Join(resultList, "\n") + "\n\nDONE")
+			//insertString("DONE\n\n", &resultBuilder)
+			//result.SetText(resultBuilder.String())
+			result.SetText("DONE")
 			if len(terminatecc) == 1 {
 				t := <-terminatecc
 				close(t)
@@ -379,12 +383,12 @@ func main() {
 
 			suspButton.SetEnabled(false)
 			resuButton.SetEnabled(false)
-		}()
+		})
 	})
 
 	termButton := widgets.NewQPushButton2("TERMINATE", nil)
 	termButton.ConnectClicked(func(bool) {
-		go func() {
+		util.Go(func() {
 			if len(terminatecc) != 1 {
 				return
 			}
@@ -392,7 +396,7 @@ func main() {
 			//close(terminatec)
 			close(<-terminatecc)
 			suspend = false
-		}()
+		})
 	})
 
 	suspButton.ConnectClicked(func(bool) {
@@ -400,12 +404,12 @@ func main() {
 	})
 
 	resuButton.ConnectClicked(func(bool) {
-		go func() {
+		util.Go(func() {
 			suspend = false
 			suspButton.SetEnabled(true)
 			resuButton.SetEnabled(false)
 			resumec <- true
-		}()
+		})
 	})
 
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
@@ -441,6 +445,13 @@ func main() {
 	devTab.SetLayout(devTabLayout)
 
 	tabWidget.AddTab(devTab, "Devices")
+
+	seqTab := widgets.NewQWidget(nil, 0)
+	seqTabLayout := widgets.NewQGridLayout2()
+	seqTabLayout.AddWidget(sequence.NewSequence(), 0, 0, 0)
+	seqTab.SetLayout(seqTabLayout)
+	tabWidget.AddTab(seqTab, "Sequences")
+
 	window.Show()
 	app.Exec()
 }
@@ -579,9 +590,12 @@ func initAozDevice(
 	if err != nil {
 		return err
 	}
-	go func() {
-		for {
-			time.Sleep(500 * time.Millisecond)
+	util.Go(func() {
+		//timer := time.NewTimer(500*time.Millisecond)
+		ticker := time.NewTicker(500 * time.Millisecond)
+		defer ticker.Stop()
+		for _ = range ticker.C {
+			//time.Sleep(500 * time.Millisecond)
 			motorStatusLabel.SetText(
 				fmt.Sprintf(
 					"Motor: (%v, %v)",
@@ -590,7 +604,7 @@ func initAozDevice(
 				),
 			)
 		}
-	}()
+	})
 	return
 }
 
@@ -627,9 +641,19 @@ func initCANDevice(
 
 func buildInstructionMap() {
 	for _, instructionMap := range InstructionDaoMap {
-		for k, v := range instructionMap {
-			fmt.Println(k)
-			InstructionMap[k] = v
+		for item := range instructionMap.Iter() {
+			k := item.Key
+			v := item.Value.(reflect.Type)
+			//fmt.Printf("v2 %s: %T, %v\n", k, reflect.New(v), reflect.New(v))
+			InstructionMap.Set(k, v)
 		}
 	}
+}
+
+func insertString(str string, builder *strings.Builder) {
+	var tmp strings.Builder
+	fmt.Fprintf(&tmp, "%v\n%v", str, builder.String())
+	builder.Reset()
+	builder.WriteString(tmp.String())
+	tmp.Reset()
 }
