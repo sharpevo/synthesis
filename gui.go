@@ -340,7 +340,7 @@ func main() {
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
 		)
-		var resultBuilder strings.Builder
+		//var resultBuilder strings.Builder
 
 		util.Go(func() {
 			completec := make(chan interface{})
@@ -368,11 +368,12 @@ func main() {
 					resp.Completec <- true
 				}
 
-				insertString(fmt.Sprintf("%v", resp.Output), &resultBuilder)
-				result.SetText(resultBuilder.String())
+				//insertString(fmt.Sprintf("%v", resp.Output), &resultBuilder)
+				//result.SetText(resultBuilder.String())
 			}
-			insertString("DONE\n\n", &resultBuilder)
-			result.SetText(resultBuilder.String())
+			//insertString("DONE\n\n", &resultBuilder)
+			//result.SetText(resultBuilder.String())
+			result.SetText("DONE")
 			if len(terminatecc) == 1 {
 				t := <-terminatecc
 				close(t)
