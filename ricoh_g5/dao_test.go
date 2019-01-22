@@ -141,21 +141,21 @@ func TestPrintData(t *testing.T) {
 		errString       string
 		ignoreResponse  bool
 	}{
-		{
-			bitsPerPixel:   "2",
-			width:          "32",
-			lineBufferSize: "3",
-			lineBuffer:     "030201",
-			expectedRequest: []byte{
-				0x02, 0x00, 0x00, 0x00,
-				0x20, 0x00, 0x00, 0x00,
-				0x03, 0x00, 0x00, 0x00,
+		//{
+		//bitsPerPixel:   "2",
+		//width:          "32",
+		//lineBufferSize: "3",
+		//lineBuffer:     "030201",
+		//expectedRequest: []byte{
+		//0x02, 0x00, 0x00, 0x00,
+		//0x20, 0x00, 0x00, 0x00,
+		//0x03, 0x00, 0x00, 0x00,
 
-				0x03, 0x02, 0x01,
-			},
-			expected: []byte{0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-			response: ricoh_g5.PrintDataUnit.ComResp(),
-		},
+		//0x03, 0x02, 0x01,
+		//},
+		//expected: []byte{0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+		//response: ricoh_g5.PrintDataUnit.ComResp(),
+		//},
 		{
 			bitsPerPixel:   "1",    // 1 or 2
 			width:          "1280", // 320 * 4 = 1280
@@ -210,6 +210,7 @@ func TestPrintData(t *testing.T) {
 				test.bitsPerPixel,
 				test.width,
 				test.lineBufferSize,
+				test.lineBuffer,
 				test.lineBuffer,
 			)
 			if err != nil {
