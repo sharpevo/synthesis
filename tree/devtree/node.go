@@ -18,6 +18,8 @@ type Node struct {
 	Enabled  bool
 	Type     string
 	Children []Node
+
+	Description string
 }
 
 func ParseDeviceConf() {

@@ -133,6 +133,7 @@ func (t *DeviceTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 	variantMap := MakeVariantMap(
 		node.Data,
 		node.Type,
+		node.Description,
 		node.Enabled,
 	)
 	item.SetData(
@@ -152,6 +153,7 @@ func (t *DeviceTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 	variantMap := VariantMap(root.Data(0, tree.DataRole()).ToMap())
 	node.Enabled = variantMap.Enabled()
 	node.Type = variantMap.Type()
+	node.Description = variantMap.Description()
 	node.Data = variantMap.Data()
 	for i := 0; i < root.ChildCount(); i++ {
 		node.Children = append(node.Children, t.ExportNode(root.Child(i)))

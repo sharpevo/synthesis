@@ -30,6 +30,8 @@ type DeviceDetail struct {
 	enabledInput *widgets.QCheckBox
 	logInput     *widgets.QTextEdit
 	saveButton   *widgets.QPushButton
+
+	descriptionInput *widgets.QLineEdit
 }
 
 func NewDeviceDetail() *DeviceDetail {
@@ -52,6 +54,8 @@ func NewDeviceDetail() *DeviceDetail {
 		DEV_TYPE_CAN,
 	})
 	d.typeInput.ConnectCurrentTextChanged(d.onDeviceTypeChanged)
+	descriptionLabel := widgets.NewQLabel2("Description:", nil, 0)
+	d.descriptionInput = widgets.NewQLineEdit(nil)
 	d.enabledInput = widgets.NewQCheckBox2("Enabled", nil)
 
 	d.logInput = widgets.NewQTextEdit(nil)
@@ -73,9 +77,11 @@ func NewDeviceDetail() *DeviceDetail {
 	layout.AddWidget(d.lineInput, 1, 1, 0)
 	layout.AddWidget(typeLabel, 2, 0, 0)
 	layout.AddWidget(d.typeInput, 2, 1, 0)
-	layout.AddWidget(d.enabledInput, 3, 0, 0)
-	layout.AddWidget3(d.saveButton, 4, 0, 1, 2, 0)
-	layout.AddWidget3(logGroup, 5, 0, 1, 2, 0)
+	layout.AddWidget(descriptionLabel, 3, 0, 0)
+	layout.AddWidget(d.descriptionInput, 3, 1, 0)
+	layout.AddWidget(d.enabledInput, 4, 0, 0)
+	layout.AddWidget3(d.saveButton, 5, 0, 1, 2, 0)
+	layout.AddWidget3(logGroup, 6, 0, 1, 2, 0)
 	d.GroupBox.SetLayout(layout)
 	return &d
 }
@@ -88,6 +94,7 @@ func (d *DeviceDetail) saveDeviceDetail() {
 	variantMap := MakeVariantMap(
 		d.lineInput.Text(),
 		d.typeInput.CurrentText(),
+		d.descriptionInput.Text(),
 		d.enabledInput.CheckState() == core.Qt__Checked,
 	)
 	d.treeItem.SetData(
@@ -107,6 +114,7 @@ func (d *DeviceDetail) Refresh(item *widgets.QTreeWidgetItem) {
 	} else {
 		d.typeInput.SetCurrentText(DEV_TYPE_UNK)
 	}
+	d.descriptionInput.SetText(variantMap.Description())
 	d.enabledInput.SetCheckState(core.Qt__Unchecked)
 	if variantMap.Enabled() {
 		d.enabledInput.SetCheckState(core.Qt__Checked)
@@ -196,11 +204,13 @@ type VariantMap map[string]*core.QVariant
 func MakeVariantMap(
 	lineText string,
 	typeText string,
+	descriptionText string,
 	enabledState bool,
 ) VariantMap {
 	variantMap := make(VariantMap)
 	variantMap["data"] = core.NewQVariant17(lineText)
 	variantMap["type"] = core.NewQVariant17(typeText)
+	variantMap["description"] = core.NewQVariant17(descriptionText)
 	variantMap["enabled"] = core.NewQVariant11(enabledState)
 	return variantMap
 }
@@ -211,6 +221,10 @@ func (v VariantMap) Data() string {
 
 func (v VariantMap) Type() string {
 	return v["type"].ToString()
+}
+
+func (v VariantMap) Description() string {
+	return v["description"].ToString()
 }
 
 func (v VariantMap) Enabled() bool {
