@@ -2,7 +2,7 @@ package aoztech
 
 import (
 	"fmt"
-	"posam/interpreter"
+	"posam/dao"
 	"posam/protocol/tml"
 	"posam/util/concurrentmap"
 	"strconv"
@@ -29,12 +29,12 @@ var CONN_ATTRIBUTES = []string{
 	AXIS_Y_SETUP_FILE,
 }
 
-var InstructionMap interpreter.InstructionMapt
+var InstructionMap *dao.InstructionMapt
 
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
-	InstructionMap = make(interpreter.InstructionMapt)
+	InstructionMap = dao.NewInstructionMap()
 	ResetInstance()
 }
 

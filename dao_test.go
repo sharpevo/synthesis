@@ -79,13 +79,19 @@ func TestNewInt32Argument(t *testing.T) {
 		order     binary.ByteOrder
 	}{
 		{
-			errString: "invalid type of argument",
+			//errString: "invalid type of argument",
+			errString: "invalid ",
 			input:     11.22,
 			order:     binary.LittleEndian,
 		},
 		{
 			expected: []byte{0x0b, 0x00, 0x00, 0x00},
 			input:    int32(11),
+			order:    binary.LittleEndian,
+		},
+		{
+			expected: []byte{0x00, 0x0a, 0x00, 0x00},
+			input:    int32(2560),
 			order:    binary.LittleEndian,
 		},
 		{
@@ -126,7 +132,7 @@ func TestNewFloat32Argument(t *testing.T) {
 		order     binary.ByteOrder
 	}{
 		{
-			errString: "invalid type of argument",
+			errString: "invalid ",
 			input:     11.22,
 			order:     binary.LittleEndian,
 		},

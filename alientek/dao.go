@@ -6,10 +6,8 @@ import (
 	"log"
 	"posam/dao"
 	"posam/protocol/serial"
-	"strconv"
-	//"posam/protocol/serialport"
-	"posam/interpreter"
 	"posam/util/concurrentmap"
+	"strconv"
 )
 
 const (
@@ -32,12 +30,12 @@ var CONN_ATTRIBUTES = []string{
 	PARITY,
 }
 
-var InstructionMap interpreter.InstructionMapt
+var InstructionMap *dao.InstructionMapt
 
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
-	InstructionMap = make(interpreter.InstructionMapt)
+	InstructionMap = dao.NewInstructionMap()
 	ResetInstance()
 }
 

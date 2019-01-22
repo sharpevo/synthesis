@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"posam/interpreter"
+	"posam/dao"
 	"posam/protocol/usbcan"
 	"posam/util/concurrentmap"
 	"strconv"
@@ -42,11 +42,11 @@ var CONN_ATTRIBUTES = []string{
 	MODE,
 }
 
-var InstructionMap interpreter.InstructionMapt
+var InstructionMap *dao.InstructionMapt
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
-	InstructionMap = make(interpreter.InstructionMapt)
+	InstructionMap = dao.NewInstructionMap()
 	ResetInstance()
 }
 
@@ -194,7 +194,6 @@ func (d *Dao) MoveRelative(
 	message = append(message, directionBytes...)
 	message = append(message, speedBytes...)
 	message = append(message, posBytes...)
-	message = append(message, []byte{0x00, 0x00}...)
 	output, err := d.SendAck2(
 		message,
 		MotorMoveRelativeUnit.RecResp(),
@@ -350,6 +349,28 @@ func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 	//conc := binary.BigEndian.Uint16(output[2:4]) // canalystii
 	//conc := binary.BigEndian.Uint16(output[1:3]) // usbcan-2c
 	resp = divideTen(conc)
+	return resp, nil
+}
+
+func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
+	deviceBytes, err := uint8Bytes(device)
+	if err != nil {
+		return resp, err
+	}
+	req := SensorPressureUnit.Request()
+	message := req.Bytes()
+	message = append(message, deviceBytes...)
+	message = append(message, []byte{0x00, 0x00, 0x00, 0x00, 0x00}...)
+	output, err := d.Send(message)
+	if err != nil {
+		log.Println(err)
+		return resp, err
+	}
+	if output[2] == 0xff {
+		return resp, fmt.Errorf("invalid pressure device '%v'", device)
+	}
+	voltageDec := binary.BigEndian.Uint16(output[2:4])
+	resp = int64(voltageDec)
 	return resp, nil
 }
 
