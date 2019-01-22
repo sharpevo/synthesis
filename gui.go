@@ -362,7 +362,7 @@ func main() {
 							if !suspend {
 								break
 							}
-							time.Sleep(1 * time.Second)
+							<-time.After(1 * time.Second)
 						}
 					}
 					resp.Completec <- true
