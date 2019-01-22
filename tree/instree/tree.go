@@ -38,8 +38,8 @@ func NewTree(
 	treeWidget.SetWindowTitle("Graphical Programming")
 	treeWidget.SetContextMenuPolicy(core.Qt__CustomContextMenu)
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
-	treeWidget.ConnectItemClicked(treeWidget.customItemClicked)
 	treeWidget.ConnectItemDoubleClicked(treeWidget.customItemDoubleClicked)
+	treeWidget.ConnectCurrentItemChanged(treeWidget.customCurrentItemChanged)
 
 	treeWidget.ImportPreviousFile()
 
@@ -103,6 +103,13 @@ func (t *InstructionTree) customDropEvent(e *gui.QDropEvent) {
 	}
 	t.SetCurrentItem(item)
 	//item.SetExpanded(true)
+}
+
+func (t *InstructionTree) customCurrentItemChanged(
+	curr *widgets.QTreeWidgetItem,
+	prev *widgets.QTreeWidgetItem,
+) {
+	t.detail.Refresh(t.CurrentItem())
 }
 
 func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
@@ -205,10 +212,6 @@ func (t *InstructionTree) WriteInputEdit(filePath string) {
 		return
 	}
 	t.inputEdit.SetPlainText(string(instBytes))
-}
-
-func (t *InstructionTree) customItemClicked(item *widgets.QTreeWidgetItem, column int) {
-	t.detail.Refresh(item)
 }
 
 func (t *InstructionTree) customItemDoubleClicked(item *widgets.QTreeWidgetItem, column int) {
