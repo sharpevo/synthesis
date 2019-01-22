@@ -52,12 +52,12 @@ func Unit(input float64) int {
 
 func Mm2(input int) string {
 	output := fmt.Sprintf("%.6f", float64(input)*25.4/600)
-	fmt.Println("convert", input, output)
+	//fmt.Println("convert", input, output)
 	return output
 }
 
 func Mm(input int) float64 {
 	output := float64(input) * 25.4 / 600
-	fmt.Println("convert", input, output)
+	//fmt.Println("convert", input, output)
 	return output
 }
