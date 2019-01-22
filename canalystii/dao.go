@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"posam/interpreter"
+	"posam/dao"
 	"posam/protocol/usbcan"
 	"posam/util/concurrentmap"
 	"strconv"
@@ -42,11 +42,11 @@ var CONN_ATTRIBUTES = []string{
 	MODE,
 }
 
-var InstructionMap interpreter.InstructionMapt
+var InstructionMap *dao.InstructionMapt
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
-	InstructionMap = make(interpreter.InstructionMapt)
+	InstructionMap = dao.NewInstructionMap()
 	ResetInstance()
 }
 

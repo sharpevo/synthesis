@@ -6,16 +6,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"posam/interpreter"
 	"strconv"
 )
 
 const NAME = "UNKNOWN"
 
-var InstructionMap interpreter.InstructionMapt
+var InstructionMap *InstructionMapt
 
 func init() {
-	InstructionMap = make(interpreter.InstructionMapt)
+	InstructionMap = NewInstructionMap()
 }
 
 type Frame struct {

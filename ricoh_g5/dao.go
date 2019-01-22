@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"posam/dao"
-	"posam/interpreter"
 	"posam/protocol/tcp"
 	"posam/util/concurrentmap"
 )
@@ -24,12 +23,12 @@ var CONN_ATTRIBUTES = []string{
 	TIMEOUT,
 }
 
-var InstructionMap interpreter.InstructionMapt
+var InstructionMap *dao.InstructionMapt
 
 var deviceMap *concurrentmap.ConcurrentMap
 
 func init() {
-	InstructionMap = make(interpreter.InstructionMapt)
+	InstructionMap = dao.NewInstructionMap()
 	ResetInstance()
 }
 
