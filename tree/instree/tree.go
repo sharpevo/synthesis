@@ -40,6 +40,7 @@ func NewTree(
 	treeWidget.ConnectCustomContextMenuRequested(treeWidget.customContextMenuRequested)
 	treeWidget.ConnectItemDoubleClicked(treeWidget.customItemDoubleClicked)
 	treeWidget.ConnectCurrentItemChanged(treeWidget.customCurrentItemChanged)
+	//treeWidget.ConnectKeyPressEvent(treeWidget.customKeyPressEvent)
 
 	treeWidget.ImportPreviousFile()
 
@@ -51,6 +52,23 @@ func NewTree(
 	treeWidget.ExpandAll()
 
 	return treeWidget
+}
+
+func (t *InstructionTree) customKeyPressEvent(e *gui.QKeyEvent) {
+	switch int32(e.Key()) {
+	case int32(core.Qt__Key_Return), int32(core.Qt__Key_Enter):
+		//e.Accept()
+		t.ItemDoubleClicked(t.CurrentItem(), 0)
+	default:
+		//fmt.Println("key pressed", e.Key())
+		e.Accept()
+	}
+}
+
+func (t *InstructionTree) RefreshDetail() {
+	t.detail.Refresh(t.CurrentItem())
+	//fmt.Println("refresh instruction detail", t.detail.devInput.CurrentData(int(core.Qt__UserRole)).ToString())
+	//t.detail.onDeviceChanged("")
 }
 
 func (t *InstructionTree) customDragEnterEvent(e *gui.QDragEnterEvent) {
@@ -223,7 +241,9 @@ func (t *InstructionTree) customItemDoubleClicked(item *widgets.QTreeWidgetItem,
 		uiutil.MessageBoxError(err.Error())
 	}
 	t.WriteInputEdit(filePath)
+	t.SetCurrentItem(nil)
 	t.runButton.Click()
+	t.SetCurrentItem(item)
 }
 
 func (t *InstructionTree) Generate() (string, error) {
