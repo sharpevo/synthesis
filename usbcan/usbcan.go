@@ -231,7 +231,7 @@ func (c *Channel) ChannelKey() string {
 }
 
 func (c *Channel) send() error { // {{{
-	//func (c *Channel) send() { // {{{
+	//func (c *Channel) send() {
 	//c.sendo.Do(func() {
 	//if c.senderLaunched {
 	//return nil
@@ -255,11 +255,13 @@ func (c *Channel) send() error { // {{{
 }
 
 func (c *Channel) transmit(req *Request) {
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
-	for _ = range ticker.C {
-		if c.Sendable {
-			break
+	if !c.Sendable {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		for _ = range ticker.C {
+			if c.Sendable {
+				ticker.Stop()
+				break
+			}
 		}
 	}
 	respc := req.Responsec
