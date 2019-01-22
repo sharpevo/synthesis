@@ -342,11 +342,11 @@ func main() {
 		)
 		var resultBuilder strings.Builder
 
-		go func() {
+		util.Go(func() {
 			completec := make(chan interface{})
-			go func() {
+			util.Go(func() {
 				<-completec
-			}()
+			})
 			for resp := range statementGroup.Execute(terminatec, completec) {
 				if resp.Error != nil {
 					resumec = resp.Completec
@@ -382,12 +382,12 @@ func main() {
 
 			suspButton.SetEnabled(false)
 			resuButton.SetEnabled(false)
-		}()
+		})
 	})
 
 	termButton := widgets.NewQPushButton2("TERMINATE", nil)
 	termButton.ConnectClicked(func(bool) {
-		go func() {
+		util.Go(func() {
 			if len(terminatecc) != 1 {
 				return
 			}
@@ -395,7 +395,7 @@ func main() {
 			//close(terminatec)
 			close(<-terminatecc)
 			suspend = false
-		}()
+		})
 	})
 
 	suspButton.ConnectClicked(func(bool) {
@@ -403,12 +403,12 @@ func main() {
 	})
 
 	resuButton.ConnectClicked(func(bool) {
-		go func() {
+		util.Go(func() {
 			suspend = false
 			suspButton.SetEnabled(true)
 			resuButton.SetEnabled(false)
 			resumec <- true
-		}()
+		})
 	})
 
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
@@ -589,9 +589,12 @@ func initAozDevice(
 	if err != nil {
 		return err
 	}
-	go func() {
-		for {
-			time.Sleep(500 * time.Millisecond)
+	util.Go(func() {
+		//timer := time.NewTimer(500*time.Millisecond)
+		ticker := time.NewTicker(500 * time.Millisecond)
+		defer ticker.Stop()
+		for _ = range ticker.C {
+			//time.Sleep(500 * time.Millisecond)
 			motorStatusLabel.SetText(
 				fmt.Sprintf(
 					"Motor: (%v, %v)",
@@ -600,7 +603,7 @@ func initAozDevice(
 				),
 			)
 		}
-	}()
+	})
 	return
 }
 
