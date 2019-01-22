@@ -122,6 +122,10 @@ PRINT never executed`
 var InstructionMap = dao.NewInstructionMap()
 var InstructionDaoMap = make(map[string]*dao.InstructionMapt)
 
+var (
+	LOGGABLE = os.Getenv("UILOG") == "true"
+)
+
 type QMessageBoxWithCustomSlot struct {
 	widgets.QMessageBox
 	_ func(message string) `slot:showMessageBoxSlot`
@@ -340,7 +344,8 @@ func main() {
 			strings.NewReader(input.ToPlainText()),
 			&statementGroup,
 		)
-		//var resultBuilder strings.Builder
+
+		var resultBuilder strings.Builder
 
 		util.Go(func() {
 			completec := make(chan interface{})
@@ -368,12 +373,17 @@ func main() {
 					resp.Completec <- true
 				}
 
-				//insertString(fmt.Sprintf("%v", resp.Output), &resultBuilder)
-				//result.SetText(resultBuilder.String())
+				if LOGGABLE {
+					insertString(fmt.Sprintf("%v", resp.Output), &resultBuilder)
+					result.SetText(resultBuilder.String())
+				}
 			}
-			//insertString("DONE\n\n", &resultBuilder)
-			//result.SetText(resultBuilder.String())
-			result.SetText("DONE")
+			if LOGGABLE {
+				insertString("DONE\n\n", &resultBuilder)
+				result.SetText(resultBuilder.String())
+			} else {
+				result.SetText("DONE")
+			}
 			if len(terminatecc) == 1 {
 				t := <-terminatecc
 				close(t)
