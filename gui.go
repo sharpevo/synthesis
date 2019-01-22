@@ -20,7 +20,7 @@ import (
 	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
 	"posam/gui/uiutil"
-	_ "posam/instruction"
+	"posam/instruction"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
 )
@@ -119,8 +119,8 @@ PRINT never executed
 PRINT never executed`
 )
 
-var InstructionMap = make(interpreter.InstructionMapt)
-var InstructionDaoMap = make(map[string]interpreter.InstructionMapt)
+var InstructionMap = dao.NewInstructionMap()
+var InstructionDaoMap = make(map[string]*dao.InstructionMapt)
 
 type QMessageBoxWithCustomSlot struct {
 	widgets.QMessageBox
@@ -637,9 +637,11 @@ func initCANDevice(
 
 func buildInstructionMap() {
 	for _, instructionMap := range InstructionDaoMap {
-		for k, v := range instructionMap {
-			fmt.Println(k)
-			InstructionMap[k] = v
+		for item := range instructionMap.Iter() {
+			k := item.Key
+			v := item.Value.(reflect.Type)
+			//fmt.Printf("v2 %s: %T, %v\n", k, reflect.New(v), reflect.New(v))
+			InstructionMap.Set(k, v)
 		}
 	}
 }

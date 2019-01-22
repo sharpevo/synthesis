@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"posam/dao"
 	"posam/gui/tree"
-	"posam/interpreter"
 	"sort"
 	"strings"
 )
@@ -34,7 +34,7 @@ type InstructionDetail struct {
 	saveButton     *widgets.QPushButton
 }
 
-func NewInstructionDetail(instructionDaoMap map[string]interpreter.InstructionMapt) *InstructionDetail {
+func NewInstructionDetail(instructionDaoMap map[string]*dao.InstructionMapt) *InstructionDetail {
 
 	typeLabel := widgets.NewQLabel2("Type", nil, 0)
 	titleLabel := widgets.NewQLabel2("Title", nil, 0)
@@ -50,7 +50,8 @@ func NewInstructionDetail(instructionDaoMap map[string]interpreter.InstructionMa
 	d.instInput = widgets.NewQComboBox(nil)
 	d.instructionMap = make(map[string][]string)
 	for name, instructionMap := range instructionDaoMap {
-		for k, _ := range instructionMap {
+		for item := range instructionMap.Iter() {
+			k := item.Key
 			if k != INST_SET_SYNC &&
 				k != INST_SET_ASYN {
 				d.instructionMap[name] = append(d.instructionMap[name], k)
