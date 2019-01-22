@@ -269,7 +269,7 @@ func NewInputGroup() *widgets.QGroupBox {
 
 	printhead0Line0Input.SetText("A")
 	printhead0Line1Input.SetText("C")
-	printhead0Line2Input.SetText("Z")
+	printhead0Line2Input.SetText("G")
 	printhead0Line3Input.SetText("T")
 	printhead1Line0Input.SetText("-")
 	printhead1Line1Input.SetText("-")
@@ -1151,7 +1151,7 @@ func genData(
 			dataSlice[nozzle.Printhead.Index][nozzle.Index] = "1"
 
 			if DEBUGABLE {
-				fmt.Println("printing", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
+				//fmt.Printf(" | printing ", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
 			}
 			if IMAGABLE {
 				img.Set(nozzle.Pos.X, subs.Height-nozzle.Pos.Y, nozzle.Reagent.Color)
