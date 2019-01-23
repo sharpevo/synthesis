@@ -58,7 +58,7 @@ func NewSubstrate(
 			yOffset -= spotSpaceUnit
 		}
 		// new slide
-		if yOffset < 0 {
+		if yOffset <= 0 {
 			slideCount += 1
 			xOffset = (slideWidthUnit + slideSpaceUnit) * (slideCount - 1)
 			yOffset = slideHeightUnit
