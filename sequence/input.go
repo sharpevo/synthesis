@@ -597,14 +597,14 @@ func NewInputGroup() *widgets.QGroupBox {
 			return
 		}
 
-		maxY := slideGeometryHeightFloat + printhead0OffsetYFloat
+		maxY := printhead0OffsetYFloat - slideGeometryHeightFloat
 		if printhead0OffsetYFloat < 0 {
 			maxY = slideGeometryHeightFloat - printhead0OffsetYFloat
 		}
-		if maxY >= 50.0 {
+		if maxY <= -50.0 {
 			uiutil.MessageBoxError(
 				fmt.Sprintf(
-					"invalid slide height: %v + %v > 50.0",
+					"invalid config: slide height '%v', position y '%v'",
 					slideGeometryHeightFloat,
 					printhead0OffsetYFloat,
 				))
