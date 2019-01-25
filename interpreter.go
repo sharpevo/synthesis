@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"posam/util/blockingqueue"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -49,8 +50,8 @@ type Statement struct {
 
 type StatementGroup struct {
 	Execution ExecutionType
-	ItemList  []interface{}
 	Stack     *Stack
+	ItemList  *blockingqueue.BlockingQueue
 }
 
 type Response struct {
@@ -202,10 +203,11 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec 
 
 	go func() {
 		var wg sync.WaitGroup
-		wg.Add(len(g.ItemList))
+		wg.Add(g.ItemList.Length())
 		defer close(respcc)
 
-		for _, itemInterface := range g.ItemList {
+		for itemi := range g.ItemList.Iter() {
+			itemInterface := itemi.Value
 			completec := make(chan interface{})
 			switch t := itemInterface.(type) {
 			case Statement, *Statement:
@@ -243,9 +245,14 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 	go func() {
 		defer close(respcc)
 
-		for i := 0; i < len(g.ItemList); i++ {
+		length := g.ItemList.Length()
+		for i := 0; i < length; i++ {
 			completec := make(chan interface{})
-			itemInterface := g.ItemList[i]
+			itemInterface, err := g.ItemList.Get(i)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
 			switch t := itemInterface.(type) {
 			case Statement, *Statement:
 
@@ -274,8 +281,12 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 					i -= 1 //trade off the i++
 					continue
 				} else {
-					if i < len(g.ItemList)-1 {
-						if s, ok := g.ItemList[i+1].(*Statement); ok &&
+					if i < length-1 {
+						nextItem, err := g.ItemList.Get(i + 1)
+						if err != nil {
+							log.Println(err)
+						}
+						if s, ok := nextItem.(*Statement); ok &&
 							s.InstructionName == "RETRY" {
 							item.IgnoreError = true
 						}
@@ -284,8 +295,12 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 					//log.Printf("'%s: %s' complet", item.InstructionName, item.Arguments)
 				}
 
-				if i < len(g.ItemList)-1 {
-					if s, ok := g.ItemList[i+1].(*Statement); ok &&
+				if i < length-1 {
+					nextItem, err := g.ItemList.Get(i + 1)
+					if err != nil {
+						log.Println(err)
+					}
+					if s, ok := nextItem.(*Statement); ok &&
 						s.InstructionName == "ERRGOTO" {
 						item.IgnoreError = true
 					}
@@ -345,6 +360,7 @@ func ParseFile(
 	defer file.Close()
 	statementGroup := StatementGroup{
 		Execution: execution,
+		ItemList:  blockingqueue.NewBlockingQueue(),
 		Stack:     stack,
 	}
 
@@ -367,21 +383,15 @@ func ParseReader(reader io.Reader, statementGroup *StatementGroup) (*StatementGr
 				NewStack(statementGroup.Stack),
 				statement.Arguments[0],
 				SYNC)
-			statementGroup.ItemList = append(
-				statementGroup.ItemList,
-				subStatementGroup)
+			statementGroup.ItemList.Append(subStatementGroup)
 		case "ASYNC":
 			subStatementGroup, _ := ParseFile(
 				NewStack(statementGroup.Stack),
 				statement.Arguments[0],
 				ASYNC)
-			statementGroup.ItemList = append(
-				statementGroup.ItemList,
-				subStatementGroup)
+			statementGroup.ItemList.Append(subStatementGroup)
 		default:
-			statementGroup.ItemList = append(
-				statementGroup.ItemList,
-				statement)
+			statementGroup.ItemList.Append(statement)
 		}
 	}
 	return statementGroup, nil
