@@ -23,6 +23,7 @@ import (
 	"posam/instruction"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
+	"posam/util/blockingqueue"
 )
 
 const (
@@ -338,6 +339,7 @@ func main() {
 		interpreter.InitParser(InstructionMap)
 		statementGroup := interpreter.StatementGroup{
 			Execution: interpreter.SYNC,
+			ItemList:  blockingqueue.NewBlockingQueue(),
 			Stack:     stack,
 		}
 		interpreter.ParseReader(
