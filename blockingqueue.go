@@ -7,7 +7,7 @@ import (
 )
 
 type BlockingQueue struct {
-	sync.RWMutex
+	sync.Mutex
 	itemList      []interface{}
 	pushCondition conditionvariable.ChannelCondition
 	termCondition conditionvariable.ChannelCondition
