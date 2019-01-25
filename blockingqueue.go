@@ -56,6 +56,27 @@ func (b *BlockingQueue) Pop() (interface{}, error) {
 	return item, nil
 }
 
+func (b *BlockingQueue) Length() int {
+	b.Lock()
+	defer b.Unlock()
+	return len(b.itemList)
+}
+
+func (b *BlockingQueue) Get(index int) (interface{}, error) {
+	b.Lock()
+	defer b.Unlock()
+	if index < 0 || index > len(b.itemList) {
+		return nil, fmt.Errorf("invalid index")
+	}
+	return b.itemList[index], nil
+}
+
+func (b *BlockingQueue) Append(item interface{}) {
+	b.Lock()
+	defer b.Unlock()
+	b.itemList = append(b.itemList, item)
+}
+
 type Item struct {
 	Index int
 	Value interface{}
