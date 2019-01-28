@@ -35,9 +35,6 @@ func (i *InstructionVariableGetByIndex) Execute(args ...string) (resp interface{
 		return
 	}
 	isSameCM := targetCM == variableCM
-	if !isSameCM {
-		defer targetCM.Unlock()
-	}
 	variableCM.Lock()
 	defer variableCM.Unlock()
 	variable, _ := i.GetVarLockless(variableCM, variableName)
@@ -51,5 +48,8 @@ func (i *InstructionVariableGetByIndex) Execute(args ...string) (resp interface{
 	targetVar, _ := i.GetVarLockless(targetCM, targetName)
 	targetVar.SetValue(list[index])
 	resp = fmt.Sprintf("%s = %s (%s[%v])", targetName, list[index], variableName, index)
+	if !isSameCM {
+		targetCM.Unlock()
+	}
 	return resp, nil
 }
