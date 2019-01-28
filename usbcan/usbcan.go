@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
 	//"sync"
@@ -290,8 +291,86 @@ func (c *Channel) transmit(req *Request) {
 		return
 	}
 	log.Printf("request sent: %v\n", pSend)
+	util.Go(func() {
+		//c.watcher(req)
+		c.watcher(hex.EncodeToString([]byte{req.InstructionCode}))
+	})
 	return
-} // }}}
+}
+
+func (c *Channel) watcher(code string) {
+	defer func() {
+		fmt.Printf("watcher terminated for code %v\n", code)
+	}()
+	fmt.Printf("watcher for %v is launched\n", code)
+
+	//for {
+	//select {
+	//case <-terminatec:
+	//case <-time.After(5 * time.Second):
+	//reqi, found := c.ReceptionMap.Get(code)
+	//if reqi == nil {
+	//return
+	//}
+	//req := reqi.(*Request)
+	//if found {
+	//fmt.Printf("\n\n--------------------------------------------------\n\n")
+	//log.Printf(
+	//"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\n",
+	//req.FrameId,
+	//req.InstructionCode,
+	//req.Message,
+	//)
+	//log.Printf(
+	//"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
+	//req.FrameId,
+	//req.InstructionCode,
+	//req.Message,
+	//)
+	////c.ReceptionMap.Unlock()
+	//c.transmit(req)
+	//fmt.Printf("--------------------------------------------------\n\n")
+	//}
+	//}
+	//}
+
+	<-time.After(5 * time.Second)
+	//c.ReceptionMap.Lock()
+	//reqi, found := c.ReceptionMap.GetLockless(code)
+	reqi, found := c.ReceptionMap.Get(code)
+	if reqi == nil {
+		return
+	}
+	req := reqi.(*Request)
+	if found {
+		fmt.Printf("\n\n--------------------------------------------------\n\n")
+		log.Printf(
+			"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\n",
+			req.FrameId,
+			req.InstructionCode,
+			req.Message,
+		)
+		log.Printf(
+			"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
+			req.FrameId,
+			req.InstructionCode,
+			req.Message,
+		)
+		//c.ReceptionMap.Unlock()
+		c.transmit(req)
+		fmt.Printf("--------------------------------------------------\n\n")
+	}
+	//log.Printf(
+	//"watcher terminating...\nframe id: %v\ncode: %v\ndata: %v\n",
+	//req.FrameId,
+	//req.InstructionCode,
+	//req.Message,
+	//)
+	//c.ReceptionMap.Unlock()
+
+}
+
+// }}}
 
 // Transmit{{{
 // no ack, com: message, [], 0x01
