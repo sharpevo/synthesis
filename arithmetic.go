@@ -77,9 +77,10 @@ func (i *InstructionArithmetic) GetInt64(
 			defer cm.Unlock()
 			variablei, _ := cm.GetLockless(v)
 			variable, _ := variablei.(*vrb.Variable)
-			v, ok := variable.GetValue().(int64)
+			vi := variable.GetValue()
+			v, ok := vi.(int64)
 			if !ok {
-				return 0, fmt.Errorf("invalid int %v(%T)", v, v)
+				return 0, fmt.Errorf("invalid int %v (%T)", vi, vi)
 			}
 			return v, nil
 		} else {
