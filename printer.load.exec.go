@@ -74,8 +74,8 @@ func (i *InstructionPrinterLoadExec) Execute(args ...string) (resp interface{}, 
 		}
 	}
 
-	fmt.Println(
-		"print",
+	fmt.Printf(
+		"print %v %v %v %v %v\n",
 		formations[groupIndex].Print.PrintheadConf.Path,
 		formations[groupIndex].Print.PrintheadConf.BitsPerPixel,
 		formations[groupIndex].Print.PrintheadConf.Width,
