@@ -2,6 +2,7 @@ package instruction
 
 import (
 	"fmt"
+	"math/big"
 	"posam/dao"
 	"strings"
 )
@@ -46,7 +47,11 @@ func (i *InstructionVariableGetFloatByIndex) Execute(args ...string) (resp inter
 		targetCM.Lock()
 	}
 	targetVar, _ := i.GetVarLockless(targetCM, targetName)
-	targetVar.SetValue(list[index])
+	floatValue, _, err := big.ParseFloat(list[index], 10, 53, big.ToNearestEven)
+	if err != nil {
+		return resp, err
+	}
+	targetVar.SetValue(floatValue)
 	resp = fmt.Sprintf("%s = %s (%s[%v])", targetName, list[index], variableName, index)
 	if !isSameCM {
 		targetCM.Unlock()
