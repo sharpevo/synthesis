@@ -3,23 +3,24 @@ package instruction
 import (
 	"fmt"
 	"posam/dao"
+	"strconv"
 	"strings"
 )
 
 func init() {
-	dao.InstructionMap.Set("GETFLOATBYINDEX", InstructionVariableGet{})
+	dao.InstructionMap.Set("GETINTBYINDEX", InstructionVariableGet{})
 }
 
-type InstructionVariableGetFloatByIndex struct {
+type InstructionVariableGetIntByIndex struct {
 	Instruction
 }
 
-func (i *InstructionVariableGetFloatByIndex) Execute(args ...string) (resp interface{}, err error) {
+func (i *InstructionVariableGetIntByIndex) Execute(args ...string) (resp interface{}, err error) {
 	if len(args) < 3 {
 		return resp, fmt.Errorf("not enough arguments")
 	}
 	targetName := args[0]
-	targetCM, err := i.ParseFloat64Variable(targetName)
+	targetCM, err := i.ParseIntVariable(targetName)
 	if err != nil {
 		return resp, err
 	}
@@ -46,7 +47,11 @@ func (i *InstructionVariableGetFloatByIndex) Execute(args ...string) (resp inter
 		targetCM.Lock()
 	}
 	targetVar, _ := i.GetVarLockless(targetCM, targetName)
-	targetVar.SetValue(list[index])
+	intValue, err := strconv.Atoi(list[index])
+	if err != nil {
+		return resp, err
+	}
+	targetVar.SetValue(int64(intValue))
 	resp = fmt.Sprintf("%s = %s (%s[%v])", targetName, list[index], variableName, index)
 	if !isSameCM {
 		targetCM.Unlock()
