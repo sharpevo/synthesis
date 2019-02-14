@@ -11,6 +11,7 @@ import (
 	"os"
 	"posam/gui/tree"
 	"posam/gui/uiutil"
+	"posam/util"
 )
 
 type InstructionTree struct {
@@ -382,27 +383,14 @@ func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 	return node
 }
 
+const IMPORTED_FILE_KEY = "general.importedfile"
+
 func (t *InstructionTree) SaveImportedFilePath(filePath string) {
-	f, err := os.Create("config")
-	defer f.Close()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	f.WriteString(filePath)
-	f.Sync()
+	util.Set(IMPORTED_FILE_KEY, filePath)
 }
 
 func (t *InstructionTree) ImportPreviousFile() {
-	f, err := os.Open("config")
-	defer f.Close()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	s := bufio.NewScanner(f)
-	s.Scan()
-	filePath := s.Text()
+	filePath := util.GetString(IMPORTED_FILE_KEY)
 	if err := t.Import(filePath); err != nil {
 		uiutil.MessageBoxError(err.Error())
 	} else {
