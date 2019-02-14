@@ -22,6 +22,7 @@ const (
 )
 
 var (
+	SEND_TIMEOUT       time.Duration
 	SHOW_RECEPTION     = config.GetBool("can.reception.debug")
 	RESEND_ALL         = config.GetBool("can.resend.all")
 	CAN_TRANSMIT_DELAY = config.GetBool("can.transmission.delay")
@@ -41,6 +42,9 @@ func init() {
 
 	receptMap = make(map[string]*Client)
 	connMap = make(map[string]*Client)
+
+	config.SetDefault("can.transmission.timeout", 500)
+	SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
 }
 
 func Instance(key string) *Client {
