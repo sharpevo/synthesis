@@ -77,3 +77,10 @@ func GetString(key string) string {
 	LoadConfig()
 	return viper.GetString(key)
 }
+
+func GetInt(key string) int {
+	LoadConfig()
+	value := viper.GetInt(key)
+	fmt.Printf("ENABLE: %s = %v\n", key, value)
+	return value
+}
