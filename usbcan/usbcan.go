@@ -21,6 +21,12 @@ const (
 	STATUS_CODE_MAILBOX_OVERFLOW = 0xE1
 )
 
+var (
+	SHOW_RECEPTION     = util.GetBool("can.reception.debug")
+	RESEND_ALL         = util.GetBool("can.resend.all")
+	CAN_TRANSMIT_DELAY = util.GetBool("can.transmission.delay")
+)
+
 var deviceMap *concurrentmap.ConcurrentMap
 var channelMap *concurrentmap.ConcurrentMap
 var clientMap *concurrentmap.ConcurrentMap
