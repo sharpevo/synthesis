@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"posam/util"
+	"posam/config"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
 	//"sync"
@@ -22,9 +22,9 @@ const (
 )
 
 var (
-	SHOW_RECEPTION     = util.GetBool("can.reception.debug")
-	RESEND_ALL         = util.GetBool("can.resend.all")
-	CAN_TRANSMIT_DELAY = util.GetBool("can.transmission.delay")
+	SHOW_RECEPTION     = config.GetBool("can.reception.debug")
+	RESEND_ALL         = config.GetBool("can.resend.all")
+	CAN_TRANSMIT_DELAY = config.GetBool("can.transmission.delay")
 )
 
 var deviceMap *concurrentmap.ConcurrentMap
