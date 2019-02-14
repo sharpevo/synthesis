@@ -1,7 +1,6 @@
 package instree
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
@@ -9,9 +8,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"posam/config"
 	"posam/gui/tree"
 	"posam/gui/uiutil"
-	"posam/util"
 )
 
 type InstructionTree struct {
@@ -386,11 +385,11 @@ func (t *InstructionTree) ExportNode(root *widgets.QTreeWidgetItem) Node {
 const IMPORTED_FILE_KEY = "general.importedfile"
 
 func (t *InstructionTree) SaveImportedFilePath(filePath string) {
-	util.Set(IMPORTED_FILE_KEY, filePath)
+	config.Set(IMPORTED_FILE_KEY, filePath)
 }
 
 func (t *InstructionTree) ImportPreviousFile() {
-	filePath := util.GetString(IMPORTED_FILE_KEY)
+	filePath := config.GetString(IMPORTED_FILE_KEY)
 	if err := t.Import(filePath); err != nil {
 		uiutil.MessageBoxError(err.Error())
 	} else {
