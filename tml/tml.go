@@ -3,6 +3,7 @@ package tml
 import (
 	"fmt"
 	"log"
+	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
 	"reflect"
@@ -11,6 +12,14 @@ import (
 )
 
 var clientMap *concurrentmap.ConcurrentMap
+
+var (
+	SET_TONPOSOK          = util.GetBool("tml.tonposok")
+	USE_TPOS              = util.GetBool("tml.tpos")
+	USE_Y_RAW_POS         = util.GetBool("tml.yrawpos")
+	COMPENSATION          = util.GetBool("tml.compensation.basic")
+	COMPENSATION_ADVANCED = util.GetBool("tml.compensation.advanced")
+)
 
 func init() {
 	clientMap = concurrentmap.NewConcurrentMap()
