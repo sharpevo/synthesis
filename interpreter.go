@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"posam/config"
 	"posam/dao"
 	"posam/instruction"
 	"posam/interpreter/vrb"
@@ -32,7 +33,7 @@ const (
 )
 
 var (
-	GCABLE = util.GetBool("general.gc.manual")
+	GCABLE = config.GetBool("general.gc.manual")
 )
 
 //type InstructionMapt map[string]reflect.Type
