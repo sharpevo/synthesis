@@ -84,3 +84,10 @@ func GetInt(key string) int {
 	fmt.Printf("ENABLE: %s = %v\n", key, value)
 	return value
 }
+
+func GetFloat(key string) float64 {
+	LoadConfig()
+	value := viper.GetFloat64(key)
+	fmt.Printf("ENABLE: %s = %v\n", key, value)
+
+}
