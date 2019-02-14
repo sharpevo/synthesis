@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"posam/util"
 	"log"
 	"os"
 	"os/exec"
@@ -124,7 +125,11 @@ var InstructionMap = dao.NewInstructionMap()
 var InstructionDaoMap = make(map[string]*dao.InstructionMapt)
 
 var (
-	LOGGABLE = os.Getenv("UILOG") == "true"
+	UILOG     = util.GetBool("ui.log")
+	UIFULLLOG = util.GetBool("ui.fulllog")
+	MONITABLE = util.GetBool("general.monit")
+	AUTOGC    = util.GetBool("general.gc.auto")
+	PROCESSES = util.GetInt("general.process")
 )
 
 type QMessageBoxWithCustomSlot struct {
@@ -133,6 +138,18 @@ type QMessageBoxWithCustomSlot struct {
 }
 
 func init() {
+	if PROCESSES == 0 {
+		runtime.GOMAXPROCS(1)
+	} else {
+		runtime.GOMAXPROCS(PROCESSES)
+	}
+	if !AUTOGC {
+		debug.SetGCPercent(-1)
+	}
+
+	if MONITABLE {
+		grmon.Start()
+	}
 
 	InstructionDaoMap[devtree.DEV_TYPE_UNK] = dao.InstructionMap
 	InstructionDaoMap[devtree.DEV_TYPE_ALT] = alientek.InstructionMap
