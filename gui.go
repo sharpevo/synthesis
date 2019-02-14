@@ -130,7 +130,7 @@ var (
 	UIFULLLOG = config.GetBool("ui.fulllog")
 	MONITABLE = config.GetBool("general.monit")
 	AUTOGC    = config.GetBool("general.gc.auto")
-	PROCESSES = config.GetInt("general.process")
+	PROCESSES int
 )
 
 type QMessageBoxWithCustomSlot struct {
@@ -139,6 +139,9 @@ type QMessageBoxWithCustomSlot struct {
 }
 
 func init() {
+
+	config.SetDefault("general.process", 1)
+	PROCESSES = config.GetInt("general.process")
 	if PROCESSES == 0 {
 		runtime.GOMAXPROCS(1)
 	} else {
