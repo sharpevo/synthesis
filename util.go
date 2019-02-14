@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"log"
 	"os"
 	"runtime/debug"
@@ -28,4 +29,51 @@ func Go(function func()) {
 		}()
 		function()
 	}()
+}
+
+const CONFIG_FILE = "config.yml"
+
+var configFileLoaded = false
+
+func LoadConfig() {
+	if configFileLoaded {
+		return
+	}
+	fmt.Println("loading config...")
+	f, err := os.Open(CONFIG_FILE)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	viper.SetConfigType("yaml")
+	if err := viper.ReadConfig(f); err != nil {
+		fmt.Println(err)
+	}
+	f.Close()
+	viper.SetConfigFile(CONFIG_FILE)
+	configFileLoaded = true
+}
+
+func GetBool(key string) bool {
+	LoadConfig()
+	value := viper.GetBool(key)
+	if value {
+		fmt.Printf("ENABLE: %s\n", key)
+	}
+	return value
+}
+
+func Set(key string, value interface{}) error {
+	LoadConfig()
+	viper.Set(key, value)
+	err := viper.WriteConfig()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return err
+}
+
+func GetString(key string) string {
+	LoadConfig()
+	return viper.GetString(key)
 }
