@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"posam/config"
 	"posam/util"
 	"log"
 	"os"
@@ -125,11 +126,11 @@ var InstructionMap = dao.NewInstructionMap()
 var InstructionDaoMap = make(map[string]*dao.InstructionMapt)
 
 var (
-	UILOG     = util.GetBool("ui.log")
-	UIFULLLOG = util.GetBool("ui.fulllog")
-	MONITABLE = util.GetBool("general.monit")
-	AUTOGC    = util.GetBool("general.gc.auto")
-	PROCESSES = util.GetInt("general.process")
+	UILOG     = config.GetBool("ui.log")
+	UIFULLLOG = config.GetBool("ui.fulllog")
+	MONITABLE = config.GetBool("general.monit")
+	AUTOGC    = config.GetBool("general.gc.auto")
+	PROCESSES = config.GetInt("general.process")
 )
 
 type QMessageBoxWithCustomSlot struct {
