@@ -39,6 +39,11 @@ func Set(key string, value interface{}) error {
 	return err
 }
 
+func SetDefault(key string, value interface{}) {
+	load()
+	viper.SetDefault(key, value)
+}
+
 func GetBool(key string) bool {
 	load()
 	value := viper.GetBool(key)
