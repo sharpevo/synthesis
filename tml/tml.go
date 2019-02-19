@@ -3,7 +3,7 @@ package tml
 import (
 	"fmt"
 	"log"
-	"posam/util"
+	"posam/config"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
 	"reflect"
@@ -14,11 +14,9 @@ import (
 var clientMap *concurrentmap.ConcurrentMap
 
 var (
-	SET_TONPOSOK          = util.GetBool("tml.tonposok")
-	USE_TPOS              = util.GetBool("tml.tpos")
-	USE_Y_RAW_POS         = util.GetBool("tml.yrawpos")
-	COMPENSATION          = util.GetBool("tml.compensation.basic")
-	COMPENSATION_ADVANCED = util.GetBool("tml.compensation.advanced")
+	SET_TONPOSOK          = config.GetBool("tml.tonposok")
+	COMPENSATION          = config.GetBool("tml.compensation.basic")
+	COMPENSATION_ADVANCED = config.GetBool("tml.compensation.advanced")
 )
 
 func init() {
@@ -268,6 +266,7 @@ func (c *Client) MoveAbsoluteByAxis(
 		return err
 	}
 	fmt.Printf("done\n")
+	c.CompensateMotion(aid, pos)
 	return nil
 }
 
@@ -307,6 +306,7 @@ func (c *Client) MoveRelativeByAxis(
 	}
 	fmt.Printf("done\n")
 	return nil
+	//c.CompensateMotion(aid, pos)
 }
 
 func (c *Client) MoveAbsByAxis(
@@ -523,6 +523,11 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
+	c.CompensateMotion(c.AxisYID, posy)
+	if COMPENSATION && COMPENSATION_ADVANCED {
+		fmt.Println("2nd compensation")
+		c.CompensateMotion(c.AxisYID, posy)
+	}
 	for {
 		time.Sleep(200 * time.Millisecond)
 		if err = tml.SelectAxis(c.AxisXID); err != nil {
@@ -641,21 +646,81 @@ func parseRelArgs(
 }
 
 func (c *Client) UpdateMotionStatus() (err error) {
-	if err = tml.SelectAxis(c.AxisXID); err != nil {
+	if c.PosX, err = tml.ActualPosition(c.AxisXID); err != nil {
 		return err
 	}
-	var posx float64
-	if err = tml.GetLongVariable("APOS", &posx); err != nil {
+	if c.PosY, err = tml.ActualPosition(c.AxisYID); err != nil {
 		return err
 	}
-	c.PosX = tml.ParsePosition(posx)
-	if err = tml.SelectAxis(c.AxisYID); err != nil {
-		return err
-	}
-	var posy float64
-	if err = tml.GetLongVariable("APOS", &posy); err != nil {
-		return err
-	}
-	c.PosY = tml.ParsePosition(posy)
 	return nil
+}
+
+func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
+	if !COMPENSATION {
+		return nil
+	}
+	switch axisID {
+	case c.AxisYID:
+		pos, err := tml.ActualPosition(c.AxisYID)
+		diffPos := target - pos
+		offset := tml.CalcPosition(c.AxisYID, diffPos)
+		fmt.Printf("compensating axis %d by %v (diff apos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
+		if err = tml.SelectAxis(c.AxisYID); err != nil {
+			return err
+		}
+		if err = tml.MoveRelative(
+			tml.CalcPosition(c.AxisYID, diffPos),
+			tml.CalcSpeed(c.AxisYID, 5),
+			tml.CalcAccel(c.AxisYID, 50),
+			true,
+			1,
+			1,
+		); err != nil {
+			return err
+		}
+		if err = tml.SetEventOnMotionComplete(true, false); err != nil {
+			return err
+		}
+		fmt.Printf("done\n")
+		return nil
+	default:
+		return nil
+	}
+}
+
+func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
+	if !COMPENSATION {
+		return nil
+	}
+	switch axisID {
+	case c.AxisYID:
+		pos, err := tml.TargetPosition(c.AxisYID)
+		diffPos := target - pos
+		offset := tml.CalcPosition(c.AxisYID, diffPos)
+		if diffPos == 0 {
+			fmt.Printf("not compensate axis %d by %v (diff tpos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
+			return nil
+		}
+		fmt.Printf("compensating axis %d by %v (diff tpos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
+		if err = tml.SelectAxis(c.AxisYID); err != nil {
+			return err
+		}
+		if err = tml.MoveRelative(
+			tml.CalcPosition(c.AxisYID, diffPos),
+			tml.CalcSpeed(c.AxisYID, 5),
+			tml.CalcAccel(c.AxisYID, 50),
+			true,
+			1,
+			1,
+		); err != nil {
+			return err
+		}
+		if err = tml.SetEventOnMotionComplete(true, false); err != nil {
+			return err
+		}
+		fmt.Printf("done\n")
+		return nil
+	default:
+		return nil
+	}
 }
