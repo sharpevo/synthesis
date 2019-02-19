@@ -98,7 +98,7 @@ func NewClient(
 }
 
 func (c *Client) connect() (err error) {
-	log.Println("Connecting the motor %q...", c.Name)
+	log.Printf("Connecting the motor %q...\n", c.Name)
 
 	commType := tml.CHANNEL_RS232
 	hostID := 1
@@ -184,7 +184,7 @@ func (c *Client) connect() (err error) {
 		return fmt.Errorf("failed to enable power on axes: x(%d) / y(%d)", statusx, statusy)
 	}
 
-	log.Printf("motor %q is ready", c.Name)
+	log.Printf("motor %q is ready\n", c.Name)
 	return nil
 }
 
@@ -202,6 +202,7 @@ type Response struct {
 func (c *Client) launch() {
 	log.Println("motor client launched")
 	c.connect()
+
 	for {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
