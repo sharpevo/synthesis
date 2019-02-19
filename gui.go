@@ -166,7 +166,7 @@ func init() {
 
 func main() {
 
-	app := widgets.NewQApplication(len(os.Args), os.Args)
+	app := uiutil.NewApp(os.Args)
 
 	window := widgets.NewQMainWindow(nil, 0)
 	window.SetMinimumSize2(500, 400)
