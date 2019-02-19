@@ -256,9 +256,9 @@ func (c *Client) MoveAbsoluteByAxis(
 		return err
 	}
 	if err = tml.MoveAbsolute(
-		pos,
-		spd,
-		acc,
+		tml.CalcPosition(aid, pos),
+		tml.CalcSpeed(aid, spd),
+		tml.CalcAccel(aid, acc),
 		mmt,
 		ref,
 	); err != nil {
@@ -293,9 +293,9 @@ func (c *Client) MoveRelativeByAxis(
 		return err
 	}
 	if err = tml.MoveRelative(
-		pos,
-		spd,
-		acc,
+		tml.CalcPosition(aid, pos),
+		tml.CalcSpeed(aid, spd),
+		tml.CalcAccel(aid, acc),
 		add,
 		mmt,
 		ref,
@@ -394,9 +394,9 @@ func (c *Client) MoveRelative(
 		return err
 	}
 	if err = tml.MoveRelative(
-		posx,
-		spd,
-		acc,
+		tml.CalcPosition(c.AxisXID, posx),
+		tml.CalcSpeed(c.AxisXID, spd),
+		tml.CalcAccel(c.AxisXID, acc),
 		add,
 		mmt,
 		ref,
@@ -411,9 +411,9 @@ func (c *Client) MoveRelative(
 		return err
 	}
 	if err = tml.MoveRelative(
-		posy,
-		spd,
-		acc,
+		tml.CalcPosition(c.AxisYID, posy),
+		tml.CalcSpeed(c.AxisYID, spd),
+		tml.CalcAccel(c.AxisYID, acc),
 		add,
 		mmt,
 		ref,
@@ -489,10 +489,13 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SelectAxis(c.AxisXID); err != nil {
 		return err
 	}
+	if SET_TONPOSOK {
+		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
+	}
 	if err = tml.MoveAbsolute(
-		posx,
-		spd,
-		acc,
+		tml.CalcPosition(c.AxisXID, posx),
+		tml.CalcSpeed(c.AxisXID, spd),
+		tml.CalcAccel(c.AxisXID, acc),
 		mmt,
 		ref,
 	); err != nil {
@@ -505,10 +508,13 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SelectAxis(c.AxisYID); err != nil {
 		return err
 	}
+	if SET_TONPOSOK {
+		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
+	}
 	if err = tml.MoveAbsolute(
-		posy,
-		spd,
-		acc,
+		tml.CalcPosition(c.AxisYID, posy),
+		tml.CalcSpeed(c.AxisYID, spd),
+		tml.CalcAccel(c.AxisYID, acc),
 		mmt,
 		ref,
 	); err != nil {
