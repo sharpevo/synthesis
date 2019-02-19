@@ -33,3 +33,14 @@ func MessageBoxError(message string) {
 		widgets.QMessageBox__Close,
 	)
 }
+
+func ShowDialog(title string, content interface{}) {
+	dialog := widgets.NewQDialog(nil, 0)
+	dialog.SetAttribute(core.Qt__WA_DeleteOnClose, true)
+	dialog.SetWindowTitle(title)
+	dialogLayout := widgets.NewQGridLayout2()
+	dialogText := widgets.NewQLabel2(fmt.Sprintf("%v", content), nil, 0)
+	dialogLayout.AddWidget3(dialogText, 0, 0, 1, 2, 0)
+	dialog.SetLayout(dialogLayout)
+	dialog.Show()
+}
