@@ -2,8 +2,37 @@ package uiutil
 
 import (
 	"fmt"
+	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 )
+
+type Application struct {
+	widgets.QApplication
+	_ func(message string) `slot:showMessageSlot`
+}
+
+var App *Application
+
+func NewApp(args []string) *Application {
+	App = NewApplication(len(args), args)
+	//App = &Application{}
+	//App.QApplication = widgets.NewQApplication(len(args), args)
+	App.ConnectShowMessageSlot(func(message string) {
+		App.showMessage(message)
+	})
+	return App
+}
+
+func (a *Application) showMessage(msg interface{}) {
+	msgBox := widgets.NewQMessageBox(nil)
+	msgBox.SetIcon(widgets.QMessageBox__Warning)
+	msgBox.SetWindowTitle("Warning")
+	msgBox.SetStandardButtons(widgets.QMessageBox__Ok)
+	msgBox.SetModal(false)
+	msgBox.SetAttribute(core.Qt__WA_DeleteOnClose, true)
+	msgBox.SetText(fmt.Sprintf("%v", msg))
+	msgBox.Show()
+}
 
 func FilePath() (string, error) {
 	dialog := widgets.NewQFileDialog2(nil, "Select file...", "", "")
