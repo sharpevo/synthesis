@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"posam/config"
+	"posam/gui/uiutil"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
 	//"sync"
@@ -25,6 +26,7 @@ var (
 	SEND_TIMEOUT       time.Duration
 	SHOW_RECEPTION     = config.GetBool("can.reception.debug")
 	RESEND_ALL         = config.GetBool("can.resend.all")
+	RESEND_ONCE        = config.GetBool("can.resend.once")
 	CAN_TRANSMIT_DELAY = config.GetBool("can.transmission.delay")
 )
 
@@ -465,7 +467,22 @@ func (c *Channel) receive() {
 			)
 			return
 		}
+		if SHOW_RECEPTION {
+			log.Println("Receive", count)
+		}
 		if count == 0 {
+			// always check timeout aside of findRequestByResponse
+			now := time.Now()
+			for item := range c.ReceptionMap.Iter() {
+				reqi := item.Value
+				req, ok := reqi.(*Request)
+				if !ok {
+					err = fmt.Errorf("invalid request: %#v", reqi)
+					log.Println(err)
+					continue
+				}
+				c.tryResend(now, req)
+			}
 			continue
 		}
 		log.Printf("data received: %#v\n", pReceive[:count])
@@ -543,11 +560,65 @@ func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Requ
 			err = nil
 			continue
 		}
+		// not matched
+		c.tryResend(now, req)
 	}
 	if request == nil {
 		return request, fmt.Errorf("invalid data instruction code %x", instCode)
 	}
+	fmt.Println("findRequestByResponse: request found")
 	return request, err
+}
+
+func (c *Channel) tryResend(now time.Time, req *Request) {
+	if !RESEND_ALL {
+		if req.Message[0] != 10 {
+			return
+		}
+	}
+
+	timeout := req.TimeSent.Add(SEND_TIMEOUT)
+	if timeout.Before(now) {
+		fmt.Printf("\n\n--------------------------------------------------\n\n")
+		log.Printf(
+			"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\nresend count: %v\n",
+			req.FrameId,
+			req.InstructionCode,
+			req.Message,
+			req.ResendCount,
+		)
+		if RESEND_ONCE && req.ResendCount > 1 {
+			// blocked Del
+			c.ReceptionMap.DelLockless(hex.EncodeToString([]byte{req.InstructionCode}))
+			resp := Response{}
+			errmsg := fmt.Errorf(
+				"error: failed to resend request\nframe id: %v\ndata: %v\n",
+				req.FrameId,
+				req.Message,
+			)
+			log.Println(errmsg)
+
+			//resp.Error = errmsg
+			resp.Message = []byte{0x0}
+			go func() {
+				req.Responsec <- resp
+				uiutil.App.ShowMessageSlot(errmsg.Error())
+			}()
+			return
+		}
+		log.Printf(
+			"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
+			req.FrameId,
+			req.InstructionCode,
+			req.Message,
+		)
+		//c.transmit(req)
+		req.ResendCount++
+		req.TimeSent = now
+		c.RequestQueue.Push(req)
+		//c.RequestQueue.Insert(0, req)
+		fmt.Printf("--------------------------------------------------\n\n")
+	}
 }
 
 func (c *Channel) getInstructionCode() (code byte, err error) {
@@ -652,6 +723,8 @@ type Request struct {
 	RecExpected     []byte
 	ComExpected     []byte
 	Responsec       chan Response
+	TimeSent        time.Time
+	ResendCount     int
 }
 
 type Response struct {
