@@ -263,6 +263,9 @@ func (c *Channel) send() error { // {{{
 			req,
 		)
 		c.transmit(req)
+		if CAN_TRANSMIT_DELAY {
+			<-time.After(200 * time.Millisecond)
+		}
 	}
 	//})
 }
@@ -303,10 +306,11 @@ func (c *Channel) transmit(req *Request) {
 		return
 	}
 	log.Printf("request sent: %v\n", pSend)
-	util.Go(func() {
-		//c.watcher(req)
-		c.watcher(hex.EncodeToString([]byte{req.InstructionCode}))
-	})
+	req.TimeSent = time.Now()
+	//util.Go(func() {
+	////c.watcher(req)
+	//c.watcher(hex.EncodeToString([]byte{req.InstructionCode}))
+	//})
 	return
 }
 
@@ -368,8 +372,8 @@ func (c *Channel) watcher(code string) {
 			req.InstructionCode,
 			req.Message,
 		)
-		//c.ReceptionMap.Unlock()
-		c.transmit(req)
+		c.ReceptionMap.Unlock()
+		//c.transmit(req)
 		fmt.Printf("--------------------------------------------------\n\n")
 	}
 	//log.Printf(
@@ -500,7 +504,11 @@ func (c *Channel) receive() {
 				continue
 			}
 			resp.Message = data
-			req.Responsec <- resp
+			fmt.Println("request found")
+			go func() {
+				req.Responsec <- resp
+				fmt.Println("response sent")
+			}()
 		}
 	}
 	//})
@@ -542,7 +550,9 @@ func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Requ
 	}
 	//for item := range c.RequestQueue.Iter() {
 	log.Printf("parsing request: %s\n", c.ReceptionMap)
+	now := time.Now()
 	for item := range c.ReceptionMap.Iter() {
+		fmt.Println("findRequestByResponse: iter receptionmap")
 		reqi := item.Value
 		req, ok := reqi.(*Request)
 		if !ok {
