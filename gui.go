@@ -173,8 +173,7 @@ func main() {
 	window.SetWindowTitle("POSaM Control Software by iGeneTech")
 
 	statusBar := widgets.NewQStatusBar(window)
-	motorStatusLabel := widgets.NewQLabel2("Motor:", nil, 0)
-	statusBar.AddWidget(motorStatusLabel, 1)
+	statusBar.AddWidget(app.MotorStatusLabel, 1)
 	window.SetStatusBar(statusBar)
 
 	tabWidget := widgets.NewQTabWidget(nil)
@@ -302,7 +301,6 @@ func main() {
 				fmt.Sprintf("%v", axisXSetupFile.GetValue()),
 				fmt.Sprintf("%v", axisYID.GetValue()),
 				fmt.Sprintf("%v", axisYSetupFile.GetValue()),
-				motorStatusLabel,
 			)
 			if err != nil {
 				uiutil.MessageBoxError(err.Error())
@@ -606,13 +604,12 @@ func initAozDevice(
 	axisXSetupFile string,
 	axisYID string,
 	axisYSetupFile string,
-	motorStatusLabel *widgets.QLabel,
 ) (err error) {
 	if aoztech.Instance(name) != nil {
 		log.Printf("Device %q has been initialized\n", name)
 		return
 	}
-	aoztechDao, err := aoztech.NewDao(
+	_, err = aoztech.NewDao(
 		name,
 		baud,
 		axisXID,
@@ -623,21 +620,6 @@ func initAozDevice(
 	if err != nil {
 		return err
 	}
-	util.Go(func() {
-		//timer := time.NewTimer(500*time.Millisecond)
-		ticker := time.NewTicker(500 * time.Millisecond)
-		defer ticker.Stop()
-		for _ = range ticker.C {
-			//time.Sleep(500 * time.Millisecond)
-			motorStatusLabel.SetText(
-				fmt.Sprintf(
-					"Motor: (%v, %v)",
-					aoztechDao.TMLClient.PosX,
-					aoztechDao.TMLClient.PosY,
-				),
-			)
-		}
-	})
 	return
 }
 

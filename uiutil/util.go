@@ -9,16 +9,23 @@ import (
 type Application struct {
 	widgets.QApplication
 	_ func(message string) `slot:showMessageSlot`
+	_ func(status string)  `slot:updateMotorStatusSlot`
+
+	MotorStatusLabel *widgets.QLabel
 }
 
 var App *Application
 
 func NewApp(args []string) *Application {
 	App = NewApplication(len(args), args)
+	App.MotorStatusLabel = widgets.NewQLabel2("Motor:", nil, 0)
 	//App = &Application{}
 	//App.QApplication = widgets.NewQApplication(len(args), args)
 	App.ConnectShowMessageSlot(func(message string) {
 		App.showMessage(message)
+	})
+	App.ConnectUpdateMotorStatusSlot(func(status string) {
+		App.updateMotorStatus(status)
 	})
 	return App
 }
@@ -32,6 +39,10 @@ func (a *Application) showMessage(msg interface{}) {
 	msgBox.SetAttribute(core.Qt__WA_DeleteOnClose, true)
 	msgBox.SetText(fmt.Sprintf("%v", msg))
 	msgBox.Show()
+}
+
+func (a *Application) updateMotorStatus(status interface{}) {
+	a.MotorStatusLabel.SetText(fmt.Sprintf("%v", status))
 }
 
 func FilePath() (string, error) {
