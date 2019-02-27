@@ -10,9 +10,6 @@ import (
 	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
-	"runtime"
-	"sync"
-	//"sync"
 	"time"
 )
 
@@ -158,7 +155,6 @@ type Channel struct {
 	//sendo    sync.Once
 	senderLaunched   bool
 	receiverLaunched bool
-	sync.Mutex
 }
 
 func NewChannel(
@@ -452,7 +448,6 @@ func (c *Channel) Transmit(
 		}
 	}
 	c.ReceptionMap.Del(hex.EncodeToString([]byte{req.InstructionCode}))
-	runtime.KeepAlive(respc)
 	return resp.Message, resp.Error
 } // }}}
 
@@ -462,20 +457,13 @@ func (c *Channel) receive() {
 	//}
 	//c.receiverLaunched = true
 	//c.receiveo.Do(func() {
-	pReceive := [2500]controlcan.CanObj{}
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for _ = range ticker.C {
-		c.Lock()
-		//fmt.Println(controlcan.FRAME_LENGTH_OF_RECEPTION) // race here
-		//pReceive := make([]controlcan.CanObj, 2500) // unexpected fault address
-		//controlcan.FRAME_LENGTH_OF_RECEPTION,
-		//pReceive, count, err := controlcan.Receive(
-		count, err := controlcan.Receive(
+		pReceive, count, err := controlcan.Receive(
 			c.DevType,
 			c.DevIndex,
 			c.CanIndex,
-			&pReceive,
 			100,
 		)
 		if err != nil || count < 0 {
@@ -483,7 +471,6 @@ func (c *Channel) receive() {
 				"canalyst client receiver %v terminated\n",
 				c.DeviceKey(),
 			)
-			c.Unlock()
 			return
 		}
 		if SHOW_RECEPTION {
@@ -502,19 +489,14 @@ func (c *Channel) receive() {
 				}
 				c.tryResend(now, req)
 			}
-			c.Unlock()
 			continue
 		}
-		//log.Printf("data received: %#v\n", pReceive[:count]) // unexpected fault address
-		//for _, canObj := range pReceive[:count] {
-		for i := 0; i < count; i++ {
-			canObj := pReceive[i]
-			//devId := string(canObj.ID)
-			devId := canObj.ID
+		log.Printf("data received: %#v\n", pReceive[:count]) // unexpected fault address
+		for _, canObj := range pReceive[:count] {
 			data := make([]byte, len(canObj.Data))
 			copy(data, canObj.Data[:])
 			resp := Response{}
-			req, err := c.findRequestByResponse(data, devId)
+			req, err := c.findRequestByResponse(data, canObj.ID)
 			if err != nil {
 				log.Println(err)
 				// TODO: notification
@@ -537,9 +519,7 @@ func (c *Channel) receive() {
 				fmt.Println("response sent")
 			}()
 		}
-		c.Unlock()
 	}
-	runtime.KeepAlive(pReceive)
 	//})
 }
 
