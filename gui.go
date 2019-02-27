@@ -376,16 +376,19 @@ func main() {
 		terminatecc <- terminatec
 
 		interpreter.InitParser(InstructionMap)
+		line := input.ToPlainText()
+		interpreter.RootScript = &interpreter.Script{}
+		interpreter.RootScript.Line = line
+		interpreter.RootScript.ParseReader(strings.NewReader(line))
+		fmt.Printf("root script %s\n", interpreter.RootScript)
 		statementGroup := interpreter.StatementGroup{
 			Execution: interpreter.SYNC,
 			ItemList:  blockingqueue.NewBlockingQueue(),
 			Stack:     stack,
 		}
-		interpreter.ParseReader(
-			strings.NewReader(input.ToPlainText()),
-			&statementGroup,
-		)
-
+		for _, script := range interpreter.RootScript.Scripts {
+			statementGroup.ItemList.Append(script)
+		}
 
 		util.Go(func() {
 			completec := make(chan interface{})
