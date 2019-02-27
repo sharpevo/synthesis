@@ -6,6 +6,7 @@ import (
 	"posam/protocol/tml"
 	"posam/util/concurrentmap"
 	"strconv"
+	"sync"
 )
 
 const (
@@ -39,7 +40,8 @@ func init() {
 }
 
 type Dao struct {
-	id        string
+	id string
+	sync.Mutex
 	TMLClient *tml.Client
 }
 
@@ -114,6 +116,12 @@ func (d *Dao) SetID(id string) error {
 	}
 	d.id = id
 	return nil
+}
+
+func (d *Dao) Position() (float64, float64) {
+	d.Lock()
+	defer d.Unlock()
+	return d.TMLClient.PosX, d.TMLClient.PosY
 }
 
 func (d *Dao) MoveRelByAxis(
