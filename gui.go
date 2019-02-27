@@ -126,11 +126,12 @@ var InstructionMap = dao.NewInstructionMap()
 var InstructionDaoMap = make(map[string]*dao.InstructionMapt)
 
 var (
-	UILOG     = config.GetBool("ui.log")
-	UIFULLLOG = config.GetBool("ui.fulllog")
-	MONITABLE = config.GetBool("general.monit")
-	AUTOGC    = config.GetBool("general.gc.auto")
-	PROCESSES int
+	UILOG         = config.GetBool("ui.log")
+	UIFULLLOG     = config.GetBool("ui.fulllog")
+	MONITABLE     = config.GetBool("general.monit")
+	AUTOGC        = config.GetBool("general.gc.auto")
+	PROCESSES     int
+	MAXBLOCKCOUNT int
 )
 
 type QMessageBoxWithCustomSlot struct {
@@ -147,6 +148,8 @@ func init() {
 	} else {
 		runtime.GOMAXPROCS(PROCESSES)
 	}
+	config.SetDefault("ui.maxlogcount", 10)
+	MAXBLOCKCOUNT = config.GetInt("ui.maxlogcount")
 	if !AUTOGC {
 		debug.SetGCPercent(-1)
 	}
@@ -198,9 +201,14 @@ func main() {
 
 	// result group
 
-	result := widgets.NewQTextEdit(nil)
+	result := widgets.NewQPlainTextEdit(nil)
 	result.SetReadOnly(true)
 	result.SetStyleSheet("QTextEdit { background-color: #e6e6e6}")
+	result.SetMaximumBlockCount(MAXBLOCKCOUNT)
+	result.ConnectTextChanged(func() {
+		result.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
+		result.EnsureCursorVisible()
+	})
 
 	suspButton := widgets.NewQPushButton2("SUSPEND", nil)
 	resuButton := widgets.NewQPushButton2("RESUME", nil)
@@ -350,7 +358,7 @@ func main() {
 
 		// TODO: init CAN devices
 
-		result.SetText("RUNNING")
+		result.SetPlainText("RUNNING\n")
 
 		terminatec := make(chan interface{})
 		terminatecc <- terminatec
@@ -366,7 +374,6 @@ func main() {
 			&statementGroup,
 		)
 
-		var resultBuilder strings.Builder
 
 		util.Go(func() {
 			completec := make(chan interface{})
@@ -394,24 +401,18 @@ func main() {
 					resp.Completec <- true
 				}
 
-				if LOGGABLE {
-					insertString(fmt.Sprintf("%v", resp.Output), &resultBuilder)
-					result.SetText(resultBuilder.String())
+				if UILOG {
+					result.AppendPlainText(fmt.Sprintf("%v\n", resp.Output))
 				}
 			}
-			if LOGGABLE {
-				insertString("DONE\n\n", &resultBuilder)
-				result.SetText(resultBuilder.String())
+			if UILOG {
 			} else {
-				result.SetText("DONE")
+				result.SetPlainText("DONE")
 			}
 			if len(terminatecc) == 1 {
 				t := <-terminatecc
 				close(t)
 			}
-
-			msgBox.ShowMessageBoxSlot("Done")
-
 			suspButton.SetEnabled(false)
 			resuButton.SetEnabled(false)
 		})
@@ -663,12 +664,4 @@ func buildInstructionMap() {
 			InstructionMap.Set(k, v)
 		}
 	}
-}
-
-func insertString(str string, builder *strings.Builder) {
-	var tmp strings.Builder
-	fmt.Fprintf(&tmp, "%v\n%v", str, builder.String())
-	builder.Reset()
-	builder.WriteString(tmp.String())
-	tmp.Reset()
 }
