@@ -7,8 +7,11 @@ import (
 	"log"
 	"posam/config"
 	"posam/gui/uiutil"
+	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
+	"runtime"
+	"sync"
 	//"sync"
 	"time"
 )
@@ -23,11 +26,13 @@ const (
 )
 
 var (
-	SEND_TIMEOUT       time.Duration
-	SHOW_RECEPTION     = config.GetBool("can.reception.debug")
-	RESEND_ALL         = config.GetBool("can.resend.all")
-	RESEND_ONCE        = config.GetBool("can.resend.once")
-	CAN_TRANSMIT_DELAY = config.GetBool("can.transmission.delay")
+	SEND_TIMEOUT          time.Duration
+	SHOW_RECEPTION        = config.GetBool("can.reception.debug")
+	RESEND_ALL            = config.GetBool("can.resend.all")
+	RESEND_ONCE           = config.GetBool("can.resend.once")
+	CAN_TRANSMIT_DELAY    = config.GetBool("can.transmission.delay")
+	NOTIFY_RESEND_SUCCESS = config.GetBool("can.resend.notify.success")
+	NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
 )
 
 var deviceMap *concurrentmap.ConcurrentMap
@@ -153,6 +158,7 @@ type Channel struct {
 	//sendo    sync.Once
 	senderLaunched   bool
 	receiverLaunched bool
+	sync.Mutex
 }
 
 func NewChannel(
@@ -235,7 +241,8 @@ func (c *Channel) Start() error {
 		return err
 	}
 	go c.send()
-	go c.receive()
+	//go c.receive()
+	util.Go(c.receive)
 	return nil
 }
 
@@ -252,13 +259,14 @@ func (c *Channel) send() error { // {{{
 	//c.senderLaunched = true
 	for {
 		reqi, err := c.RequestQueue.Pop()
-		log.Println("processing", reqi)
 		if err != nil {
 			log.Printf("canalyst client sender %v terminated\n", c.DeviceKey())
 			return err
 		}
+		c.ReceptionMap.Lock() // one object shared in two units, slice, and map
+		log.Println("processing", reqi)
 		req := reqi.(*Request)
-		c.ReceptionMap.Set(
+		c.ReceptionMap.SetLockless(
 			hex.EncodeToString([]byte{req.InstructionCode}),
 			req,
 		)
@@ -266,6 +274,7 @@ func (c *Channel) send() error { // {{{
 		if CAN_TRANSMIT_DELAY {
 			<-time.After(200 * time.Millisecond)
 		}
+		c.ReceptionMap.Unlock()
 	}
 	//})
 }
@@ -406,13 +415,15 @@ func (c *Channel) Transmit(
 	}
 	defer c.releaseInstructionCode(code)
 	message = append(message, code)
+	respc := make(chan Response)
 	req := Request{
 		FrameId:         frameId,
 		InstructionCode: code,
 		Message:         message,
 		RecExpected:     recExpected,
 		ComExpected:     comExpected,
-		Responsec:       make(chan Response),
+		//Responsec:       make(chan Response), // unexpected fault address
+		Responsec: respc,
 	}
 	c.RequestQueue.Push(&req)
 	if len(recExpected) > 0 {
@@ -441,6 +452,7 @@ func (c *Channel) Transmit(
 		}
 	}
 	c.ReceptionMap.Del(hex.EncodeToString([]byte{req.InstructionCode}))
+	runtime.KeepAlive(respc)
 	return resp.Message, resp.Error
 } // }}}
 
@@ -450,18 +462,20 @@ func (c *Channel) receive() {
 	//}
 	//c.receiverLaunched = true
 	//c.receiveo.Do(func() {
+	pReceive := [2500]controlcan.CanObj{}
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for _ = range ticker.C {
-		pReceive := make(
-			[]controlcan.CanObj,
-			controlcan.FRAME_LENGTH_OF_RECEPTION,
-		)
+		c.Lock()
+		//fmt.Println(controlcan.FRAME_LENGTH_OF_RECEPTION) // race here
+		//pReceive := make([]controlcan.CanObj, 2500) // unexpected fault address
+		//controlcan.FRAME_LENGTH_OF_RECEPTION,
+		//pReceive, count, err := controlcan.Receive(
 		count, err := controlcan.Receive(
 			c.DevType,
 			c.DevIndex,
 			c.CanIndex,
-			pReceive,
+			&pReceive,
 			100,
 		)
 		if err != nil || count < 0 {
@@ -469,6 +483,7 @@ func (c *Channel) receive() {
 				"canalyst client receiver %v terminated\n",
 				c.DeviceKey(),
 			)
+			c.Unlock()
 			return
 		}
 		if SHOW_RECEPTION {
@@ -487,11 +502,13 @@ func (c *Channel) receive() {
 				}
 				c.tryResend(now, req)
 			}
+			c.Unlock()
 			continue
 		}
-		log.Printf("data received: %#v\n", pReceive[:count])
-
-		for _, canObj := range pReceive[:count] {
+		//log.Printf("data received: %#v\n", pReceive[:count]) // unexpected fault address
+		//for _, canObj := range pReceive[:count] {
+		for i := 0; i < count; i++ {
+			canObj := pReceive[i]
 			//devId := string(canObj.ID)
 			devId := canObj.ID
 			data := make([]byte, len(canObj.Data))
@@ -503,6 +520,16 @@ func (c *Channel) receive() {
 				// TODO: notification
 				continue
 			}
+			if NOTIFY_RESEND_SUCCESS {
+				if req.ResendCount > 0 {
+					errmsg := fmt.Errorf(
+						"request resent\nframe id: %v\ndata: %v\n",
+						req.FrameId,
+						req.Message,
+					)
+					uiutil.App.ShowMessageSlot(errmsg.Error())
+				}
+			}
 			resp.Message = data
 			fmt.Println("request found")
 			go func() {
@@ -510,7 +537,9 @@ func (c *Channel) receive() {
 				fmt.Println("response sent")
 			}()
 		}
+		c.Unlock()
 	}
+	runtime.KeepAlive(pReceive)
 	//})
 }
 
@@ -549,7 +578,7 @@ func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Requ
 		return request, err
 	}
 	//for item := range c.RequestQueue.Iter() {
-	log.Printf("parsing request: %s\n", c.ReceptionMap)
+	//log.Printf("parsing request: %s\n", c.ReceptionMap) // unexpected fault address
 	now := time.Now()
 	for item := range c.ReceptionMap.Iter() {
 		fmt.Println("findRequestByResponse: iter receptionmap")
@@ -612,7 +641,9 @@ func (c *Channel) tryResend(now time.Time, req *Request) {
 			resp.Message = []byte{0x0}
 			go func() {
 				req.Responsec <- resp
-				uiutil.App.ShowMessageSlot(errmsg.Error())
+				if NOTIFY_RESEND_FAILURE {
+					uiutil.App.ShowMessageSlot(errmsg.Error())
+				}
 			}()
 			return
 		}
