@@ -48,9 +48,23 @@ func (c *ConcurrentMap) Set(key string, value interface{}) interface{} {
 	return value
 }
 
+func (c *ConcurrentMap) SetLockless(key string, value interface{}) interface{} {
+	c.m[key] = value
+	return value
+}
+
 func (c *ConcurrentMap) Del(key string) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	if _, ok := c.m[key]; !ok {
+		return fmt.Errorf("failed to delete map entry due to invalid key %s", key)
+	}
+	delete(c.m, key)
+	return nil
+}
+
+// delete during iteration, e.g., can
+func (c *ConcurrentMap) DelLockless(key string) error {
 	if _, ok := c.m[key]; !ok {
 		return fmt.Errorf("failed to delete map entry due to invalid key %s", key)
 	}
