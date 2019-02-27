@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"posam/interpreter/vrb"
+	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
 	"sync"
 )
@@ -11,7 +12,7 @@ import (
 type Stack struct {
 	// TODO: mutex
 	lock  sync.RWMutex
-	cmaps []*concurrentmap.ConcurrentMap
+	cmaps *blockingqueue.BlockingQueue
 }
 
 func NewStack(stackList ...*Stack) *Stack {
@@ -21,28 +22,34 @@ func NewStack(stackList ...*Stack) *Stack {
 		newMap.Set(v.Name, v)
 	}
 	newStack := &Stack{
-		cmaps: []*concurrentmap.ConcurrentMap{newMap},
+		cmaps: blockingqueue.NewBlockingQueue(),
 	}
+	newStack.cmaps.Append(newMap)
 	if len(stackList) != 0 {
 		for _, stack := range stackList {
-			newStack.cmaps = append(newStack.cmaps, stack.cmaps...)
+			for item := range stack.cmaps.Iter() {
+				newStack.cmaps.Append(item.Value)
+			}
 		}
 	}
 	return newStack
 }
 
 func (s *Stack) Len() int {
-	return len(s.cmaps)
+	return s.cmaps.Length()
 }
 
 func (s *Stack) GetVariable(name string) (variable *vrb.Variable, found bool) {
-	for _, cmap := range s.cmaps {
+	for item := range s.cmaps.Iter() {
+		if found {
+			continue
+		}
+		cmapi := item.Value
+		cmap := cmapi.(*concurrentmap.ConcurrentMap)
 		cmap.Lock()
 		if v, found := cmap.GetLockless(name); found {
-			variable := v.(*vrb.Variable)
+			variable = v.(*vrb.Variable)
 			fmt.Printf("reading stack %#v: %v\n", name, variable)
-			cmap.Unlock()
-			return variable, found
 		}
 		cmap.Unlock()
 	}
@@ -50,32 +57,40 @@ func (s *Stack) GetVariable(name string) (variable *vrb.Variable, found bool) {
 }
 
 func (s *Stack) Get(name string) (cmap *concurrentmap.ConcurrentMap, found bool) {
-	for _, cmap := range s.cmaps {
-		cmap.Lock()
-		if _, found = cmap.GetLockless(name); found {
-			cmap.Unlock()
-			return cmap, found
+	for item := range s.cmaps.Iter() {
+		if found {
+			continue
 		}
-		cmap.Unlock()
+		cmapi := item.Value
+		_cmap := cmapi.(*concurrentmap.ConcurrentMap)
+		_cmap.Lock()
+		if _, found = _cmap.GetLockless(name); found {
+			cmap = _cmap
+			found = true
+		}
+		_cmap.Unlock()
 	}
 	return cmap, found
 }
 
 func (s *Stack) Set(variable *vrb.Variable) *vrb.Variable {
 	// TODO: global variable creation
-	cmap := s.cmaps[0]
+	cmapi, _ := s.cmaps.Get(0)
+	cmap := cmapi.(*concurrentmap.ConcurrentMap)
 	result := cmap.Set(variable.Name, variable)
 	log.Printf("Set stack: %s = %v\n", variable.Name, variable.GetValue())
 	return result.(*vrb.Variable)
 }
 
 func (s *Stack) Push(cmap *concurrentmap.ConcurrentMap) error {
-	for _, _cmap := range s.cmaps {
+	for item := range s.cmaps.Iter() {
+		_cmapi := item.Value
+		_cmap := _cmapi.(*concurrentmap.ConcurrentMap)
 		if _cmap == cmap {
 			return fmt.Errorf("item duplicated in stack")
 		}
 	}
-	s.cmaps = append(s.cmaps, cmap)
+	s.cmaps.Append(cmap)
 	return nil
 }
 
