@@ -13,6 +13,7 @@ import (
 	"posam/interpreter/vrb"
 	"posam/util"
 	"posam/util/blockingqueue"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -32,11 +33,11 @@ const (
 )
 
 var (
-	GCABLE = config.GetBool("general.gc.manual")
+	InstructionMap = make(map[string]reflect.Type)
+	GCABLE         = config.GetBool("general.gc.manual")
 )
 
 type Statement struct {
-	//sync.RWMutex
 	Stack *instruction.Stack
 	//Title string
 	InstructionName string
@@ -59,276 +60,40 @@ type Response struct {
 }
 
 func InitParser(instructionMap *dao.InstructionMapt) error {
-	return nil
-}
-
-func RunInstruction(
-	name string,
-	arguments []string,
-	//stack *interpreter.Stack,
-	stack *instruction.Stack,
-) (resp interface{}, err error) {
-
-	fmt.Println("### running instruction", name, arguments)
-	switch name {
-
-	// UNKNOWN{{{
-	case "ADD":
-		i := instruction.InstructionAddition{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "SUB":
-		i := instruction.InstructionSubtraction{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "DIV":
-		i := instruction.InstructionDivision{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "MUL":
-		i := instruction.InstructionMultiplication{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "MOD":
-		i := instruction.InstructionModulo{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "EQGOTO":
-		i := instruction.InstructionControlFlowEqualGoto{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "ERRGOTO":
-		i := instruction.InstructionControlFlowErrGoto{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "GOTO":
-		i := instruction.InstructionControlFlowGoto{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "GTGOTO":
-		i := instruction.InstructionControlFlowGreaterThanGoto{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "LOOP":
-		i := instruction.InstructionControlFlowLoop{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "LTGOTO":
-		i := instruction.InstructionControlFlowLessThanGoto{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "NEGOTO":
-		i := instruction.InstructionControlFlowNotEqualGoto{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "RETURN":
-		i := instruction.InstructionControlFlowReturn{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "PRINT":
-		i := instruction.InstructionPrint{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "SLEEP":
-		i := instruction.InstructionSleep{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "CMPVAR":
-		i := instruction.InstructionVariableCompare{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "GETVAR":
-		i := instruction.InstructionVariableGet{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "GETFLOATBYINDEX":
-		i := instruction.InstructionVariableGetFloatByIndex{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "GETINTBYINDEX":
-		i := instruction.InstructionVariableGetIntByIndex{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "SETVAR":
-		i := instruction.InstructionVariableSet{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-		// }}}
-
-		// CAN{{{
-	case "CANMOVEABS":
-		i := instruction.InstructionCANMotorMoveAbsolute{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "CANMOVEREL":
-		i := instruction.InstructionCANMotorMoveRelative{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "CANRESETMOTOR":
-		i := instruction.InstructionCANMotorReset{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "HUMITURE":
-		i := instruction.InstructionCANSensorHumiture{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "OXYGENCONC":
-		i := instruction.InstructionCANSensorOxygenConc{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "PRESSURE":
-		i := instruction.InstructionCANSensorPressure{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "SWITCH":
-		i := instruction.InstructionCANSwitcherControl{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "SWITCHCOND":
-		i := instruction.InstructionCANSwitcherControlAdvanced{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "ROMREAD":
-		i := instruction.InstructionCANSystemRomRead{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "ROMWRITE":
-		i := instruction.InstructionCANSystemRomWrite{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-		// }}}
-
-		// PRINTERHEAD{{{
-	case "ERRORCODE":
-		i := instruction.InstructionPrinterHeadErrorCode{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "PRINTDATA":
-		i := instruction.InstructionPrinterHeadPrintData{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "PRINTERSTATUS":
-		i := instruction.InstructionPrinterHeadPrinterStatus{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "WAVEFORM":
-		i := instruction.InstructionPrinterHeadWaveform{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	// }}}
-
-	// RINTER{{{
-	case "LOADCYCLE":
-		i := instruction.InstructionPrinterLoadCycle{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "LOADEXEC":
-		i := instruction.InstructionPrinterLoadExec{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "LOADGROUP":
-		i := instruction.InstructionPrinterLoadFormation{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-		// }}}
-
-		// TML{{{
-	case "MOVEABS":
-		i := instruction.InstructionTMLMoveAbs{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "MOVEABSX":
-		i := instruction.InstructionTMLMoveAbsX{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "MOVEABSY":
-		i := instruction.InstructionTMLMoveAbsY{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "MOVEREL":
-		i := instruction.InstructionTMLMoveRel{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "MOVERELX":
-		i := instruction.InstructionTMLMoveRelX{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "MOVERELY":
-		i := instruction.InstructionTMLMoveRelY{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "POSITIONX":
-		i := instruction.InstructionTMLPositionX{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-	case "POSITIONY":
-		i := instruction.InstructionTMLPositionY{}
-		//i.Env = instruction.NewStack(stack)
-		i.Env = stack
-		resp, err = i.Execute(arguments...)
-		// }}}
-
-	default:
-		err = fmt.Errorf("invalid instruction %s", name)
+	for item := range instructionMap.Iter() {
+		k := item.Key
+		v := item.Value.(reflect.Type)
+		InstructionMap[k] = v
 	}
-	return
+	return nil
 }
 
 func (s *Statement) Run(completec chan<- interface{}) Response {
 	resp := Response{}
-	output, err := RunInstruction(
-		s.InstructionName, s.Arguments, s.Stack)
+	instType, found := InstructionMap[s.InstructionName]
+	if !found {
+		resp.Error = fmt.Errorf("invalid instruction %s", s.InstructionName)
+		return resp
+	}
+	instValue := reflect.New(instType)
+	arguments := make([]reflect.Value, len(s.Arguments))
+	for i, _ := range s.Arguments {
+		arguments[i] = reflect.ValueOf(s.Arguments[i])
+	}
+	reflect.Indirect(instValue).FieldByName("Env").Set(reflect.ValueOf(s.Stack))
+	outputValueList := instValue.MethodByName("Execute").Call(arguments)
+	output := outputValueList[0].Interface()
+	erri := outputValueList[1].Interface()
+	var err error
+	if erri != nil {
+		err = erri.(error)
+	} else {
+		err = nil
+	}
 	resp.Output = output
 	resp.Error = err
 	resp.Completec = completec
 	resp.IgnoreError = s.IgnoreError
-	fmt.Println("instructionname", s.InstructionName)
-	fmt.Println("arguments", s.Arguments)
-	fmt.Println("output", output)
 	log.Printf("'%s: %s' produces %q\n", s.InstructionName, s.Arguments, output)
 	message := ""
 	if resp.Error != nil {
@@ -346,7 +111,6 @@ func (s *Statement) Execute(terminatec <-chan interface{}, completec chan<- inte
 	respc := make(chan Response)
 	util.Go(func() {
 		defer close(respc)
-		fmt.Println("### executing instruction", s.InstructionName, s.Arguments)
 		for {
 			select {
 			case <-terminatec:
@@ -421,7 +185,6 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec 
 
 	log.Println("==== ASYNC ====")
 	respcc := make(chan (<-chan Response))
-
 	util.Go(func() {
 		var wg sync.WaitGroup
 		wg.Add(g.ItemList.Length())
@@ -471,7 +234,6 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 
 	log.Println("==== SYNC ====")
 	respcc := make(chan (<-chan Response))
-
 	util.Go(func() {
 		defer close(respcc)
 		list := g.ItemList.ItemList()
