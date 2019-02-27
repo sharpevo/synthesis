@@ -2,22 +2,26 @@ package main
 
 import (
 	"fmt"
-	"posam/config"
-	"posam/util"
 	"log"
 	"os"
 	"os/exec"
+	"posam/config"
 	"posam/dao"
 	"posam/dao/alientek"
 	"posam/dao/aoztech"
 	"posam/dao/canalystii"
 	"posam/dao/ricoh_g5"
 	"posam/gui/sequence"
+	"posam/util"
+	"reflect"
 	"runtime"
+	"runtime/debug"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"posam/gui/tree/devtree"
 	"posam/gui/tree/instree"
@@ -26,6 +30,10 @@ import (
 	"posam/interpreter"
 	"posam/interpreter/vrb"
 	"posam/util/blockingqueue"
+
+	"github.com/bcicen/grmon/agent"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 const (
@@ -156,6 +164,10 @@ func init() {
 
 	if MONITABLE {
 		grmon.Start()
+		runtime.SetMutexProfileFraction(5)
+		go func() {
+			log.Println(http.ListenAndServe("localhost:6060", nil))
+		}()
 	}
 
 	InstructionDaoMap[devtree.DEV_TYPE_UNK] = dao.InstructionMap
