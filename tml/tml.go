@@ -179,7 +179,7 @@ func (c *Client) connect() (err error) {
 		if statusx != 0 && statusy != 0 {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		<-time.After(1 * time.Second)
 	}
 	if statusx == 0 || statusy == 0 {
 		return fmt.Errorf("failed to enable power on axes: x(%d) / y(%d)", statusx, statusy)
@@ -426,7 +426,7 @@ func (c *Client) MoveRelative(
 		return err
 	}
 	for {
-		time.Sleep(200 * time.Millisecond)
+		<-time.After(200 * time.Millisecond)
 		if err = tml.SelectAxis(c.AxisXID); err != nil {
 			log.Println(err)
 		}
@@ -531,7 +531,7 @@ func (c *Client) MoveAbsolute(
 		c.CompensateMotion(c.AxisYID, posy)
 	}
 	for {
-		time.Sleep(200 * time.Millisecond)
+		<-time.After(200 * time.Millisecond)
 		if err = tml.SelectAxis(c.AxisXID); err != nil {
 			log.Println(err)
 		}
