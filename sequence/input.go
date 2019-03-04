@@ -372,18 +372,21 @@ func NewInputGroup() (
 	previewLayout.SetContentsMargins(0, 0, 0, 0)
 	previewGroup.SetLayout(previewLayout)
 
-	nextButton := widgets.NewQPushButton2("NEXT", nil)
-	nextButton.ConnectClicked(func(bool) {
-		fmt.Println("next")
-	})
-	prevButton := widgets.NewQPushButton2("PREV", nil)
-	prevButton.ConnectClicked(func(bool) {
-		fmt.Println("prev")
-	})
 	stepInput := widgets.NewQLineEdit(nil)
 	stepInput.SetFixedWidth(50)
 	stepInput.SetText("1")
 	stepInput.SetAlignment(core.Qt__AlignCenter)
+
+	nextButton := widgets.NewQPushButton2("NEXT", nil)
+	nextButton.ConnectClicked(func(bool) {
+		step := getStep(stepInput)
+		fmt.Println("next", step)
+	})
+	prevButton := widgets.NewQPushButton2("PREV", nil)
+	prevButton.ConnectClicked(func(bool) {
+		step := getStep(stepInput)
+		fmt.Println("prev", step)
+	})
 
 	previewLayout.AddWidget(prevButton, 0, 1, 0)
 	previewLayout.AddWidget(stepInput, 0, 2, 0)
@@ -1320,4 +1323,13 @@ func MostLeftSpot(cycleIndex int, spots []*slide.Spot) *slide.Spot {
 		}
 	}
 	return target
+}
+
+func getStep(stepInput *widgets.QLineEdit) int {
+	result, err := strconv.Atoi(stepInput.Text())
+	if err != nil {
+		stepInput.SetText("1")
+		return 1
+	}
+	return result
 }
