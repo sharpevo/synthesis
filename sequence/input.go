@@ -104,8 +104,11 @@ ATC
 
 // }}}
 
-func NewInputGroup() *widgets.QGroupBox {
-	group := widgets.NewQGroupBox2("Parameters", nil)
+func NewInputGroup() (
+	group *widgets.QGroupBox,
+	previewGroup *widgets.QWidget,
+) {
+	group = widgets.NewQGroupBox2("Parameters", nil)
 	layout := widgets.NewQGridLayout2()
 	group.SetLayout(layout)
 
@@ -362,6 +365,29 @@ func NewInputGroup() *widgets.QGroupBox {
 
 	// }}}
 
+	// previews
+
+	previewGroup = widgets.NewQWidget(nil, 0)
+	previewLayout := widgets.NewQGridLayout2()
+	previewLayout.SetContentsMargins(0, 0, 0, 0)
+	previewGroup.SetLayout(previewLayout)
+
+	nextButton := widgets.NewQPushButton2("NEXT", nil)
+	nextButton.ConnectClicked(func(bool) {
+		fmt.Println("next")
+	})
+	prevButton := widgets.NewQPushButton2("PREV", nil)
+	prevButton.ConnectClicked(func(bool) {
+		fmt.Println("prev")
+	})
+	stepInput := widgets.NewQLineEdit(nil)
+	stepInput.SetFixedWidth(50)
+	stepInput.SetText("1")
+	stepInput.SetAlignment(core.Qt__AlignCenter)
+
+	previewLayout.AddWidget(prevButton, 0, 1, 0)
+	previewLayout.AddWidget(stepInput, 0, 2, 0)
+	previewLayout.AddWidget(nextButton, 0, 3, 0)
 	// build button
 
 	buildButton := widgets.NewQPushButton2("BUILD", nil)
@@ -659,7 +685,7 @@ func NewInputGroup() *widgets.QGroupBox {
 
 	})
 
-	return group
+	return group, previewGroup
 }
 
 func ToFloat(inputString string) (float64, error) {

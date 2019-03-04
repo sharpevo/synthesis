@@ -22,8 +22,9 @@ func NewSequence() *widgets.QGroupBox {
 	viewGroup := NewViewGroup(imageItem)
 	layout.AddWidget(viewGroup, 0, 0, 0)
 
-	inputGroup := NewInputGroup()
+	inputGroup, previewGroup := NewInputGroup()
 	layout.AddWidget(inputGroup, 0, 1, 0)
+	viewGroup.Layout().AddWidget(previewGroup)
 
 	layout.SetColumnStretch(0, 1)
 	layout.SetColumnStretch(1, 1)
