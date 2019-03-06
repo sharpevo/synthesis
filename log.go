@@ -37,6 +37,13 @@ func WithFields(fields Fields) *logrus.Entry {
 	return log.WithFields(logrus.Fields(fields))
 }
 
+func Data(key string, value interface{}) *logrus.Entry {
+	fields := logrus.Fields{
+		key: fmt.Sprintf("%#v", value), // fix #642, #871
+	}
+	return log.WithFields(fields)
+}
+
 func Trace(args ...interface{}) {
 	log.Trace(args)
 }
