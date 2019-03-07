@@ -931,8 +931,17 @@ func build(
 			"2560",
 			"320",
 		),
+		mode,
+		subs,
 	)
 	fmt.Println("create bin", bin)
+	countc := bin.Build(step)
+	go func() {
+		for count := range countc {
+			buildProgressbar.SetValue((count + 1) * buildProgressbar.Maximum() / cycleCount)
+		}
+	}()
+	return
 
 	// reagent first mode{{{
 
