@@ -17,12 +17,11 @@ const (
 	IMAGABLE = true
 )
 
-func (b *Bin) Build(
-	step int,
-	img *image.RGBA,
-) (countc chan int) {
+func (b *Bin) Build(step int) (countc chan int) {
 	countc = make(chan int)
 	go func() {
+		img := image.NewRGBA(
+			image.Rect(0, 0, b.Substrate.Width, b.Substrate.Height+1))
 		stepCount := 0
 		for cycleIndex := 0; cycleIndex < b.CycleCount; cycleIndex++ {
 			img.Pix = make([]uint8, 4*b.Substrate.Width*(b.Substrate.Height+1))
