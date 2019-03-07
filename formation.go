@@ -86,7 +86,7 @@ type Bin struct {
 	CycleMap      map[int]Cycle
 
 	Mode           byte
-	Substrate      *substrate.Substrate
+	substrate      *substrate.Substrate
 	PrintheadArray *printhead.Array
 }
 
@@ -105,9 +105,13 @@ func NewBin(
 		PrintheadConf: printheadConf,
 
 		Mode:           mode,
-		Substrate:      substrate,
+		substrate:      substrate,
 		PrintheadArray: printheadarray,
 	}
+}
+
+func (b *Bin) Substrate() *substrate.Substrate {
+	return b.substrate
 }
 
 func (b *Bin) AddFormation(
@@ -151,24 +155,7 @@ func (b *Bin) SaveToFile(filePath string) error {
 		fmt.Println(err)
 	}
 	encoder := gob.NewEncoder(file)
-	_b := struct {
-		CycleCount     int
-		MotorConf      MotorConf
-		PrintheadConf  PrintheadConf
-		Formations     map[int][]Formation
-		CycleMap       map[int]Cycle
-		Mode           byte
-		PrintheadArray *printhead.Array
-	}{
-		CycleCount:     b.CycleCount,
-		MotorConf:      b.MotorConf,
-		PrintheadConf:  b.PrintheadConf,
-		Formations:     b.Formations,
-		CycleMap:       b.CycleMap,
-		PrintheadArray: b.PrintheadArray,
-		Mode:           b.Mode,
-	}
-	err = encoder.Encode(_b)
+	err = encoder.Encode(b)
 	return err
 }
 

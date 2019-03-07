@@ -21,20 +21,20 @@ func (b *Bin) Build(step int) (countc chan int) {
 	countc = make(chan int)
 	go func() {
 		img := image.NewRGBA(
-			image.Rect(0, 0, b.Substrate.Width, b.Substrate.Height+1))
+			image.Rect(0, 0, b.Substrate().Width, b.Substrate().Height+1))
 		stepCount := 0
 		for cycleIndex := 0; cycleIndex < b.CycleCount; cycleIndex++ {
-			img.Pix = make([]uint8, 4*b.Substrate.Width*(b.Substrate.Height+1))
+			img.Pix = make([]uint8, 4*b.Substrate().Width*(b.Substrate().Height+1))
 			log.V("cycle index", cycleIndex).Debug()
-			stripSum := b.Substrate.Strip()
+			stripSum := b.Substrate().Strip()
 			for stripCount := 0; stripCount < stripSum; stripCount++ {
 				log.V("strip count", stripCount).Debug()
 				posx := stripCount * 1280
-				posy := b.Substrate.Top()
+				posy := b.Substrate().Top()
 				rowIndex := 3
 				b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Top() >= b.Substrate.Bottom() {
+				for b.PrintheadArray.Top() >= b.Substrate().Bottom() {
 					dataMap, count := b.genData(
 						cycleIndex, img, &stepCount)
 					if count > 0 {
@@ -51,11 +51,11 @@ func (b *Bin) Build(step int) (countc chan int) {
 				if step == 1 {
 					continue
 				}
-				posy = b.Substrate.Bottom()
+				posy = b.Substrate().Bottom()
 				rowIndex = 2
 				b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Bottom() <= b.Substrate.Top() {
+				for b.PrintheadArray.Bottom() <= b.Substrate().Top() {
 					dataMap, count := b.genData(
 						cycleIndex, img, &stepCount)
 					if count > 0 {
@@ -69,11 +69,11 @@ func (b *Bin) Build(step int) (countc chan int) {
 					posy += step
 					b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
 				}
-				posy = b.Substrate.Top()
+				posy = b.Substrate().Top()
 				rowIndex = 1
 				b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Top() >= b.Substrate.Bottom() {
+				for b.PrintheadArray.Top() >= b.Substrate().Bottom() {
 					dataMap, count := b.genData(
 						cycleIndex, img, &stepCount)
 					if count > 0 {
@@ -87,11 +87,11 @@ func (b *Bin) Build(step int) (countc chan int) {
 					posy -= step
 					b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
 				}
-				posy = b.Substrate.Bottom()
+				posy = b.Substrate().Bottom()
 				rowIndex = 0
 				b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Bottom() <= b.Substrate.Top() {
+				for b.PrintheadArray.Bottom() <= b.Substrate().Top() {
 					dataMap, count := b.genData(
 						cycleIndex, img, &stepCount)
 					if count > 0 {
@@ -139,13 +139,13 @@ func (b *Bin) genData(
 			continue
 		}
 		//log.D(nozzle.Pos.X, nozzle.Pos.Y, b.Substrate.Width, b.Substrate.Height)
-		if nozzle.Pos.Y >= b.Substrate.Height ||
+		if nozzle.Pos.Y >= b.Substrate().Height ||
 			nozzle.Pos.Y < 0 ||
-			nozzle.Pos.X >= b.Substrate.Width ||
+			nozzle.Pos.X >= b.Substrate().Width ||
 			nozzle.Pos.X < 0 {
 			continue
 		}
-		spot := b.Substrate.Spots[nozzle.Pos.Y][nozzle.Pos.X]
+		spot := b.Substrate().Spots[nozzle.Pos.Y][nozzle.Pos.X]
 		if spot == nil || cycleIndex > len(spot.Reagents)-1 {
 			//log.Vs(log.M{"spot": spot, "cycle index": cycleIndex}).
 			//Error("not enough reagents")
@@ -158,7 +158,7 @@ func (b *Bin) genData(
 
 			log.D("printing ", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
 			if IMAGABLE {
-				img.Set(nozzle.Pos.X, b.Substrate.Height-nozzle.Pos.Y, nozzle.Reagent.Color)
+				img.Set(nozzle.Pos.X, b.Substrate().Height-nozzle.Pos.Y, nozzle.Reagent.Color)
 			}
 		}
 	}
