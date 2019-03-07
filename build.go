@@ -107,6 +107,12 @@ func (b *Bin) Build(
 					b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
 				}
 			}
+			if IMAGABLE && b.Mode == MODE_CIJ {
+				outputFile, _ := os.Create(
+					fmt.Sprintf("output/CIJ.%03d.png", cycleIndex))
+				png.Encode(outputFile, img)
+				outputFile.Close()
+			}
 			countc <- cycleIndex + 1
 		}
 		err := b.SaveToFile(BINFILE)
@@ -172,9 +178,9 @@ func (b *Bin) genData(
 			log.V("dataBinSlice", dataBinSlice[:16]).Debug()
 			log.V("linebuffer", output[deviceIndex][:8]).Debug()
 		}
-		if IMAGABLE {
+		if IMAGABLE && b.Mode == MODE_DOD {
 			outputFile, _ := os.Create(
-				fmt.Sprintf("output/%06d.%03d.png", *stepCount, cycleIndex))
+				fmt.Sprintf("output/DoD.%06d.%03d.png", *stepCount, cycleIndex))
 			png.Encode(outputFile, img)
 			outputFile.Close()
 			*stepCount = *stepCount + 1
