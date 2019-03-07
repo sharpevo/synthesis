@@ -4,7 +4,14 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"posam/util/printhead"
+	"posam/util/substrate"
 	//"sync"
+)
+
+const (
+	MODE_DOD = 0
+	MODE_CIJ = 1
 )
 
 type MotorConf struct {
@@ -77,17 +84,29 @@ type Bin struct {
 	PrintheadConf PrintheadConf
 	Formations    map[int][]Formation
 	CycleMap      map[int]Cycle
+
+	Mode           byte
+	Substrate      *substrate.Substrate
+	PrintheadArray *printhead.Array
 }
 
 func NewBin(
 	cycleCount int,
 	motorConf MotorConf,
 	printheadConf PrintheadConf,
+
+	mode byte,
+	substrate *substrate.Substrate,
+	printheadarray *printhead.Array,
 ) *Bin {
 	return &Bin{
 		CycleCount:    cycleCount,
 		MotorConf:     motorConf,
 		PrintheadConf: printheadConf,
+
+		Mode:           mode,
+		Substrate:      substrate,
+		PrintheadArray: printheadarray,
 	}
 }
 
@@ -132,7 +151,24 @@ func (b *Bin) SaveToFile(filePath string) error {
 		fmt.Println(err)
 	}
 	encoder := gob.NewEncoder(file)
-	err = encoder.Encode(b)
+	_b := struct {
+		CycleCount     int
+		MotorConf      MotorConf
+		PrintheadConf  PrintheadConf
+		Formations     map[int][]Formation
+		CycleMap       map[int]Cycle
+		Mode           byte
+		PrintheadArray *printhead.Array
+	}{
+		CycleCount:     b.CycleCount,
+		MotorConf:      b.MotorConf,
+		PrintheadConf:  b.PrintheadConf,
+		Formations:     b.Formations,
+		CycleMap:       b.CycleMap,
+		PrintheadArray: b.PrintheadArray,
+		Mode:           b.Mode,
+	}
+	err = encoder.Encode(_b)
 	return err
 }
 
