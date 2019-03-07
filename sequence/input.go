@@ -346,6 +346,13 @@ func NewInputGroup() (
 
 	activatorInput := widgets.NewQCheckBox2("Activator", nil)
 
+	printModeLabel := widgets.NewQLabel2("Print mode", nil, 0)
+	printModeInput := widgets.NewQComboBox(nil)
+	printModeInput.AddItems([]string{
+		"Drop on Demand",
+		"Continuous Inkjet",
+	})
+
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
 	miscLayout.AddWidget(dpiLabel, 1, 0, 0)
@@ -361,7 +368,9 @@ func NewInputGroup() (
 	miscLayout.AddWidget(printhead0OffsetLabel, 5, 0, 0)
 	miscLayout.AddWidget(printhead0OffsetXInput, 5, 1, 0)
 	miscLayout.AddWidget(printhead0OffsetYInput, 5, 2, 0)
-	miscLayout.AddWidget(activatorInput, 6, 0, 0)
+	miscLayout.AddWidget(printModeLabel, 6, 0, 0)
+	miscLayout.AddWidget3(printModeInput, 6, 1, 1, 2, 0)
+	miscLayout.AddWidget(activatorInput, 7, 0, 0)
 
 	// }}}
 
@@ -673,6 +682,11 @@ func NewInputGroup() (
 		buildButton.SetVisible(false)
 		buildProgressbar.SetVisible(true)
 
+		mode := formation.MODE_DOD
+		if printModeInput.CurrentText() == "Continuous Inkjet" {
+			mode = formation.MODE_CIJ
+		}
+
 		build(
 			step,
 			cycleCount,
@@ -684,6 +698,7 @@ func NewInputGroup() (
 			motorAccelInput.Text(),
 			printhead0PathInput.Text(),
 			buildProgressbar,
+			byte(mode),
 		)
 
 	})
@@ -889,6 +904,7 @@ func build(
 	motorAccel string,
 	printhead0Path string,
 	buildProgressbar *widgets.QProgressBar,
+	mode byte,
 ) {
 	//filePath, err := uiutil.FilePath()
 	//if err != nil {
