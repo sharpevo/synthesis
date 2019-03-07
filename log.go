@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"os"
 	"posam/config"
@@ -31,68 +32,79 @@ func init() {
 	}
 }
 
-type Fields logrus.Fields
+type M logrus.Fields
 
-func WithFields(fields Fields) *logrus.Entry {
+func Vs(fields M) *logrus.Entry {
+	for k, v := range fields {
+		fields[k] = fmt.Sprintf("%#v", v)
+	}
 	return log.WithFields(logrus.Fields(fields))
 }
 
-func Data(key string, value interface{}) *logrus.Entry {
+func V(key string, value interface{}) *logrus.Entry {
 	return log.WithField(key, fmt.Sprintf("%#v", value))
 }
 
-func Trace(args ...interface{}) {
-	log.Trace(args)
+func T(args ...interface{}) {
+	log.Trace(S(args)...)
 }
 
-func Tracef(format string, args ...interface{}) {
-	log.Tracef(format, args)
+func Tf(format string, args ...interface{}) {
+	log.Tracef(format, S(args)...)
 }
 
-func Debug(args ...interface{}) {
-	log.Debug(args)
+func D(args ...interface{}) {
+	log.Debug(S(args)...)
 }
 
-func Debugf(format string, args ...interface{}) {
-	log.Debugf(format, args)
+func Df(format string, args ...interface{}) {
+	log.Debugf(format, S(args)...)
 }
 
-func Info(args ...interface{}) {
-	log.Info(args)
+func I(args ...interface{}) {
+	log.Info(S(args)...)
 }
 
-func Infof(format string, args ...interface{}) {
-	log.Infof(format, args)
+func If(format string, args ...interface{}) {
+	log.Infof(format, S(args)...)
 }
 
-func Warn(args ...interface{}) {
-	log.Warn(args)
+func W(args ...interface{}) {
+	log.Warn(S(args)...)
 }
 
-func Warnf(format string, args ...interface{}) {
-	log.Warnf(format, args)
+func Wf(format string, args ...interface{}) {
+	log.Warnf(format, S(args)...)
 }
 
-func Error(args ...interface{}) {
-	log.Error(args)
+func E(args ...interface{}) {
+	log.Error(S(args)...)
 }
 
-func Errorf(format string, args ...interface{}) {
-	log.Errorf(format, args)
+func Ef(format string, args ...interface{}) {
+	log.Errorf(format, S(args)...)
 }
 
-func Fatal(args ...interface{}) {
-	log.Fatal(args)
+func F(args ...interface{}) {
+	log.Fatal(S(args)...)
 }
 
-func Fatalf(format string, args ...interface{}) {
-	log.Fatalf(format, args)
+func Ff(format string, args ...interface{}) {
+	log.Fatalf(format, S(args)...)
 }
 
-func Panic(args ...interface{}) {
-	log.Panic(args)
+func P(args ...interface{}) {
+	log.Panic(S(args)...)
 }
 
-func Panicf(format string, args ...interface{}) {
-	log.Panicf(format, args)
+func Pf(format string, args ...interface{}) {
+	log.Panicf(format, S(args)...)
+}
+
+func S(args ...interface{}) []interface{} {
+	r := make([]interface{}, len(args))
+	for _, v := range args {
+		r = append(r, fmt.Sprintf("%#v", v))
+	}
+	return r
 }
