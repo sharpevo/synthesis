@@ -37,6 +37,7 @@ func NewViewGroup() *widgets.QGroupBox {
 			core.Qt__IgnoreAspectRatio,
 			core.Qt__FastTransformation,
 		), nil)
+		scene.Clear()
 		scene.AddItem(imageItem)
 		go func() {
 			select {
