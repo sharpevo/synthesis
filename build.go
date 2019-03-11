@@ -17,13 +17,12 @@ const (
 	IMAGABLE = true
 )
 
-func (b *Bin) Build(step int) (countc chan int) {
+func (b *Bin) Build(step int, img *image.RGBA, paintedc chan struct{}) (countc chan int) {
 	countc = make(chan int)
 	go func() {
-		img := image.NewRGBA(
-			image.Rect(0, 0, b.Substrate().Width, b.Substrate().Height+1))
 		stepCount := 0
 		for cycleIndex := 0; cycleIndex < b.CycleCount; cycleIndex++ {
+			<-paintedc
 			img.Pix = make([]uint8, 4*b.Substrate().Width*(b.Substrate().Height+1))
 			log.V("cycle index", cycleIndex).Debug()
 			stripSum := b.Substrate().Strip()
@@ -120,6 +119,7 @@ func (b *Bin) Build(step int) (countc chan int) {
 		}
 		close(countc)
 	}()
+	paintedc <- struct{}{}
 	return countc
 }
 
