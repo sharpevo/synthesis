@@ -935,10 +935,13 @@ func build(
 		subs,
 	)
 	fmt.Println("create bin", bin)
-	countc := bin.Build(step)
+	img := image.NewRGBA(image.Rect(0, 0, subs.Width, subs.Height+1))
+	scene.image = img
+	countc := bin.Build(step, img, paintedc)
 	go func() {
 		for count := range countc {
-			buildProgressbar.SetValue((count + 1) * buildProgressbar.Maximum() / cycleCount)
+			buildProgressbar.SetValue(count * buildProgressbar.Maximum() / cycleCount)
+			scene.UpdatePixmap()
 		}
 	}()
 	return
