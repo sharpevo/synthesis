@@ -134,7 +134,8 @@ func (b *Bin) Build(
 				} else {
 					lot++
 				}
-				if lot == lotamount {
+				if lot == lotamount ||
+					cycleIndex+1 >= b.CycleCount { // even step may not 100%
 					countc <- cycleIndex + 1
 					lot = 0
 				} else {
