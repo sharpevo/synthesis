@@ -20,6 +20,25 @@ func NewViewGroup() *widgets.QGroupBox {
 
 	scene = NewScene(nil)
 	view := widgets.NewQGraphicsView(nil)
+	scene.ConnectKeyPressEvent(func(e *gui.QKeyEvent) {
+		if e.Modifiers() == core.Qt__ControlModifier {
+			switch int32(e.Key()) {
+			case int32(core.Qt__Key_Plus):
+				view.Scale(1.2, 1.2)
+			case int32(core.Qt__Key_Minus):
+				view.Scale(0.8, 0.8)
+			}
+		}
+	})
+	scene.ConnectWheelEvent(func(e *widgets.QGraphicsSceneWheelEvent) {
+		if e.Modifiers() == core.Qt__ControlModifier {
+			if e.Delta() > 0 {
+				view.Scale(1.2, 1.2)
+			} else {
+				view.Scale(0.8, 0.8)
+			}
+		}
+	})
 	paintedc = make(chan struct{})
 	scene.ConnectUpdatePixmap(func() {
 		var imagebuff bytes.Buffer
