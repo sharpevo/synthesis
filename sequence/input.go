@@ -399,6 +399,13 @@ func NewInputGroup() (
 		}
 	})
 
+	// previews
+
+	previewGroup = widgets.NewQWidget(nil, 0)
+	previewLayout := widgets.NewQGridLayout2()
+	previewLayout.SetContentsMargins(0, 0, 0, 0)
+	previewGroup.SetLayout(previewLayout)
+
 	buildButton.ConnectClicked(func(bool) {
 		printhead0PositionX,
 			printhead0PositionY,
@@ -690,12 +697,7 @@ func NewInputGroup() (
 
 	})
 
-	// previews
-
-	previewGroup = widgets.NewQWidget(nil, 0)
-	previewLayout := widgets.NewQGridLayout2()
-	previewLayout.SetContentsMargins(0, 0, 0, 0)
-	previewGroup.SetLayout(previewLayout)
+	// preview group 2
 
 	stepInput := widgets.NewQLineEdit(nil)
 	stepInput.SetFixedWidth(50)
@@ -978,11 +980,11 @@ func build(
 			scene.UpdatePixmap()
 		}
 		//close(lotc)
-		lotc = make(chan int)
+		//lotc = make(chan int)
 		*stepwise = false
 		fmt.Println("reinitialize paintedc")
-		close(paintedc)
-		paintedc = make(chan struct{})
+		//close(paintedc)
+		//paintedc = make(chan struct{})
 	}()
 	return
 
