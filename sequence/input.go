@@ -374,33 +374,10 @@ func NewInputGroup() (
 
 	// }}}
 
-	// previews
-
-	previewGroup = widgets.NewQWidget(nil, 0)
-	previewLayout := widgets.NewQGridLayout2()
-	previewLayout.SetContentsMargins(0, 0, 0, 0)
-	previewGroup.SetLayout(previewLayout)
-
-	stepInput := widgets.NewQLineEdit(nil)
-	stepInput.SetFixedWidth(50)
-	stepInput.SetText("1")
-	stepInput.SetAlignment(core.Qt__AlignCenter)
-
-	nextButton := widgets.NewQPushButton2("NEXT", nil)
-	nextButton.ConnectClicked(func(bool) {
-		step := getStep(stepInput)
-		fmt.Println("next", step)
-	})
-	prevButton := widgets.NewQPushButton2("PREV", nil)
-	prevButton.ConnectClicked(func(bool) {
-		step := getStep(stepInput)
-		fmt.Println("prev", step)
-	})
-
-	previewLayout.AddWidget(prevButton, 0, 1, 0)
-	previewLayout.AddWidget(stepInput, 0, 2, 0)
-	previewLayout.AddWidget(nextButton, 0, 3, 0)
 	// build button
+
+	var lotc chan int
+	var stepwise = false
 
 	buildButton := widgets.NewQPushButton2("BUILD", nil)
 	layout.AddWidget(buildButton, 6, 0, 0)
@@ -687,6 +664,14 @@ func NewInputGroup() (
 			mode = formation.MODE_CIJ
 		}
 
+		fmt.Println("initialize lotc")
+		lotc = make(chan int)
+		if !stepwise {
+			fmt.Println("close lotc")
+			close(lotc)
+		}
+		fmt.Println("going to build")
+
 		build(
 			step,
 			cycleCount,
@@ -699,8 +684,55 @@ func NewInputGroup() (
 			printhead0PathInput.Text(),
 			buildProgressbar,
 			byte(mode),
+			lotc,
+			&stepwise,
 		)
 
+	})
+
+	// previews
+
+	previewGroup = widgets.NewQWidget(nil, 0)
+	previewLayout := widgets.NewQGridLayout2()
+	previewLayout.SetContentsMargins(0, 0, 0, 0)
+	previewGroup.SetLayout(previewLayout)
+
+	stepInput := widgets.NewQLineEdit(nil)
+	stepInput.SetFixedWidth(50)
+	stepInput.SetText("1")
+	stepInput.SetAlignment(core.Qt__AlignCenter)
+
+	nextButton := widgets.NewQPushButton2("NEXT", nil)
+	prevButton := widgets.NewQPushButton2("PREV", nil)
+	previewLayout.AddWidget(prevButton, 0, 1, 0)
+	previewLayout.AddWidget(stepInput, 0, 2, 0)
+	previewLayout.AddWidget(nextButton, 0, 3, 0)
+
+	nextButton.ConnectClicked(func(bool) {
+		previewGroup.SetEnabled(false)
+		step := getStep(stepInput)
+		fmt.Println("next", step, stepwise)
+		if !stepwise {
+			stepwise = true
+			buildButton.Clicked(false)
+		}
+		go func() {
+			lotc <- step
+			previewGroup.SetEnabled(true)
+		}()
+	})
+	prevButton.ConnectClicked(func(bool) {
+		previewGroup.SetEnabled(false)
+		step := getStep(stepInput)
+		fmt.Println("prev", step)
+		if !stepwise {
+			stepwise = true
+			buildButton.Clicked(false)
+		}
+		go func() {
+			lotc <- -step
+			previewGroup.SetEnabled(true)
+		}()
 	})
 
 	return group, previewGroup
@@ -905,6 +937,8 @@ func build(
 	printhead0Path string,
 	buildProgressbar *widgets.QProgressBar,
 	mode byte,
+	lotc chan int,
+	stepwise *bool,
 ) {
 	//filePath, err := uiutil.FilePath()
 	//if err != nil {
@@ -937,12 +971,18 @@ func build(
 	fmt.Println("create bin", bin)
 	img := image.NewRGBA(image.Rect(0, 0, subs.Width, subs.Height+1))
 	scene.image = img
-	countc := bin.Build(step, img, paintedc)
+	countc := bin.Build(step, lotc, img, paintedc)
 	go func() {
 		for count := range countc {
 			buildProgressbar.SetValue(count * buildProgressbar.Maximum() / cycleCount)
 			scene.UpdatePixmap()
 		}
+		//close(lotc)
+		lotc = make(chan int)
+		*stepwise = false
+		fmt.Println("reinitialize paintedc")
+		close(paintedc)
+		paintedc = make(chan struct{})
 	}()
 	return
 
