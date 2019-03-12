@@ -24,7 +24,8 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 	fmt.Println("activatable", activatable)
 	spots := []*Spot{}
 	cycleCount := 0
-	for _, line := range strings.Split(input, "\n") {
+	sep := "\n"
+	for _, line := range strings.Split(input, sep) {
 		if line == "" {
 			continue
 		}
@@ -41,6 +42,8 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 			if activatable {
 				if r.Name != reagent.Nil.Name {
 					spot.AddReagent(reagent.Activator)
+				} else {
+					spot.AddReagent(reagent.Nil)
 				}
 			}
 			//fmt.Printf("'%#v'\n", name)

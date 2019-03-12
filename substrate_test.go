@@ -129,9 +129,9 @@ func TestNewSubstrate2(t *testing.T) {
 	s, err := substrate.NewSubstrate(
 		600/150,
 		3,
-		20, // 10 * 4 * 25.4 / 600
-		25, // 4 * 4 * 25.4 / 600
-		2,  // 5 * 600 / 25.4
+		20.0, // 10 * 4 * 25.4 / 600
+		50.0, // 4 * 4 * 25.4 / 600
+		2.0,  // 5 * 600 / 25.4
 		spots,
 	)
 	fmt.Println(err)
