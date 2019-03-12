@@ -17,10 +17,18 @@ const (
 	IMAGABLE = true
 )
 
-func (b *Bin) Build(step int, img *image.RGBA, paintedc chan struct{}) (countc chan int) {
+func (b *Bin) Build(
+	step int,
+	lotamountc chan int,
+	img *image.RGBA,
+	paintedc chan struct{},
+) (countc chan int) {
+	lotamount := 1
+	stepwise := false
 	countc = make(chan int)
 	go func() {
 		stepCount := 0
+		lot := 0
 		for cycleIndex := 0; cycleIndex < b.CycleCount; cycleIndex++ {
 			<-paintedc
 			img.Pix = make([]uint8, 4*b.Substrate().Width*(b.Substrate().Height+1))
@@ -111,7 +119,33 @@ func (b *Bin) Build(step int, img *image.RGBA, paintedc chan struct{}) (countc c
 				png.Encode(outputFile, img)
 				outputFile.Close()
 			}
-			countc <- cycleIndex + 1
+			if lotamount, stepwise = <-lotamountc; stepwise {
+				if lotamount < 0 {
+					cycleIndex += lotamount - 2
+					if cycleIndex < -1 {
+						cycleIndex = 0 - 1
+					}
+					go func() {
+						paintedc <- struct{}{}
+						lotamountc <- 1
+						lot = 0
+					}()
+					continue
+				} else {
+					lot++
+				}
+				if lot == lotamount {
+					countc <- cycleIndex + 1
+					lot = 0
+				} else {
+					go func() {
+						paintedc <- struct{}{}
+						lotamountc <- lotamount
+					}()
+				}
+			} else {
+				countc <- cycleIndex + 1
+			}
 		}
 		err := b.SaveToFile(BINFILE)
 		if err != nil {
