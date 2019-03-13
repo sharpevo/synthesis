@@ -20,7 +20,7 @@ type Substrate struct {
 
 func NewSubstrate(
 	spotSpaceUnit int, // unit
-	slideNum int,
+	slideNumHori int,
 	slideWidth float64, // mm
 	slideHeight float64, // mm
 	slideSpaceHori float64, // mm
@@ -37,7 +37,7 @@ func NewSubstrate(
 		slideSpaceHoriUnit -= rem
 	}
 
-	maxSpotsHori := geometry.Unit(slideWidth*float64(slideNum) + slideSpaceHori*float64(slideNum-1))
+	maxSpotsHori := geometry.Unit(slideWidth*float64(slideNumHori) + slideSpaceHori*float64(slideNumHori-1))
 	s.Width = maxSpotsHori
 	s.Height = slideHeightUnit
 	s.Spots = make([][]*Spot, slideHeightUnit)
@@ -64,7 +64,7 @@ func NewSubstrate(
 			xOffset = (slideWidthUnit + slideSpaceHoriUnit) * (columnCount - 1)
 			yOffset = slideHeightUnit
 		}
-		if columnCount*slideCount > slideNum {
+		if columnCount > slideNumHori {
 			return nil, fmt.Errorf("not enough space for spots")
 		}
 
