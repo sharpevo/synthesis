@@ -46,24 +46,25 @@ func NewSubstrate(
 	}
 
 	slideCount := 1
+	columnCount := 1
 	xOffset := 0
 	yOffset := slideHeightUnit // 1181
 
 	fmt.Println(slideWidthUnit, slideHeightUnit, slideSpaceHoriUnit, maxSpotsHori)
 	for _, spot := range spots {
-		right := (slideWidthUnit+slideSpaceHoriUnit)*(slideCount-1) + slideWidthUnit
+		right := (slideWidthUnit+slideSpaceHoriUnit)*(columnCount-1) + slideWidthUnit
 		// new line
 		if xOffset > right {
 			xOffset = right - slideWidthUnit
 			yOffset -= spotSpaceUnit
 		}
-		// new slide
+		// new column
 		if yOffset <= 0 {
-			slideCount += 1
-			xOffset = (slideWidthUnit + slideSpaceHoriUnit) * (slideCount - 1)
+			columnCount += 1
+			xOffset = (slideWidthUnit + slideSpaceHoriUnit) * (columnCount - 1)
 			yOffset = slideHeightUnit
 		}
-		if slideCount > slideNum {
+		if columnCount*slideCount > slideNum {
 			return nil, fmt.Errorf("not enough space for spots")
 		}
 
