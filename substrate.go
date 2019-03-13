@@ -23,7 +23,7 @@ func NewSubstrate(
 	slideNum int,
 	slideWidth float64, // mm
 	slideHeight float64, // mm
-	slideSpace float64, // mm
+	slideSpaceHori float64, // mm
 	spots []*Spot,
 ) (*Substrate, error) {
 	s := &Substrate{
@@ -31,13 +31,13 @@ func NewSubstrate(
 	}
 	slideWidthUnit := geometry.Unit(slideWidth)
 	slideHeightUnit := geometry.Unit(slideHeight)
-	slideSpaceUnit := geometry.Unit(slideSpace)
-	rem := slideSpaceUnit % 4
+	slideSpaceHoriUnit := geometry.Unit(slideSpaceHori)
+	rem := slideSpaceHoriUnit % 4
 	if rem != 0 {
-		slideSpaceUnit -= rem
+		slideSpaceHoriUnit -= rem
 	}
 
-	maxSpotsHori := geometry.Unit(slideWidth*float64(slideNum) + slideSpace*float64(slideNum-1))
+	maxSpotsHori := geometry.Unit(slideWidth*float64(slideNum) + slideSpaceHori*float64(slideNum-1))
 	s.Width = maxSpotsHori
 	s.Height = slideHeightUnit
 	s.Spots = make([][]*Spot, slideHeightUnit)
@@ -49,9 +49,9 @@ func NewSubstrate(
 	xOffset := 0
 	yOffset := slideHeightUnit // 1181
 
-	fmt.Println(slideWidthUnit, slideHeightUnit, slideSpaceUnit, maxSpotsHori)
+	fmt.Println(slideWidthUnit, slideHeightUnit, slideSpaceHoriUnit, maxSpotsHori)
 	for _, spot := range spots {
-		right := (slideWidthUnit+slideSpaceUnit)*(slideCount-1) + slideWidthUnit
+		right := (slideWidthUnit+slideSpaceHoriUnit)*(slideCount-1) + slideWidthUnit
 		// new line
 		if xOffset > right {
 			xOffset = right - slideWidthUnit
@@ -60,7 +60,7 @@ func NewSubstrate(
 		// new slide
 		if yOffset <= 0 {
 			slideCount += 1
-			xOffset = (slideWidthUnit + slideSpaceUnit) * (slideCount - 1)
+			xOffset = (slideWidthUnit + slideSpaceHoriUnit) * (slideCount - 1)
 			yOffset = slideHeightUnit
 		}
 		if slideCount > slideNum {
