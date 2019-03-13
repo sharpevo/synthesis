@@ -2,7 +2,9 @@ package substrate
 
 import (
 	"fmt"
+	"math"
 	"posam/util/geometry"
+	"posam/util/log"
 )
 
 const (
@@ -32,12 +34,36 @@ func NewSubstrate(
 		SpotCount: len(spots),
 	}
 	slideWidthUnit := geometry.Unit(slideWidth)
+	if rem := slideWidthUnit % 4; rem != 0 {
+		slideWidthUnit -= rem
+	} // new column
 	slideHeightUnit := geometry.Unit(slideHeight)
 	slideSpaceHoriUnit := geometry.Unit(slideSpaceHori)
-	slideSpaceVertUnit := geometry.Unit(slideSpaceVert)
-	rem := slideSpaceHoriUnit % 4
-	if rem != 0 {
+	if rem := slideSpaceHoriUnit % 4; rem != 0 {
 		slideSpaceHoriUnit -= rem
+	} // counted in xoffset
+	slideSpaceVertUnit := geometry.Unit(slideSpaceVert)
+	if rem := slideSpaceVertUnit % 4; rem != 0 {
+		slideSpaceVertUnit -= rem
+	} // counted in yoffset
+
+	capacity := slideNumHori * slideNumVert
+	spotsPerSlide := (slideWidthUnit / (1 + spotSpaceUnit)) * (slideHeightUnit / (1 + spotSpaceUnit))
+	required := int(math.Ceil(float64(len(spots)) / float64(spotsPerSlide)))
+	log.Vs(log.M{
+		"capacity": capacity,
+		"required": required,
+
+		"spotsPerSlide": spotsPerSlide,
+
+		"slideWidthUnit":  slideWidthUnit,
+		"slideHeightUnit": slideHeightUnit,
+		"slideNumHori":    slideNumHori,
+		"slideNumVert":    slideNumVert,
+		"spots":           len(spots),
+	}).Info()
+	if required > capacity {
+		return nil, fmt.Errorf("not enough slide: %v > %v", required, capacity)
 	}
 
 	maxSpotsHori := geometry.Unit(slideWidth*float64(slideNumHori) + slideSpaceHori*float64(slideNumHori-1))
@@ -52,27 +78,60 @@ func NewSubstrate(
 	slideCount := 1
 	columnCount := 1
 	xOffset := 0
-	yOffset := slideHeightUnit // 1181
+	yOffset := maxSpotsVert
 
 	fmt.Println(slideWidthUnit, slideHeightUnit, slideSpaceHoriUnit, maxSpotsHori)
 	for _, spot := range spots {
 		right := (slideWidthUnit+slideSpaceHoriUnit)*(columnCount-1) + slideWidthUnit
-		bottom := (slideHeightUnit+slideSpaceVertUnit)*(slideCount-1) + slideHeightUnit
-		// new line
-		if xOffset > right {
-			xOffset = right - slideWidthUnit
-			yOffset -= spotSpaceUnit
-		}
-		// new column
-		if yOffset <= 0 {
-			columnCount += 1
-			xOffset = (slideWidthUnit + slideSpaceHoriUnit) * (columnCount - 1)
-			yOffset = slideHeightUnit
-		}
-		if columnCount > slideNumHori {
-			return nil, fmt.Errorf("not enough space for spots")
+		bottom := maxSpotsVert - (slideHeightUnit+slideSpaceVertUnit)*(slideCount-1) - slideHeightUnit
+		log.Vs(log.M{
+			"spot":    spot,
+			"right":   right,
+			"bottom":  bottom,
+			"xoffset": xOffset,
+			"yoffset": yOffset,
+
+			"slideSpaceHoriUnit": slideSpaceHoriUnit,
+			"slideSpaceVertUnit": slideSpaceVertUnit,
+		}).Debug()
+		if xOffset >= right {
+			log.Vs(log.M{
+				"yoffset":            yOffset,
+				"slideSpaceVertUnit": slideSpaceVertUnit,
+				"maxspotsvert":       maxSpotsVert,
+				"maxspotshori":       maxSpotsHori,
+			}).Info("new line")
+			if yOffset < bottom {
+				log.D("new slide")
+				xOffset = right - slideWidthUnit
+				yOffset -= slideSpaceVertUnit
+				slideCount += 1
+			} else {
+				log.D("same slide")
+				xOffset = right - slideWidthUnit
+				yOffset -= spotSpaceUnit
+			}
+
+			if yOffset <= 0 {
+				log.D("new column")
+				columnCount += 1
+				xOffset = (slideWidthUnit + slideSpaceHoriUnit) * (columnCount - 1)
+				yOffset = maxSpotsVert
+				slideCount = 1
+				if columnCount > slideNumHori {
+					return nil, fmt.Errorf(
+						"not enough space for spots: %v > %v", columnCount, slideNumHori)
+				}
+			}
 		}
 
+		log.Vs(log.M{
+			"x":            xOffset,
+			"y":            yOffset - 1,
+			"maxspotshori": maxSpotsHori,
+			"maxspotsvert": maxSpotsVert,
+			"spot":         spot.Reagents[0].Name,
+		}).Debug("update spot")
 		x := xOffset
 		y := yOffset - 1
 		if s.Spots[y][x] != nil {
