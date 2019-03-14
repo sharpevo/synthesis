@@ -570,8 +570,15 @@ func NewInputGroup() (
 		} else {
 			deltay -= yrem
 		}
-		fmt.Println("printhead 1", p1x, p0y+deltay)
-		nozzles1 := p1.MakeNozzles(p1x, p0y+deltay)
+		deltax := geometry.Unit(printhead1OffsetXFloat - printhead0OffsetXFloat)
+		xrem := deltax % step
+		if xrem > step/2 {
+			deltax += step - xrem
+		} else {
+			deltax -= xrem
+		}
+		fmt.Println("printhead 1", p0x-deltax, p0y+deltay)
+		nozzles1 := p1.MakeNozzles(p0x-deltax, p0y+deltay)
 
 		printheadArray := printhead.NewArray(
 			append(nozzles0, nozzles1...),
@@ -646,6 +653,7 @@ func NewInputGroup() (
 			//50.0, // height // 25
 			slideAreaSpaceFloat,
 			spots,
+			deltax,
 		)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
