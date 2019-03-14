@@ -18,6 +18,7 @@ type Substrate struct {
 	Width     int
 	Height    int
 	SpotCount int
+	LeftMost  int
 }
 
 func NewSubstrate(
@@ -29,6 +30,7 @@ func NewSubstrate(
 	slideSpaceHori float64, // mm
 	slideSpaceVert float64, // mm
 	spots []*Spot,
+	leftmost int, // unit
 ) (*Substrate, error) {
 	s := &Substrate{
 		SpotCount: len(spots),
@@ -46,6 +48,10 @@ func NewSubstrate(
 	if rem := slideSpaceVertUnit % 4; rem != 0 {
 		slideSpaceVertUnit -= rem
 	} // counted in yoffset
+	s.LeftMost = leftmost
+	if rem := s.LeftMost % 4; rem != 0 {
+		s.LeftMost -= rem
+	}
 
 	capacity := slideNumHori * slideNumVert
 	spotsPerSlide := (slideWidthUnit / (1 + spotSpaceUnit)) * (slideHeightUnit / (1 + spotSpaceUnit))
@@ -61,6 +67,7 @@ func NewSubstrate(
 		"slideNumHori":    slideNumHori,
 		"slideNumVert":    slideNumVert,
 		"spots":           len(spots),
+		"leftmost":        s.LeftMost,
 	}).Info()
 	if required > capacity {
 		return nil, fmt.Errorf("not enough slide: %v > %v", required, capacity)
@@ -163,7 +170,7 @@ func (s *Substrate) Left() int {
 }
 
 func (s *Substrate) Strip() (count int) {
-	quo, rem := s.Width/1280, s.Width%1280
+	quo, rem := (s.Width+s.LeftMost)/1280, (s.Width+s.LeftMost)%1280
 	if rem != 0 {
 		count = quo + 1
 	} else {
