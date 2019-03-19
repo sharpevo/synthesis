@@ -50,6 +50,14 @@ func Unit(input float64) int {
 	return int(input*600/25.4 + 0.5)
 }
 
+func RoundedUnit(input float64) int {
+	result := Unit(input)
+	if rem := result % 4; rem != 0 {
+		result -= rem
+	}
+	return result
+}
+
 func Mm2(input int) string {
 	output := fmt.Sprintf("%.6f", float64(input)*25.4/600)
 	//fmt.Println("convert", input, output)
