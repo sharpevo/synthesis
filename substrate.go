@@ -62,7 +62,7 @@ func NewSubstrate(
 	if rem := s.LeftMostu % 4; rem != 0 {
 		s.LeftMostu -= rem
 	}
-	log.Vs(log.M{
+	log.Dv(log.M{
 		"slideTop":     s.Top(),
 		"slideBottom":  s.Bottom(),
 		"maxspotsvert": s.MaxSpotsv,
@@ -75,7 +75,7 @@ func NewSubstrate(
 		"slideNumVert": s.SlideNumv,
 		"spotsCount":   s.SpotCount,
 		"leftmost":     s.LeftMostu,
-	}).Debugf("substrate created %#v\n", s)
+		"_":            "substrate created"})
 	if err := s.loadSpots(spots); err != nil {
 		return nil, err
 	}
@@ -95,16 +95,14 @@ func (s *Substrate) loadSpots(spots []*Spot) error {
 		right := (s.SlideWidthu+s.SlideSpacehu)*(columnCount-1) + s.SlideWidthu
 		bottom := s.MaxSpotsv -
 			(s.SlideHeightu+s.SlideSpacevu)*(slideCount-1) - s.SlideHeightu
-		log.Vs(log.M{
+		log.Dv(log.M{
 			"x":           x,
 			"y":           y,
-			"spot":        spot,
 			"right":       right,
 			"bottom":      bottom,
 			"spotCount":   spotCount,
 			"slideCount":  slideCount,
-			"columnCount": columnCount,
-		}).Debug()
+			"columnCount": columnCount})
 		if x > right {
 			log.D("new line")
 			if y-s.SpotSpaceu < bottom {
@@ -168,11 +166,11 @@ func (s *Substrate) Strip() (count int) {
 func (s *Substrate) isOverloaded() error {
 	capacity := s.SlideNumh * s.SlideNumv
 	required := int(float64(s.SpotCount)/float64(s.spotsPerSlide()) + 0.5)
-	log.Vs(log.M{
+	log.Dv(log.M{
 		"capacity":      capacity,
 		"required":      required,
 		"spotsPerSlide": s.spotsPerSlide(),
-	}).Debug("Check overloaded")
+		"_":             "Check overloaded"})
 	if required > capacity {
 		return fmt.Errorf("not enough slide: %v > %v", required, capacity)
 	}
