@@ -441,3 +441,51 @@ func TestSpotsPerSlide(t *testing.T) {
 		})
 	}
 }
+
+func TestIsOverloaded(t *testing.T) {
+	cases := []struct {
+		slidenumh   int
+		slidenumv   int
+		spotcount   int
+		slidewidth  float64
+		slideheight float64
+		expectError bool
+	}{
+		{
+			3,
+			3,
+			900,
+			10,
+			10,
+			false,
+		},
+		{
+			3,
+			3,
+			52302, // 52302/5478 + 0.5 = 10
+			11,
+			14,
+			true,
+		},
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("%vx%v", c.slidewidth, c.slideheight), func(t *testing.T) {
+			s := &substrate.Substrate{
+				SlideNumh:   c.slidenumh,
+				SlideNumv:   c.slidenumv,
+				SpotCount:   c.spotcount,
+				SlideWidth:  c.slidewidth,
+				SlideHeight: c.slideheight,
+			}
+			err := s.IsOverloaded()
+			fmt.Println(err)
+			if err != nil && !c.expectError {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					"no error",
+					err,
+				)
+			}
+		})
+	}
+}
