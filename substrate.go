@@ -2,7 +2,6 @@ package substrate
 
 import (
 	"fmt"
-	"math"
 	"posam/util/geometry"
 	"posam/util/log"
 )
@@ -14,183 +13,150 @@ const (
 )
 
 type Substrate struct {
-	Spots     [][]*Spot
-	Width     int
-	Height    int
-	SpotCount int
-	LeftMost  int
+	Spots      [][]*Spot
+	SpotCount  int
+	SpotSpaceu int
+	MaxSpotsh  int
+	MaxSpotsv  int
+	Width      int
+	Height     int
+	LeftMostu  int
+
+	SlideHeight  float64
+	SlideWidth   float64
+	SlideHeightu int
+	SlideWidthu  int
+	SlideNumh    int
+	SlideNumv    int
+	SlideSpacehu int
+	SlideSpacevu int
 }
 
 func NewSubstrate(
-	spotSpaceUnit int, // unit
-	slideNumHori int,
-	slideNumVert int,
-	slideWidth float64, // mm
-	slideHeight float64, // mm
-	slideSpaceHori float64, // mm
-	slideSpaceVert float64, // mm
+	slideNumh int,
+	slideNumv int,
+	slideWidth float64,
+	slideHeight float64,
+	slideSpaceHori float64,
+	slideSpaceVert float64,
 	spots []*Spot,
-	leftmost int, // unit
+	spotSpaceu int,
+	leftmostu int,
 ) (*Substrate, error) {
 	s := &Substrate{
-		SpotCount: len(spots),
+		SpotCount:    len(spots),
+		SpotSpaceu:   spotSpaceu,
+		SlideNumh:    slideNumh,
+		SlideNumv:    slideNumv,
+		SlideWidth:   slideWidth,
+		SlideHeight:  slideHeight,
+		SlideWidthu:  geometry.RoundedUnit(slideWidth),
+		SlideHeightu: geometry.Unit(slideHeight),
+		SlideSpacehu: geometry.RoundedUnit(slideSpaceHori),
+		SlideSpacevu: geometry.RoundedUnit(slideSpaceVert),
 	}
-	slideWidthUnit := geometry.Unit(slideWidth)
-	if rem := slideWidthUnit % 4; rem != 0 {
-		slideWidthUnit -= rem
-	} // new column
-	slideHeightUnit := geometry.Unit(slideHeight)
-	slideSpaceHoriUnit := geometry.Unit(slideSpaceHori)
-	if rem := slideSpaceHoriUnit % 4; rem != 0 {
-		slideSpaceHoriUnit -= rem
-	} // counted in xoffset
-	slideSpaceVertUnit := geometry.Unit(slideSpaceVert)
-	if rem := slideSpaceVertUnit % 4; rem != 0 {
-		slideSpaceVertUnit -= rem
-	} // counted in yoffset
-	s.LeftMost = leftmost
-	if rem := s.LeftMost % 4; rem != 0 {
-		s.LeftMost -= rem
+	if err := s.isOverloaded(); err != nil {
+		return nil, err
 	}
-
-	capacity := slideNumHori * slideNumVert
-	//spotsPerSlide := (slideWidthUnit / (1 + spotSpaceUnit)) * (slideHeightUnit / (1 + spotSpaceUnit)) // rem has been removed
-	spotsPerSlide := (geometry.Unit(slideWidth)/4 + 1) * (geometry.Unit(slideHeight)/4 + 1)
-	required := int(math.Ceil(float64(len(spots)) / float64(spotsPerSlide)))
-	log.Vs(log.M{
-		"capacity": capacity,
-		"required": required,
-
-		"spotsPerSlide": spotsPerSlide,
-
-		"slideWidthUnit":  slideWidthUnit,
-		"slideHeightUnit": slideHeightUnit,
-		"slideNumHori":    slideNumHori,
-		"slideNumVert":    slideNumVert,
-		"spotSpaceUnit":   spotSpaceUnit,
-		"spots":           len(spots),
-		"leftmost":        s.LeftMost,
-	}).Info()
-	if required > capacity {
-		return nil, fmt.Errorf("not enough slide: %v > %v", required, capacity)
+	s.MaxSpotsh = geometry.Unit(s.SlideWidth*float64(s.SlideNumh)+slideSpaceHori*float64(s.SlideNumh-1)) + 1
+	s.MaxSpotsv = geometry.Unit(s.SlideHeight*float64(s.SlideNumv)+slideSpaceVert*float64(s.SlideNumv-1)) + 1
+	s.Width = s.MaxSpotsh + 1
+	s.Height = s.MaxSpotsv + 1
+	s.LeftMostu = leftmostu
+	if rem := s.LeftMostu % 4; rem != 0 {
+		s.LeftMostu -= rem
 	}
-
-	maxSpotsHori := geometry.Unit(slideWidth*float64(slideNumHori)+slideSpaceHori*float64(slideNumHori-1)) + 1 // include 0
-	maxSpotsVert := geometry.Unit(slideHeight*float64(slideNumVert)+slideSpaceVert*float64(slideNumVert-1)) + 1
-	s.Width = maxSpotsHori + 1  // most right spot missed
-	s.Height = maxSpotsVert + 1 // top line, but C & T will not printed since they moves downward
 	log.Vs(log.M{
 		"slideTop":    s.Top(),
 		"slideBottom": s.Bottom(),
-		"slideLeft":   s.Left(),
-		"slideRight":  s.Right(),
-	}).Info("slide info")
-
-	s.Spots = make([][]*Spot, maxSpotsVert+1) // last spot
-	for y := range s.Spots {
-		s.Spots[y] = make([]*Spot, maxSpotsHori+1)
-	}
-
-	slideCount := 1
-	columnCount := 1
-	xOffset := 0
-	yOffset := maxSpotsVert
-
-	fmt.Println(slideWidthUnit, slideHeightUnit, slideSpaceHoriUnit, maxSpotsHori)
-	for spotCount, spot := range spots {
-		right := (slideWidthUnit+slideSpaceHoriUnit)*(columnCount-1) + slideWidthUnit
-		bottom := maxSpotsVert - (slideHeightUnit+slideSpaceVertUnit)*(slideCount-1) - slideHeightUnit
-		//bottom := maxSpotsVert - (slideHeightUnit+geometry.Unit(slideSpaceVert))*(slideCount-1) - slideHeightUnit
-		log.Vs(log.M{
-			"spot":    spot,
-			"right":   right,
-			"bottom":  bottom,
-			"xoffset": xOffset,
-			"yoffset": yOffset,
-
-			"slideSpaceHoriUnit": slideSpaceHoriUnit,
-			"slideSpaceVertUnit": slideSpaceVertUnit,
-			"spotCount":          spotCount,
-			"slideCount":         slideCount,
-			"columnCount":        columnCount,
-		}).Debug()
-		//if xOffset >= right {
-		if xOffset > right { // xOffset starts from 0 and == should be in the same line, so that 3000 counts is done
-			//xOffset >= maxSpotsHori { // xOffset starts from 0
-			log.Vs(log.M{
-				"yoffset":            yOffset,
-				"slideSpaceVertUnit": slideSpaceVertUnit,
-				"maxspotsvert":       maxSpotsVert,
-				"maxspotshori":       maxSpotsHori,
-			}).Info("new line")
-			if yOffset-spotSpaceUnit < bottom { // == is the last dots
-				//if yOffset <= bottom {
-				log.D("new slide")
-				xOffset = right - slideWidthUnit
-				yOffset -= slideSpaceVertUnit
-				slideCount += 1
-				if slideCount > slideNumVert {
-					// new column
-					log.D("new column")
-					columnCount += 1
-					xOffset = (slideWidthUnit + slideSpaceHoriUnit) * (columnCount - 1)
-					yOffset = maxSpotsVert
-					slideCount = 1
-					if columnCount > slideNumHori {
-						return nil, fmt.Errorf(
-							"not enough space for spots in horizon: %v > %v", columnCount, slideNumHori)
-					}
-				}
-			} else {
-				log.D("same slide")
-				xOffset = right - slideWidthUnit
-				yOffset -= spotSpaceUnit
-				// yOffset may below the bottom
-			}
-		}
-
-		log.Vs(log.M{
-			"x":            xOffset,
-			"y":            yOffset,
-			"maxspotshori": maxSpotsHori,
-			"maxspotsvert": maxSpotsVert,
-			"spot":         spot.Reagents[0].Name,
-		}).Debug("update spot")
-		x := xOffset
-		//y := yOffset - 1
-		y := yOffset
-		if s.Spots[y][x] != nil {
-			return nil, fmt.Errorf("invalid location")
-		}
-
-		spot.Pos = geometry.NewPosition(x, y)
-		s.Spots[y][x] = spot
-
-		xOffset += spotSpaceUnit
+	}).Infof("substrate created %#v\n", s)
+	if err := s.LoadSpots(spots); err != nil {
+		return nil, err
 	}
 	return s, nil
 }
 
-func (s *Substrate) Top() int {
-	return s.Height - 1 // include 0
-	//return s.Height
+func (s *Substrate) LoadSpots(spots []*Spot) error {
+	s.Spots = make([][]*Spot, s.Height)
+	for y := range s.Spots {
+		s.Spots[y] = make([]*Spot, s.Width)
+	}
+	slideCount := 1
+	columnCount := 1
+	x := 0
+	y := s.MaxSpotsv
+	for spotCount, spot := range spots {
+		right := (s.SlideWidthu+s.SlideSpacehu)*(columnCount-1) + s.SlideWidthu
+		bottom := s.MaxSpotsv - (s.SlideHeightu+s.SlideSpacevu)*(slideCount-1) - s.SlideHeightu
+		log.Vs(log.M{
+			"spot":         spot,
+			"right":        right,
+			"bottom":       bottom,
+			"x":            x,
+			"y":            y,
+			"SlideSpacehu": s.SlideSpacehu,
+			"SlideSpacevu": s.SlideSpacevu,
+			"spotCount":    spotCount,
+			"slideCount":   slideCount,
+			"columnCount":  columnCount,
+		}).Debug()
+		if x > right {
+			log.Vs(log.M{
+				"y":            y,
+				"SlideSpacevu": s.SlideSpacevu,
+				"maxspotsvert": s.MaxSpotsv,
+				"maxspotshori": s.MaxSpotsh,
+			}).Info("new line")
+			if y-s.SpotSpaceu < bottom {
+				log.D("new slide")
+				x = right - s.SlideWidthu
+				y -= s.SlideSpacevu
+				slideCount += 1
+				if slideCount > s.SlideNumv {
+					log.D("new column")
+					columnCount += 1
+					x = (s.SlideWidthu + s.SlideSpacehu) * (columnCount - 1)
+					y = s.MaxSpotsv
+					slideCount = 1
+					if columnCount > s.SlideNumh {
+						return fmt.Errorf(
+							"not enough space for spots in horizon: %v > %v", columnCount, s.SlideNumh)
+					}
+				}
+			} else {
+				log.D("same slide")
+				x = right - s.SlideWidthu
+				y -= s.SpotSpaceu
+			}
+		}
+		log.Vs(log.M{
+			"x":            x,
+			"y":            y,
+			"maxspotshori": s.MaxSpotsh,
+			"maxspotsvert": s.MaxSpotsv,
+			"spot":         spot.Reagents[0].Name,
+		}).Debug("update spot")
+		if s.Spots[y][x] != nil {
+			return fmt.Errorf("invalid location")
+		}
+		spot.Pos = geometry.NewPosition(x, y)
+		s.Spots[y][x] = spot
+		x += s.SpotSpaceu
+	}
+	return nil
 }
 
-func (s *Substrate) Right() int {
-	//return s.Width - 1
-	return s.Width
+func (s *Substrate) Top() int {
+	return s.MaxSpotsv
 }
 
 func (s *Substrate) Bottom() int {
-	return (s.Height - 1) % 4 // bottom = 6, then nothing in 4x21
-}
-
-func (s *Substrate) Left() int {
-	return 0
+	return s.MaxSpotsv % 4 // bottom = 6, then nothing in 4x21
 }
 
 func (s *Substrate) Strip() (count int) {
-	quo, rem := (s.Width+s.LeftMost)/1280, (s.Width+s.LeftMost)%1280
+	extension := s.MaxSpotsh + s.LeftMostu
+	quo, rem := extension/1280, extension%1280
 	if rem != 0 {
 		count = quo + 1
 	} else {
@@ -202,4 +168,29 @@ func (s *Substrate) Strip() (count int) {
 	//}
 
 	return count
+}
+
+func (s *Substrate) isOverloaded() error {
+	capacity := s.SlideNumh * s.SlideNumv
+	required := int(float64(s.SpotCount)/float64(s.spotsPerSlide()) + 0.5)
+	log.Vs(log.M{
+		"capacity":      capacity,
+		"required":      required,
+		"spotsPerSlide": s.spotsPerSlide(),
+		"SlideWidthu":   s.SlideWidthu,
+		"SlideHeightu":  s.SlideHeightu,
+		"slideNumHori":  s.SlideNumh,
+		"slideNumVert":  s.SlideNumv,
+		"spotSpaceUnit": s.SpotSpaceu,
+		"spots":         s.SpotCount,
+		"leftmost":      s.LeftMostu,
+	}).Info("isOverloaded()")
+	if required > capacity {
+		return fmt.Errorf("not enough slide: %v > %v", required, capacity)
+	}
+	return nil
+}
+
+func (s *Substrate) spotsPerSlide() int {
+	return (geometry.Unit(s.SlideWidth)/4 + 1) * (geometry.Unit(s.SlideHeight)/4 + 1)
 }
