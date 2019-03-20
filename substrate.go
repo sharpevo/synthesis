@@ -58,8 +58,10 @@ func NewSubstrate(
 	if err := s.isOverloaded(); err != nil {
 		return nil, err
 	}
-	s.MaxSpotsh = geometry.Unit(s.SlideWidth*float64(s.SlideNumh)+slideSpaceHori*float64(s.SlideNumh-1)) + 1
-	s.MaxSpotsv = geometry.Unit(s.SlideHeight*float64(s.SlideNumv)+slideSpaceVert*float64(s.SlideNumv-1)) + 1
+	s.MaxSpotsh = geometry.Unit(
+		s.SlideWidth*float64(s.SlideNumh)+slideSpaceHori*float64(s.SlideNumh-1)) + 1
+	s.MaxSpotsv = geometry.Unit(
+		s.SlideHeight*float64(s.SlideNumv)+slideSpaceVert*float64(s.SlideNumv-1)) + 1
 	s.Width = s.MaxSpotsh + 1
 	s.Height = s.MaxSpotsv + 1
 	s.LeftMostu = leftmostu
@@ -87,7 +89,8 @@ func (s *Substrate) LoadSpots(spots []*Spot) error {
 	y := s.MaxSpotsv
 	for spotCount, spot := range spots {
 		right := (s.SlideWidthu+s.SlideSpacehu)*(columnCount-1) + s.SlideWidthu
-		bottom := s.MaxSpotsv - (s.SlideHeightu+s.SlideSpacevu)*(slideCount-1) - s.SlideHeightu
+		bottom := s.MaxSpotsv -
+			(s.SlideHeightu+s.SlideSpacevu)*(slideCount-1) - s.SlideHeightu
 		log.Vs(log.M{
 			"spot":         spot,
 			"right":        right,
@@ -120,7 +123,8 @@ func (s *Substrate) LoadSpots(spots []*Spot) error {
 					slideCount = 1
 					if columnCount > s.SlideNumh {
 						return fmt.Errorf(
-							"not enough space for spots in horizon: %v > %v", columnCount, s.SlideNumh)
+							"not enough space for spots in horizon: %v > %v",
+							columnCount, s.SlideNumh)
 					}
 				}
 			} else {
@@ -151,7 +155,7 @@ func (s *Substrate) Top() int {
 }
 
 func (s *Substrate) Bottom() int {
-	return s.MaxSpotsv % 4 // bottom = 6, then nothing in 4x21
+	return s.MaxSpotsv % 4
 }
 
 func (s *Substrate) Strip() (count int) {
@@ -192,5 +196,6 @@ func (s *Substrate) isOverloaded() error {
 }
 
 func (s *Substrate) spotsPerSlide() int {
-	return (geometry.Unit(s.SlideWidth)/4 + 1) * (geometry.Unit(s.SlideHeight)/4 + 1)
+	return (geometry.Unit(s.SlideWidth)/4 + 1) *
+		(geometry.Unit(s.SlideHeight)/4 + 1)
 }
