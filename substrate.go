@@ -63,9 +63,19 @@ func NewSubstrate(
 		s.LeftMostu -= rem
 	}
 	log.Vs(log.M{
-		"slideTop":    s.Top(),
-		"slideBottom": s.Bottom(),
-	}).Infof("substrate created %#v\n", s)
+		"slideTop":     s.Top(),
+		"slideBottom":  s.Bottom(),
+		"maxspotsvert": s.MaxSpotsv,
+		"maxspotshori": s.MaxSpotsh,
+		"SlideSpacehu": s.SlideSpacehu,
+		"SlideSpacevu": s.SlideSpacevu,
+		"SlideWidthu":  s.SlideWidthu,
+		"SlideHeightu": s.SlideHeightu,
+		"slideNumHori": s.SlideNumh,
+		"slideNumVert": s.SlideNumv,
+		"spotsCount":   s.SpotCount,
+		"leftmost":     s.LeftMostu,
+	}).Debugf("substrate created %#v\n", s)
 	if err := s.loadSpots(spots); err != nil {
 		return nil, err
 	}
@@ -86,24 +96,17 @@ func (s *Substrate) loadSpots(spots []*Spot) error {
 		bottom := s.MaxSpotsv -
 			(s.SlideHeightu+s.SlideSpacevu)*(slideCount-1) - s.SlideHeightu
 		log.Vs(log.M{
-			"spot":         spot,
-			"right":        right,
-			"bottom":       bottom,
-			"x":            x,
-			"y":            y,
-			"SlideSpacehu": s.SlideSpacehu,
-			"SlideSpacevu": s.SlideSpacevu,
-			"spotCount":    spotCount,
-			"slideCount":   slideCount,
-			"columnCount":  columnCount,
+			"x":           x,
+			"y":           y,
+			"spot":        spot,
+			"right":       right,
+			"bottom":      bottom,
+			"spotCount":   spotCount,
+			"slideCount":  slideCount,
+			"columnCount": columnCount,
 		}).Debug()
 		if x > right {
-			log.Vs(log.M{
-				"y":            y,
-				"SlideSpacevu": s.SlideSpacevu,
-				"maxspotsvert": s.MaxSpotsv,
-				"maxspotshori": s.MaxSpotsh,
-			}).Info("new line")
+			log.D("new line")
 			if y-s.SpotSpaceu < bottom {
 				log.D("new slide")
 				x = right - s.SlideWidthu
@@ -127,12 +130,7 @@ func (s *Substrate) loadSpots(spots []*Spot) error {
 				y -= s.SpotSpaceu
 			}
 		}
-		log.Vs(log.M{
-			"x":            x,
-			"y":            y,
-			"maxspotshori": s.MaxSpotsh,
-			"maxspotsvert": s.MaxSpotsv,
-		}).Debug("update spot")
+		log.Vs(log.M{"x": x, "y": y}).Debug("update spot")
 		if s.Spots[y][x] != nil {
 			return fmt.Errorf("invalid location")
 		}
@@ -174,14 +172,7 @@ func (s *Substrate) isOverloaded() error {
 		"capacity":      capacity,
 		"required":      required,
 		"spotsPerSlide": s.spotsPerSlide(),
-		"SlideWidthu":   s.SlideWidthu,
-		"SlideHeightu":  s.SlideHeightu,
-		"slideNumHori":  s.SlideNumh,
-		"slideNumVert":  s.SlideNumv,
-		"spotSpaceUnit": s.SpotSpaceu,
-		"spots":         s.SpotCount,
-		"leftmost":      s.LeftMostu,
-	}).Info("isOverloaded()")
+	}).Debug("Check overloaded")
 	if required > capacity {
 		return fmt.Errorf("not enough slide: %v > %v", required, capacity)
 	}
