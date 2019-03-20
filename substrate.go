@@ -132,7 +132,6 @@ func (s *Substrate) LoadSpots(spots []*Spot) error {
 			"y":            y,
 			"maxspotshori": s.MaxSpotsh,
 			"maxspotsvert": s.MaxSpotsv,
-			"spot":         spot.Reagents[0].Name,
 		}).Debug("update spot")
 		if s.Spots[y][x] != nil {
 			return fmt.Errorf("invalid location")
