@@ -23,16 +23,33 @@ func init() {
 		log.Formatter = &logrus.JSONFormatter{}
 		log.Level = logrus.InfoLevel
 	} else {
-		log.Out = os.Stdout
-		log.Level = logrus.TraceLevel
-		log.ReportCaller = true
-		log.Formatter = &logrus.TextFormatter{
-			FullTimestamp: true,
+		//log.Out = os.Stdout
+		//log.Level = logrus.TraceLevel
+		////log.ReportCaller = true
+		//log.Formatter = &logrus.TextFormatter{
+		//FullTimestamp: true,
+		//}
+		file, err := os.OpenFile("log.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+		if err == nil {
+			log.Out = file
+		} else {
+			log.Info("Failed to log to file, using default stderr")
 		}
+		log.Formatter = &logrus.JSONFormatter{
+			PrettyPrint: true,
+		}
+		log.Level = logrus.TraceLevel
 	}
 }
 
-type M logrus.Fields
+type M map[string]interface{}
+
+func (m M) raw() M {
+	for k, v := range m {
+		m[k] = fmt.Sprintf("%v", v)
+	}
+	return m
+}
 
 func Vs(fields M) *logrus.Entry {
 	for k, v := range fields {
@@ -104,7 +121,7 @@ func Pf(format string, args ...interface{}) {
 func S(args ...interface{}) []interface{} {
 	r := make([]interface{}, len(args))
 	for _, v := range args {
-		r = append(r, fmt.Sprintf("%#v", v))
+		r = append(r, fmt.Sprintf("%v", v))
 	}
 	return r
 }
