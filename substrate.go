@@ -6,12 +6,6 @@ import (
 	"posam/util/log"
 )
 
-const (
-	SLIDE_WIDTH  = 20 // mm
-	SLIDE_HEIGHT = 50 // mm
-	SLIDE_COUNT  = 3
-)
-
 type Substrate struct {
 	Spots      [][]*Spot
 	SpotCount  int
