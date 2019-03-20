@@ -1,6 +1,7 @@
 package substrate_test
 
 import (
+	"fmt"
 	"posam/util/substrate"
 	"testing"
 )
@@ -410,5 +411,33 @@ func TestEdge(t *testing.T) {
 			2,
 			s.Top(),
 		)
+	}
+}
+
+func TestSpotsPerSlide(t *testing.T) {
+	cases := []struct {
+		width  float64
+		height float64
+		expect int
+	}{
+		{10, 10, 3600},
+		{11, 14, 5478},
+		{4, 21, 3000},
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("%vx%v", c.width, c.height), func(t *testing.T) {
+			s := &substrate.Substrate{
+				SlideWidth:  c.width,
+				SlideHeight: c.height,
+			}
+			actual := s.SpotsPerSlide()
+			if actual != c.expect {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.expect,
+					actual,
+				)
+			}
+		})
 	}
 }
