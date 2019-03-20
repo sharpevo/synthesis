@@ -392,3 +392,23 @@ func TestNewSubstrate(t *testing.T) {
 		})
 	}
 }
+
+func TestEdge(t *testing.T) {
+	s := &substrate.Substrate{
+		MaxSpotsv: 5,
+	}
+	if s.Top() != 5 {
+		t.Errorf(
+			"\nEXPECT: %v\n GET: %v\n\n",
+			2,
+			s.Top(),
+		)
+	}
+	if s.Bottom() != 1 {
+		t.Errorf(
+			"\nEXPECT: %v\n GET: %v\n\n",
+			2,
+			s.Top(),
+		)
+	}
+}
