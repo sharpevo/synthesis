@@ -66,13 +66,13 @@ func NewSubstrate(
 		"slideTop":    s.Top(),
 		"slideBottom": s.Bottom(),
 	}).Infof("substrate created %#v\n", s)
-	if err := s.LoadSpots(spots); err != nil {
+	if err := s.loadSpots(spots); err != nil {
 		return nil, err
 	}
 	return s, nil
 }
 
-func (s *Substrate) LoadSpots(spots []*Spot) error {
+func (s *Substrate) loadSpots(spots []*Spot) error {
 	s.Spots = make([][]*Spot, s.Height)
 	for y := range s.Spots {
 		s.Spots[y] = make([]*Spot, s.Width)
