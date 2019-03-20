@@ -319,7 +319,6 @@ func TestNewSubstrate(t *testing.T) {
 	} // }}}
 	for _, c := range cases {
 		t.Run(c.title, func(t *testing.T) {
-			t.Parallel()
 			s, err := substrate.NewSubstrate(
 				c.input.slidecounth,
 				c.input.slidecountv,
