@@ -334,3 +334,57 @@ func TestIsOverloaded(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestStrip(t *testing.T) { // {{{
+	cases := []struct {
+		maxspotsh int
+		leftmostu int
+		expect    int
+	}{
+		{
+			1279,
+			0,
+			1, // should print even less than 1280
+		},
+		{
+			1280,
+			0,
+			1,
+		},
+		{
+			1281,
+			0,
+			2, // quo + 1
+		},
+		{
+			1279,
+			2,
+			2, // quo + 1
+		},
+		{
+			1280,
+			1280,
+			2, // quo + 1
+		},
+		{
+			1281,
+			1280,
+			3, // quo + 1
+		},
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("%v %v", c.maxspotsh, c.leftmostu), func(t *testing.T) {
+			s := &substrate.Substrate{}
+			s.MaxSpotsh = c.maxspotsh
+			s.LeftMostu = c.leftmostu
+			actual := s.Strip()
+			if actual != c.expect {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.expect,
+					actual,
+				)
+			}
+		})
+	}
+} // }}}
