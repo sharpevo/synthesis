@@ -17,8 +17,22 @@ func NewSpot() *Spot {
 	return &Spot{}
 }
 
-func (s *Spot) AddReagent(r *reagent.Reagent) {
+func (s *Spot) addReagent(r *reagent.Reagent) {
 	s.Reagents = append(s.Reagents, r)
+}
+
+func (s *Spot) AddReagents(names []string, activatable bool) {
+	for _, name := range names {
+		r := reagent.NewReagent(name)
+		s.addReagent(r)
+		if activatable {
+			if r.Name != reagent.Nil.Name {
+				s.addReagent(reagent.Activator)
+			} else {
+				s.addReagent(reagent.Nil)
+			}
+		}
+	}
 }
 
 func ParseSpots(input string, activatable bool) ([]*Spot, int) {
@@ -35,19 +49,7 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 		if length > cycleCount {
 			cycleCount = length
 		}
-		log.Dv(log.M{"line": line})
-		for _, name := range reagents {
-			r := reagent.NewReagent(name)
-			spot.AddReagent(r)
-			if activatable {
-				if r.Name != reagent.Nil.Name {
-					spot.AddReagent(reagent.Activator)
-				} else {
-					spot.AddReagent(reagent.Nil)
-				}
-			}
-			log.Dv(log.M{"reagent name": name})
-		}
+		spot.AddReagents(names, activatable)
 		spots = append(spots, spot)
 	}
 	if activatable {

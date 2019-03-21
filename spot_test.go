@@ -1,7 +1,7 @@
 package substrate_test
 
 import (
-	//"fmt"
+	"fmt"
 	"io/ioutil"
 	"posam/util/substrate"
 	"reflect"
@@ -42,4 +42,61 @@ func TestParseLines(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAddReagents(t *testing.T) {
+	cases := []struct {
+		names       []string
+		activatable bool
+		expect      []string
+	}{
+		{
+			[]string{"A", "C", "T", "G"},
+			false,
+			[]string{"A", "C", "T", "G"},
+		},
+		{
+			[]string{"A", "C", "T", "G"},
+			true,
+			[]string{"A", "Z", "C", "Z", "T", "Z", "G", "Z"},
+		},
+		{
+			[]string{"A", "-", "T", "G"},
+			false,
+			[]string{"A", "-", "T", "G"},
+		},
+		{
+			[]string{"A", "-", "T", "G"},
+			true,
+			[]string{"A", "Z", "-", "-", "T", "Z", "G", "Z"}, // never activate nil
+		},
+		{
+			[]string{"A", "B", "T", "G"},
+			false,
+			[]string{"A", "B", "T", "G"},
+		},
+		{
+			[]string{"A", "B", "T", "G"},
+			true,
+			[]string{"A", "Z", "B", "Z", "T", "Z", "G", "Z"},
+		},
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("%v", c.names), func(t *testing.T) {
+			s := substrate.NewSpot()
+			s.AddReagents(c.names, c.activatable)
+			names := []string{}
+			for _, r := range s.Reagents {
+				names = append(names, r.Name)
+			}
+			if !reflect.DeepEqual(names, c.expect) {
+				t.Errorf(
+					"\nEXPECT: %#v\n GET: %#v\n\n",
+					c.expect,
+					names,
+				)
+			}
+		})
+	}
+
 }
