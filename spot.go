@@ -3,6 +3,7 @@ package substrate
 import (
 	"fmt"
 	"posam/util/geometry"
+	"posam/util/log"
 	"posam/util/reagent"
 	"strings"
 )
@@ -21,7 +22,7 @@ func (s *Spot) AddReagent(r *reagent.Reagent) {
 }
 
 func ParseSpots(input string, activatable bool) ([]*Spot, int) {
-	fmt.Println("activatable", activatable)
+	log.Dv(log.M{"activatable": activatable})
 	spots := []*Spot{}
 	cycleCount := 0
 	sep := "\n"
@@ -35,7 +36,7 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 		if length > cycleCount {
 			cycleCount = length
 		}
-		//fmt.Println(line)
+		log.Dv(log.M{"line": line})
 		for _, name := range reagents {
 			r := reagent.NewReagent(name)
 			spot.AddReagent(r)
@@ -46,7 +47,7 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 					spot.AddReagent(reagent.Nil)
 				}
 			}
-			//fmt.Printf("'%#v'\n", name)
+			log.Dv(log.M{"reagent name": name})
 		}
 		spots = append(spots, spot)
 	}
