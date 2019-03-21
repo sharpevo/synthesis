@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestParseLines(t *testing.T) {
+func TestParseLines(t *testing.T) { // {{{
 	windata, err := ioutil.ReadFile("testfiles/seq.with.windows.new.line")
 	if err != nil {
 		t.Fatal(err)
@@ -42,9 +42,9 @@ func TestParseLines(t *testing.T) {
 			}
 		})
 	}
-}
+} // }}}
 
-func TestAddReagents(t *testing.T) {
+func TestAddReagents(t *testing.T) { // {{{
 	cases := []struct {
 		names       []string
 		activatable bool
@@ -98,10 +98,9 @@ func TestAddReagents(t *testing.T) {
 			}
 		})
 	}
+} // }}}
 
-}
-
-func TestParseReagentName(t *testing.T) {
+func TestParseReagentName(t *testing.T) { // {{{
 	cases := []struct {
 		input  string
 		expect []string
@@ -131,9 +130,9 @@ func TestParseReagentName(t *testing.T) {
 			}
 		})
 	}
-}
+} // }}}
 
-func TestParseSpots(t *testing.T) {
+func TestParseSpots(t *testing.T) { // {{{
 	cases := []struct {
 		input             string
 		activatable       bool
@@ -199,4 +198,4 @@ func TestParseSpots(t *testing.T) {
 			}
 		})
 	}
-}
+} // }}}

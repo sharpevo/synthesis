@@ -160,7 +160,7 @@ import (
 //}
 // }}}
 
-func TestNewSubstrate(t *testing.T) {
+func TestNewSubstrate(t *testing.T) { // {{{
 	spots10x10 := []*substrate.Spot{}
 	for _ = range [900]int{} {
 		spots10x10 = append(spots10x10, substrate.NewSpot())
@@ -391,9 +391,9 @@ func TestNewSubstrate(t *testing.T) {
 
 		})
 	}
-}
+} // }}}
 
-func TestEdge(t *testing.T) {
+func TestEdge(t *testing.T) { // {{{
 	s := &substrate.Substrate{
 		MaxSpotsv: 5,
 	}
@@ -411,9 +411,9 @@ func TestEdge(t *testing.T) {
 			s.Top(),
 		)
 	}
-}
+} // }}}
 
-func TestSpotsPerSlide(t *testing.T) {
+func TestSpotsPerSlide(t *testing.T) { // {{{
 	cases := []struct {
 		width  float64
 		height float64
@@ -439,9 +439,9 @@ func TestSpotsPerSlide(t *testing.T) {
 			}
 		})
 	}
-}
+} // }}}
 
-func TestIsOverloaded(t *testing.T) {
+func TestIsOverloaded(t *testing.T) { // {{{
 	cases := []struct {
 		slidenumh   int
 		slidenumv   int
@@ -487,4 +487,4 @@ func TestIsOverloaded(t *testing.T) {
 			}
 		})
 	}
-}
+} // }}}
