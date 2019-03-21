@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	dao.InstructionMap.Set("GETFLOATBYINDEX", InstructionVariableGet{})
+	dao.InstructionMap.Set("GETFLOATBYINDEX", InstructionVariableGetFloatByIndex{})
 }
 
 type InstructionVariableGetFloatByIndex struct {

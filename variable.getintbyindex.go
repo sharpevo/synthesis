@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	dao.InstructionMap.Set("GETINTBYINDEX", InstructionVariableGet{})
+	dao.InstructionMap.Set("GETINTBYINDEX", InstructionVariableGetIntByIndex{})
 }
 
 type InstructionVariableGetIntByIndex struct {
