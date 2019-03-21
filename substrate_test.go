@@ -388,3 +388,96 @@ func TestStrip(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestMarginRight(t *testing.T) { // {{{
+	cases := []struct {
+		slidewidthu  int
+		slidespacehu int
+		curcolumn    int
+		expect       int
+	}{
+		{
+			36,
+			24,
+			1,
+			36,
+		},
+		{
+			36,
+			24,
+			2,
+			96,
+		},
+		{
+			36,
+			24,
+			3,
+			156,
+		},
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("column-%v", c.curcolumn), func(t *testing.T) {
+			s := &substrate.Substrate{}
+			s.SlideWidthu = c.slidewidthu
+			s.SlideSpacehu = c.slidespacehu
+			s.SetCurColumn(c.curcolumn)
+			actual := s.MarginRightu()
+			if actual != c.expect {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.expect,
+					actual,
+				)
+			}
+		})
+	}
+} // }}}
+
+func TestMarginBottom(t *testing.T) { // {{{
+	cases := []struct {
+		maxspotsv    int
+		slideheightu int
+		slidespacevu int
+		curslide     int
+		expect       int
+	}{
+		{
+			156,
+			36,
+			24,
+			1,
+			120,
+		},
+		{
+			157,
+			36,
+			24,
+			2,
+			61,
+		},
+		{
+			157,
+			36,
+			24,
+			3,
+			1,
+		},
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("slide-%v", c.curslide), func(t *testing.T) {
+			s := &substrate.Substrate{}
+			s.MaxSpotsv = c.maxspotsv
+			s.SlideHeightu = c.slideheightu
+			s.SlideSpacevu = c.slidespacevu
+			s.SetCurSlide(c.curslide)
+			actual := s.MarginBottomu()
+			if actual != c.expect {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.expect,
+					actual,
+				)
+			}
+		})
+	}
+} // }}}

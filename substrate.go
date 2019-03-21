@@ -139,6 +139,15 @@ func (s *Substrate) loadSpots(spots []*Spot) error {
 	return nil
 }
 
+func (s *Substrate) marginRightu() int {
+	return (s.SlideWidthu+s.SlideSpacehu)*(s.curColumn-1) + s.SlideWidthu
+}
+
+func (s *Substrate) marginBottomu() int {
+	return s.MaxSpotsv -
+		(s.SlideHeightu+s.SlideSpacevu)*(s.curSlide-1) - s.SlideHeightu
+}
+
 func (s *Substrate) Top() int {
 	return s.MaxSpotsv
 }
