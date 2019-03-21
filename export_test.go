@@ -7,3 +7,5 @@ func (s *Substrate) SpotsPerSlide() int {
 func (s *Substrate) IsOverloaded() error {
 	return s.isOverloaded()
 }
+
+var ParseLines = parseLines

@@ -25,8 +25,7 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 	log.Dv(log.M{"activatable": activatable})
 	spots := []*Spot{}
 	cycleCount := 0
-	sep := "\n"
-	for _, line := range strings.Split(input, sep) {
+	for _, line := range parseLines(input) {
 		if line == "" {
 			continue
 		}
@@ -55,4 +54,8 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 		return spots, cycleCount * 2
 	}
 	return spots, cycleCount
+}
+
+func parseLines(input string) []string {
+	return strings.Split(strings.Replace(input, "\r\n", "\n", -1), "\n")
 }
