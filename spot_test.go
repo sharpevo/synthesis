@@ -132,3 +132,71 @@ func TestParseReagentName(t *testing.T) {
 		})
 	}
 }
+
+func TestParseSpots(t *testing.T) {
+	cases := []struct {
+		input             string
+		activatable       bool
+		expectSpotsLength int
+		expectCycleCount  int
+	}{
+		{
+			"ACGT",
+			false,
+			1,
+			4,
+		},
+		{
+			"ACGT\nCCCC",
+			false,
+			2,
+			4,
+		},
+		{
+			"A\nCCCCC",
+			false,
+			2,
+			5,
+		},
+		{
+			"A\nCCCCC",
+			true,
+			2,
+			10,
+		},
+		{
+			"A\n\n",
+			false,
+			1,
+			1,
+		},
+		{
+			"",
+			true,
+			0,
+			0,
+		},
+		{
+			"\n",
+			false,
+			0,
+			0,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.input, func(t *testing.T) {
+			spots, cycleCount := substrate.ParseSpots(c.input, c.activatable)
+			if len(spots) != c.expectSpotsLength ||
+				cycleCount != c.expectCycleCount {
+				t.Error(
+					"\nEXPECT\n",
+					c.expectSpotsLength,
+					c.expectCycleCount,
+					"\nGET\n",
+					len(spots),
+					cycleCount,
+				)
+			}
+		})
+	}
+}
