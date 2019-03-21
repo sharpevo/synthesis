@@ -176,8 +176,10 @@ func TestNewSubstrate(t *testing.T) { // {{{
 				c.input.spotspace,
 				c.input.leftmost,
 			)
-			if err != nil ||
-				s.Top() != c.output.Top ||
+			if err != nil {
+				t.Fatal(err)
+			}
+			if s.Top() != c.output.Top ||
 				s.Bottom() != c.output.Bottom ||
 				s.SpotCount != c.output.SpotCount ||
 				s.SpotSpaceu != c.output.SpotSpaceu ||
