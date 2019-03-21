@@ -100,3 +100,35 @@ func TestAddReagents(t *testing.T) {
 	}
 
 }
+
+func TestParseReagentName(t *testing.T) {
+	cases := []struct {
+		input  string
+		expect []string
+	}{
+		{
+			"ACTG",
+			[]string{"A", "C", "T", "G"},
+		},
+		{
+			"A CTG",
+			[]string{"A", " ", "C", "T", "G"}, // allow space in sequences ?
+		},
+		{
+			" ACTG ",
+			[]string{"A", "C", "T", "G"},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.input, func(t *testing.T) {
+			actual := substrate.ParseReagentNames(c.input)
+			if !reflect.DeepEqual(actual, c.expect) {
+				t.Errorf(
+					"\nEXPECT: %#v\n GET: %#v\n\n",
+					c.expect,
+					actual,
+				)
+			}
+		})
+	}
+}

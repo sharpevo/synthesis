@@ -41,8 +41,8 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 			continue
 		}
 		spot := NewSpot()
-		reagents := strings.Split(strings.Trim(line, " "), "")
-		length := len(reagents)
+		names := parseReagentNames(line)
+		length := len(names)
 		if length > cycleCount {
 			cycleCount = length
 		}
@@ -57,4 +57,8 @@ func ParseSpots(input string, activatable bool) ([]*Spot, int) {
 
 func parseLines(input string) []string {
 	return strings.Split(strings.Replace(input, "\r\n", "\n", -1), "\n")
+}
+
+func parseReagentNames(input string) []string {
+	return strings.Split(strings.Trim(input, " "), "")
 }

@@ -9,3 +9,4 @@ func (s *Substrate) IsOverloaded() error {
 }
 
 var ParseLines = parseLines
+var ParseReagentNames = parseReagentNames
