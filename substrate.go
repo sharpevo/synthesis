@@ -24,6 +24,9 @@ type Substrate struct {
 	SlideNumv    int
 	SlideSpacehu int
 	SlideSpacevu int
+
+	curSlide  int
+	curColumn int
 }
 
 func NewSubstrate(
@@ -82,53 +85,20 @@ func NewSubstrate(
 	return s, nil
 }
 
-func (s *Substrate) loadSpots(spots []*Spot) error {
+func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 	s.Spots = make([][]*Spot, s.Height)
 	for y := range s.Spots {
 		s.Spots[y] = make([]*Spot, s.Width)
 	}
-	slideCount := 1
-	columnCount := 1
+	s.curSlide = 1
+	s.curColumn = 1
 	x := 0
 	y := s.MaxSpotsv
-	for spotCount, spot := range spots {
-		right := (s.SlideWidthu+s.SlideSpacehu)*(columnCount-1) + s.SlideWidthu
-		bottom := s.MaxSpotsv -
-			(s.SlideHeightu+s.SlideSpacevu)*(slideCount-1) - s.SlideHeightu
-		log.Dv(log.M{
-			"x":           x,
-			"y":           y,
-			"right":       right,
-			"bottom":      bottom,
-			"spotCount":   spotCount,
-			"slideCount":  slideCount,
-			"columnCount": columnCount})
-		if x > right {
-			log.D("new line")
-			if y-s.SpotSpaceu < bottom {
-				log.D("new slide")
-				x = right - s.SlideWidthu
-				y -= s.SlideSpacevu
-				slideCount += 1
-				if slideCount > s.SlideNumv {
-					log.D("new column")
-					columnCount += 1
-					x = (s.SlideWidthu + s.SlideSpacehu) * (columnCount - 1)
-					y = s.MaxSpotsv
-					slideCount = 1
-					if columnCount > s.SlideNumh {
-						return fmt.Errorf(
-							"not enough space for spots in horizon: %v > %v",
-							columnCount, s.SlideNumh)
-					}
-				}
-			} else {
-				log.D("same slide")
-				x = right - s.SlideWidthu
-				y -= s.SpotSpaceu
-			}
+	for _, spot := range spots {
+		x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
+		if err != nil {
+			return err
 		}
-		log.Vs(log.M{"x": x, "y": y}).Debug("update spot")
 		if s.Spots[y][x] != nil {
 			return fmt.Errorf("invalid location")
 		}
@@ -146,6 +116,34 @@ func (s *Substrate) marginRightu() int {
 func (s *Substrate) marginBottomu() int {
 	return s.MaxSpotsv -
 		(s.SlideHeightu+s.SlideSpacevu)*(s.curSlide-1) - s.SlideHeightu
+}
+
+func (s *Substrate) allocate(
+	x, y, marginRightu, marginBottomu int) (int, int, error) {
+	if x <= marginRightu {
+		return x, y, nil
+	}
+	if y >= marginBottomu+s.SpotSpaceu {
+		x = marginRightu - s.SlideWidthu
+		y -= s.SpotSpaceu
+		return x, y, nil
+	}
+	if s.curSlide <= s.SlideNumv-1 {
+		x = marginRightu - s.SlideWidthu
+		y -= s.SlideSpacevu
+		s.curSlide++
+		return x, y, nil
+	}
+	x = (s.SlideWidthu + s.SlideSpacehu) * s.curColumn
+	y = s.MaxSpotsv
+	s.curColumn++
+	s.curSlide = 1
+	if s.curColumn > s.SlideNumh {
+		return x, y, fmt.Errorf(
+			"not enough space for spots in horizon: %v > %v",
+			s.curColumn, s.SlideNumh)
+	}
+	return x, y, nil
 }
 
 func (s *Substrate) Top() int {
@@ -175,11 +173,6 @@ func (s *Substrate) Strip() (count int) {
 func (s *Substrate) isOverloaded() error {
 	capacity := s.SlideNumh * s.SlideNumv
 	required := int(float64(s.SpotCount)/float64(s.spotsPerSlide()) + 0.5)
-	log.Dv(log.M{
-		"capacity":      capacity,
-		"required":      required,
-		"spotsPerSlide": s.spotsPerSlide(),
-		"_":             "Check overloaded"})
 	if required > capacity {
 		return fmt.Errorf("not enough slide: %v > %v", required, capacity)
 	}

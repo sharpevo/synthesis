@@ -483,3 +483,168 @@ func TestMarginBottom(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestAllocate(t *testing.T) { // {{{
+	cases := []struct {
+		title        string
+		x            int
+		y            int
+		marginright  int
+		marginbottom int
+
+		spotspaceu   int
+		slidewidthu  int
+		slidespacehu int
+		slidespacevu int
+		slidenumh    int
+		slidenumv    int
+		maxspotsv    int
+		curslide     int
+		curcolumn    int
+
+		expectX         int
+		expectY         int
+		expectCurSlide  int
+		expectCurColumn int
+		expectError     bool
+	}{
+		{
+			title:        "current line",
+			x:            5, // x < marginright
+			y:            0,
+			marginright:  10,
+			marginbottom: 20,
+
+			expectX:         5, // x
+			expectY:         0, // y
+			expectCurSlide:  0,
+			expectCurColumn: 0,
+			expectError:     false,
+		},
+		{
+			title:        "new line",
+			x:            11, // x > marginright
+			y:            27, // y >= marginbottom + spotspaceu
+			marginright:  10,
+			marginbottom: 20,
+
+			spotspaceu:  6,
+			slidewidthu: 2,
+
+			expectX:         8,  // marginright - slidewidthu
+			expectY:         21, // y - spotspaceu
+			expectCurSlide:  0,
+			expectCurColumn: 0,
+			expectError:     false,
+		},
+		{
+			title:        "new slide",
+			x:            11, // x > marginright
+			y:            25, // y < marginbottom + spotspaceu
+			marginright:  10,
+			marginbottom: 20,
+
+			spotspaceu: 6,
+			slidenumv:  4,
+			curslide:   2, // curslide < slidenumv - 1
+
+			slidewidthu:  2,
+			slidespacevu: 3,
+
+			expectX:         8,  // marginright - slidewidthu
+			expectY:         22, // y - slidespacevu
+			expectCurSlide:  3,  // curslide + 1
+			expectCurColumn: 0,
+			expectError:     false,
+		},
+		{
+			title:        "new column",
+			x:            11, // x > marginright
+			y:            25, // y < marginbottom + spotspaceu
+			marginright:  10,
+			marginbottom: 20,
+
+			spotspaceu: 6,
+			slidenumv:  4,
+			curslide:   4, // curslide > slidenumv - 1
+
+			slidewidthu:  2,
+			slidespacehu: 7,
+			curcolumn:    2,
+			maxspotsv:    50,
+
+			slidenumh: 3,
+
+			expectX:         18, // (slidewidthu + slidespacehu) * curcolumn
+			expectY:         50, // maxspotsv
+			expectCurSlide:  1,  // 1
+			expectCurColumn: 3,  // curcolumn + 1, <= slidenumh
+			expectError:     false,
+		},
+		{
+			title:        "new column but overloaded",
+			x:            11, // x > marginright
+			y:            25, // y < marginbottom + spotspaceu
+			marginright:  10,
+			marginbottom: 20,
+
+			spotspaceu: 6,
+			slidenumv:  4,
+			curslide:   4, // curslide > slidenumv - 1
+
+			slidewidthu:  2,
+			slidespacehu: 7,
+			curcolumn:    2,
+			maxspotsv:    50,
+
+			slidenumh: 2,
+
+			expectX:         18, // (slidewidthu + slidespacehu) * curcolumn
+			expectY:         50, // maxspotsv
+			expectCurSlide:  1,  // 1
+			expectCurColumn: 3,  // curcolumn + 1, > slidenumh
+			expectError:     true,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.title, func(t *testing.T) {
+			s := &substrate.Substrate{}
+			s.SpotSpaceu = c.spotspaceu
+			s.SlideWidthu = c.slidewidthu
+			s.SlideSpacehu = c.slidespacehu
+			s.SlideSpacevu = c.slidespacevu
+			s.SlideNumh = c.slidenumh
+			s.SlideNumv = c.slidenumv
+			s.MaxSpotsv = c.maxspotsv
+			s.SetCurSlide(c.curslide)
+			s.SetCurColumn(c.curcolumn)
+			actualX, actualY, err := s.Allocate(
+				c.x, c.y, c.marginright, c.marginbottom)
+			if (!c.expectError && err != nil) ||
+				(c.expectError && err == nil) {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					"no error",
+					err,
+				)
+			}
+			if actualX != c.expectX ||
+				actualY != c.expectY ||
+				s.CurSlide() != c.expectCurSlide ||
+				s.CurColumn() != c.expectCurColumn {
+				t.Error(
+					"\nEXPECT\n",
+					c.expectX,
+					c.expectY,
+					c.expectCurSlide,
+					c.expectCurColumn,
+					"\nGET\n",
+					actualX,
+					actualY,
+					s.CurSlide(),
+					s.CurColumn(),
+				)
+			}
+		})
+	}
+} // }}}
