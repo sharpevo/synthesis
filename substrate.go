@@ -3,7 +3,6 @@ package substrate
 import (
 	"fmt"
 	"posam/util/geometry"
-	"posam/util/log"
 )
 
 type Substrate struct {
@@ -34,8 +33,8 @@ func NewSubstrate(
 	slideNumv int,
 	slideWidth float64,
 	slideHeight float64,
-	slideSpaceHori float64,
-	slideSpaceVert float64,
+	slideSpaceh float64,
+	slideSpacev float64,
 	spots []*Spot,
 	spotSpaceu int,
 	leftmostu int,
@@ -49,16 +48,14 @@ func NewSubstrate(
 		SlideHeight:  slideHeight,
 		SlideWidthu:  geometry.RoundedUnit(slideWidth),
 		SlideHeightu: geometry.Unit(slideHeight),
-		SlideSpacehu: geometry.RoundedUnit(slideSpaceHori),
-		SlideSpacevu: geometry.RoundedUnit(slideSpaceVert),
+		SlideSpacehu: geometry.RoundedUnit(slideSpaceh),
+		SlideSpacevu: geometry.RoundedUnit(slideSpacev),
 	}
 	if err := s.isOverloaded(); err != nil {
 		return nil, err
 	}
-	s.MaxSpotsh = geometry.Unit(
-		s.SlideWidth*float64(s.SlideNumh)+slideSpaceHori*float64(s.SlideNumh-1)) + 1
-	s.MaxSpotsv = geometry.Unit(
-		s.SlideHeight*float64(s.SlideNumv)+slideSpaceVert*float64(s.SlideNumv-1)) + 1
+	s.MaxSpotsh = s.MaxSpotshu(slideSpaceh)
+	s.MaxSpotsv = s.MaxSpotsvu(slideSpacev)
 	s.Width = s.MaxSpotsh + 1
 	s.Height = s.MaxSpotsv + 1
 	s.LeftMostu = geometry.Round(leftmostu)
@@ -66,6 +63,16 @@ func NewSubstrate(
 		return nil, err
 	}
 	return s, nil
+}
+
+func (s *Substrate) MaxSpotshu(slideSpaceh float64) int {
+	return geometry.Unit(
+		s.SlideWidth*float64(s.SlideNumh)+slideSpaceh*float64(s.SlideNumh-1)) + 1
+}
+
+func (s *Substrate) MaxSpotsvu(slideSpacev float64) int {
+	return geometry.Unit(
+		s.SlideHeight*float64(s.SlideNumv)+slideSpacev*float64(s.SlideNumv-1)) + 1
 }
 
 func (s *Substrate) loadSpots(spots []*Spot) (err error) {
