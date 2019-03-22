@@ -61,24 +61,7 @@ func NewSubstrate(
 		s.SlideHeight*float64(s.SlideNumv)+slideSpaceVert*float64(s.SlideNumv-1)) + 1
 	s.Width = s.MaxSpotsh + 1
 	s.Height = s.MaxSpotsv + 1
-	s.LeftMostu = leftmostu
-	if rem := s.LeftMostu % 4; rem != 0 {
-		s.LeftMostu -= rem
-	}
-	log.Dv(log.M{
-		"slideTop":     s.Top(),
-		"slideBottom":  s.Bottom(),
-		"maxspotsvert": s.MaxSpotsv,
-		"maxspotshori": s.MaxSpotsh,
-		"SlideSpacehu": s.SlideSpacehu,
-		"SlideSpacevu": s.SlideSpacevu,
-		"SlideWidthu":  s.SlideWidthu,
-		"SlideHeightu": s.SlideHeightu,
-		"slideNumHori": s.SlideNumh,
-		"slideNumVert": s.SlideNumv,
-		"spotsCount":   s.SpotCount,
-		"leftmost":     s.LeftMostu,
-		"_":            "substrate created"})
+	s.LeftMostu = geometry.Round(leftmostu)
 	if err := s.loadSpots(spots); err != nil {
 		return nil, err
 	}
