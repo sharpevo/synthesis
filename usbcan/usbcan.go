@@ -27,7 +27,6 @@ var (
 	SHOW_RECEPTION        = config.GetBool("can.reception.debug")
 	RESEND_ALL            = config.GetBool("can.resend.all")
 	RESEND_ONCE           = config.GetBool("can.resend.once")
-	CAN_TRANSMIT_DELAY    = config.GetBool("can.transmission.delay")
 	NOTIFY_RESEND_SUCCESS = config.GetBool("can.resend.notify.success")
 	NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
 )
@@ -267,9 +266,7 @@ func (c *Channel) send() error { // {{{
 			req,
 		)
 		c.transmit(req)
-		if CAN_TRANSMIT_DELAY {
-			<-time.After(200 * time.Millisecond)
-		}
+		<-time.After(7 * time.Millisecond)
 		c.ReceptionMap.Unlock()
 	}
 	//})
