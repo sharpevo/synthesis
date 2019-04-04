@@ -24,6 +24,8 @@ const (
 
 var (
 	SEND_TIMEOUT          time.Duration
+	WARN_TIMEOUT          time.Duration
+	INTERRUPT_WHEN_WARN   = config.GetBool("can.transmission.interruptwhenwarning")
 	SHOW_RECEPTION        = config.GetBool("can.reception.debug")
 	RESEND_ALL            = config.GetBool("can.resend.all")
 	RESEND_ONCE           = config.GetBool("can.resend.once")
@@ -48,6 +50,8 @@ func init() {
 
 	config.SetDefault("can.transmission.timeout", 500)
 	SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
+	config.SetDefault("can.transmission.warningtimeout", 5000)
+	WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) * time.Millisecond
 }
 
 func Instance(key string) *Client {
@@ -519,6 +523,20 @@ func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Requ
 }
 
 func (c *Channel) tryResend(now time.Time, req *Request) {
+	if INTERRUPT_WHEN_WARN {
+		warningTimeout := req.TimeSent.Add(WARN_TIMEOUT)
+		if warningTimeout.Before(now) {
+			resp := Response{}
+			resp.Error = fmt.Errorf("Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
+				req.FrameId,
+				req.Message,
+				req.TimeSent.Format("15:04:05.999999"),
+			)
+			go func() {
+				req.Responsec <- resp
+			}()
+		}
+	}
 	if !RESEND_ALL {
 		if req.Message[0] != 10 {
 			return
