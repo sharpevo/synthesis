@@ -342,9 +342,14 @@ func (c *Channel) Transmit(
 		//Responsec:       make(chan Response), // unexpected fault address
 		Responsec: respc,
 	}
+	defer c.ReceptionMap.Del(hex.EncodeToString([]byte{req.InstructionCode}))
 	c.RequestQueue.Push(&req)
 	if len(recExpected) > 0 {
 		resp := <-req.Responsec
+		if resp.Error != nil {
+			// if timeout warning, the resp.Message is nil, so panic index out of range at the status line
+			return resp.Message, resp.Error
+		}
 		status := resp.Message[recIndex]
 		switch status {
 		case STATUS_CODE_RECEIVED:
@@ -356,10 +361,14 @@ func (c *Channel) Transmit(
 	}
 	resp := <-req.Responsec
 	if len(comExpected) > 0 {
+		if resp.Error != nil {
+			// if timeout warning, the resp.Message is nil, so panic index out of range at the status line
+			return resp.Message, resp.Error
+		}
 		status := resp.Message[comIndex]
 		switch status {
 		case STATUS_CODE_COMPLETED:
-			return resp.Message, nil
+			return resp.Message, nil // should delete receptionmap key
 		case STATUS_CODE_ERROR:
 			return resp.Message,
 				fmt.Errorf("unknown error when execute %#v", message)
@@ -368,7 +377,6 @@ func (c *Channel) Transmit(
 				fmt.Errorf("invalid status code %#v", status)
 		}
 	}
-	c.ReceptionMap.Del(hex.EncodeToString([]byte{req.InstructionCode}))
 	return resp.Message, resp.Error
 } // }}}
 
