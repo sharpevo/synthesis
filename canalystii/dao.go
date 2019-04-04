@@ -10,7 +10,6 @@ import (
 	"posam/protocol/usbcan"
 	"posam/util/concurrentmap"
 	"strconv"
-	"sync"
 )
 
 const (
@@ -52,8 +51,7 @@ func init() {
 }
 
 type Dao struct {
-	id string
-	sync.Mutex
+	id           string
 	UsbcanClient usbcan.Clienter
 }
 
@@ -431,8 +429,6 @@ func (d *Dao) ReadSystemRom(
 func (d *Dao) Send(
 	message []byte,
 ) ([]byte, error) {
-	d.Lock()
-	defer d.Unlock()
 	return d.UsbcanClient.Send(
 		message,
 		responseNil(),
@@ -446,8 +442,6 @@ func (d *Dao) Send1(
 	message []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	d.Lock()
-	defer d.Unlock()
 	return d.UsbcanClient.Send(
 		message,
 		responseNil(),
@@ -462,8 +456,6 @@ func (d *Dao) SendAck1(
 	recResp []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	d.Lock()
-	defer d.Unlock()
 	return d.UsbcanClient.Send(
 		message,
 		recResp,
@@ -478,8 +470,6 @@ func (d *Dao) SendAck2(
 	recResp []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	d.Lock()
-	defer d.Unlock()
 	return d.UsbcanClient.Send(
 		message,
 		recResp,
@@ -494,8 +484,6 @@ func (d *Dao) SendAck6(
 	recResp []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	d.Lock()
-	defer d.Unlock()
 	return d.UsbcanClient.Send(
 		message,
 		recResp,
