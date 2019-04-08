@@ -1,12 +1,13 @@
 package usbcan_test
 
 import (
+	"fmt"
 	"posam/protocol/usbcan"
 	"reflect"
 	"testing"
 )
 
-func TestInstance(t *testing.T) {
+func TestInstance(t *testing.T) { // {{{
 	client1 := &usbcan.Client{
 		Channel: nil,
 		DevID:   1,
@@ -43,4 +44,36 @@ func TestInstance(t *testing.T) {
 			}
 		})
 	}
-}
+} // }}}
+
+func TestAddInstance(t *testing.T) { // {{{
+	client1 := &usbcan.Client{
+		Channel: nil,
+		DevID:   1,
+	}
+	cases := []struct {
+		client  *usbcan.Client
+		existed bool
+	}{
+		{
+			client1,
+			false,
+		},
+		{
+			client1,
+			true,
+		},
+	}
+	for index, c := range cases {
+		t.Run(fmt.Sprintf("%v", index), func(t *testing.T) {
+			_, ok := usbcan.AddInstance(c.client)
+			if ok != c.existed {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.existed,
+					ok,
+				)
+			}
+		})
+	}
+} // }}}
