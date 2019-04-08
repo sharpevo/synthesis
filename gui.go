@@ -215,7 +215,7 @@ func main() {
 
 	result := widgets.NewQPlainTextEdit(nil)
 	result.SetReadOnly(true)
-	result.SetStyleSheet("QTextEdit { background-color: #e6e6e6}")
+	result.SetStyleSheet("QPlainTextEdit { background-color: #e6e6e6}")
 	result.SetMaximumBlockCount(MAXBLOCKCOUNT)
 	result.ConnectTextChanged(func() {
 		result.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
@@ -417,12 +417,11 @@ func main() {
 				}
 
 				if UILOG {
-					result.AppendPlainText(fmt.Sprintf("%v\n", resp.Output))
+					result.AppendPlainText(fmt.Sprintf("%v", resp.Output))
 				}
 			}
 			if UILOG {
-			} else {
-				result.SetPlainText("DONE")
+				result.AppendPlainText("DONE")
 			}
 			if len(terminatecc) == 1 {
 				t := <-terminatecc
