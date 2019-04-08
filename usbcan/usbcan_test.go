@@ -178,3 +178,27 @@ func TestResetInstance(t *testing.T) { // {{{
 		)
 	}
 } // }}}
+
+func TestDeviceKey(t *testing.T) { // {{{
+	cases := []struct {
+		devtype  int
+		devindex int
+		expected string
+	}{
+		{
+			0, 0, "0-0",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.expected, func(t *testing.T) {
+			d := usbcan.Device{c.devtype, c.devindex}
+			if d.DeviceKey() != c.expected {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.expected,
+					d.DeviceKey(),
+				)
+			}
+		})
+	}
+} // }}}
