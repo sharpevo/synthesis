@@ -33,20 +33,12 @@ var (
 	NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
 )
 
-var deviceMap *concurrentmap.ConcurrentMap
-var channelMap *concurrentmap.ConcurrentMap
-var clientMap *concurrentmap.ConcurrentMap
-
-var receptMap map[string]*Client
-var connMap map[string]*Client
+var deviceMap, channelMap, clientMap *concurrentmap.ConcurrentMap
 
 func init() {
-	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
 	channelMap = concurrentmap.NewConcurrentMap()
-
-	receptMap = make(map[string]*Client)
-	connMap = make(map[string]*Client)
+	clientMap = concurrentmap.NewConcurrentMap()
 
 	config.SetDefault("can.transmission.timeout", 500)
 	SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
@@ -88,8 +80,6 @@ func ResetInstance() {
 	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
 	channelMap = concurrentmap.NewConcurrentMap()
-	receptMap = make(map[string]*Client)
-	connMap = make(map[string]*Client)
 }
 
 type Device struct {
