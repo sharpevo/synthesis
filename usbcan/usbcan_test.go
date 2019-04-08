@@ -77,3 +77,28 @@ func TestAddInstance(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestResetInstance(t *testing.T) { // {{{
+	clientKey := "test reset instance"
+	client1 := &usbcan.Client{
+		Channel: nil,
+		DevID:   3,
+	}
+	usbcan.ClientMap.Set(clientKey, client1)
+	// never use usbcan.Client again
+	// since it's the pointer to the *usbcan.clientMap,
+	// not the  pointer to the usbcan.clientMap,
+	client := usbcan.Instance(clientKey)
+	if client == nil {
+		t.Error("failed to add instance")
+	}
+	usbcan.ResetInstance()
+	client = usbcan.Instance(clientKey)
+	if client != nil {
+		t.Errorf(
+			"\nEXPECT: %v\n GET: %v\n\n",
+			nil,
+			client,
+		)
+	}
+} // }}}

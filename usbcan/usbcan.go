@@ -75,8 +75,7 @@ func addInstance(client *Client) (*Client, bool) {
 func ResetInstance() {
 	for item := range clientMap.Iter() {
 		client := item.Value.(*Client)
-		log.Println("terminating client: ", client.DevID)
-		//client.RequestQueue.Reset()
+		client.Reset()
 	}
 	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
@@ -447,6 +446,20 @@ func (c *Channel) receive() {
 	//})
 }
 
+func (c *Channel) Reset() {
+	if c == nil {
+		return
+	}
+	c.RequestQueue.Reset()
+	c.ReceptionMap = concurrentmap.NewConcurrentMap()
+	for index := range [256]byte{} {
+		c.InstructionCodeMap.Set(
+			hex.EncodeToString([]byte{byte(index)}),
+			false,
+		)
+	}
+}
+
 // Helpers{{{
 
 func (c *Channel) parseFunctionCode(data []byte) (byte, error) {
@@ -709,4 +722,8 @@ func (c *Client) Send(
 		comExpected,
 		comIndex,
 	)
+}
+
+func (c *Client) Reset() {
+	c.Channel.Reset()
 }
