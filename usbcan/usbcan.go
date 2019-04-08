@@ -33,13 +33,13 @@ var (
 	NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
 )
 
-var deviceMap, channelMap, clientMap *concurrentmap.ConcurrentMap
+var (
+	deviceMap  = concurrentmap.NewConcurrentMap()
+	channelMap = concurrentmap.NewConcurrentMap()
+	clientMap  = concurrentmap.NewConcurrentMap()
+)
 
 func init() {
-	deviceMap = concurrentmap.NewConcurrentMap()
-	channelMap = concurrentmap.NewConcurrentMap()
-	clientMap = concurrentmap.NewConcurrentMap()
-
 	config.SetDefault("can.transmission.timeout", 500)
 	SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
 	config.SetDefault("can.transmission.warningtimeout", 5000)
