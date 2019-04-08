@@ -46,19 +46,20 @@ func init() {
 	WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) * time.Millisecond
 }
 
-func Instance(key string) *Client {
+func Instance(key string) (client *Client) {
 	if key == "" {
 		for item := range clientMap.Iter() {
-			return item.Value.(*Client)
+			if client == nil {
+				client = item.Value.(*Client)
+			}
 		}
+		return client
 	} else {
 		if clienti, ok := clientMap.Get(key); ok {
 			return clienti.(*Client)
-		} else {
-			return nil
 		}
 	}
-	return nil
+	return client
 }
 
 func addInstance(client *Client) (*Client, bool) {
