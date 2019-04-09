@@ -92,7 +92,9 @@ type Device struct {
 	DevIndex int
 }
 
-func NewDevice(
+var NewDevice = newDevice
+
+func newDevice(
 	devType int,
 	devIndex int,
 ) (*Device, error) {
@@ -180,29 +182,38 @@ func NewChannel(
 	}
 	channel.DevType = devType
 	channel.DevIndex = devIndex
-	_, err := NewDevice(channel.DevType, channel.DevIndex)
-	if err != nil {
-		log.Println(err)
+	if _, err := NewDevice(channel.DevType, channel.DevIndex); err != nil {
 		return channel, err
 	}
 	if c, found := channelMap.Get(channel.ChannelKey()); found {
 		return c.(*Channel), nil
 	}
-	channel.RequestQueue = blockingqueue.NewBlockingQueue()
-	channel.ReceptionMap = concurrentmap.NewConcurrentMap()
-	channel.InstructionCodeMap = concurrentmap.NewConcurrentMap()
-	for index := range [256]byte{} {
-		channel.InstructionCodeMap.Set(
-			hex.EncodeToString([]byte{byte(index)}),
-			false,
-		)
-	}
-	if err := channel.Start(); err != nil {
-		log.Println(err)
+	channel.init()
+	if err := StartChannel(channel); err != nil {
 		return channel, err
 	}
 	channelMap.Set(channel.ChannelKey(), channel)
 	return channel, nil
+}
+
+var StartChannel = func(channel *Channel) error {
+	return channel.Start()
+}
+
+func (c *Channel) init() {
+	c.RequestQueue = blockingqueue.NewBlockingQueue()
+	c.ReceptionMap = concurrentmap.NewConcurrentMap()
+	c.InstructionCodeMap = concurrentmap.NewConcurrentMap()
+	c.loadInstructionCode()
+}
+
+func (c *Channel) loadInstructionCode() {
+	for index := range [256]byte{} {
+		c.InstructionCodeMap.Set(
+			hex.EncodeToString([]byte{byte(index)}),
+			false,
+		)
+	}
 }
 
 func (c *Channel) Start() error {
@@ -459,12 +470,7 @@ func (c *Channel) Reset() {
 	}
 	c.RequestQueue.Reset()
 	c.ReceptionMap = concurrentmap.NewConcurrentMap()
-	for index := range [256]byte{} {
-		c.InstructionCodeMap.Set(
-			hex.EncodeToString([]byte{byte(index)}),
-			false,
-		)
-	}
+	c.loadInstructionCode()
 }
 
 // Helpers{{{
