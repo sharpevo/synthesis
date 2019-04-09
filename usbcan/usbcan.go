@@ -247,8 +247,7 @@ func (c *Channel) Start() error {
 	); err != nil {
 		return err
 	}
-	go c.send()
-	//go c.receive()
+	util.Go(c.send)
 	util.Go(c.receive)
 	return nil
 }
