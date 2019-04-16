@@ -277,8 +277,8 @@ func (c *Channel) send() error { // {{{
 			req,
 		)
 		c.transmit(req)
-		<-time.After(7 * time.Millisecond)
 		c.ReceptionMap.Unlock()
+		<-time.After(7 * time.Millisecond)
 	}
 	//})
 }
