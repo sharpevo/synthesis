@@ -256,13 +256,6 @@ func (c *Channel) ChannelKey() string {
 	return fmt.Sprintf("%v-%v-%v", c.DevType, c.DevIndex, c.CanIndex)
 }
 
-func (c *Channel) send() error { // {{{
-	//func (c *Channel) send() {
-	//c.sendo.Do(func() {
-	//if c.senderLaunched {
-	//return nil
-	//}
-	//c.senderLaunched = true
 	for {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
@@ -280,7 +273,6 @@ func (c *Channel) send() error { // {{{
 		c.ReceptionMap.Unlock()
 		<-time.After(7 * time.Millisecond)
 	}
-	//})
 }
 
 func (c *Channel) transmit(req *Request) {
@@ -392,11 +384,6 @@ func (c *Channel) Transmit(
 } // }}}
 
 func (c *Channel) receive() {
-	//if c.receiverLaunched {
-	//return
-	//}
-	//c.receiverLaunched = true
-	//c.receiveo.Do(func() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for _ = range ticker.C {
