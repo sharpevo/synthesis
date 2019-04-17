@@ -256,11 +256,12 @@ func (c *Channel) ChannelKey() string {
 	return fmt.Sprintf("%v-%v-%v", c.DevType, c.DevIndex, c.CanIndex)
 }
 
+func (c *Channel) send() {
 	for {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
 			log.Printf("canalyst client sender %v terminated\n", c.DeviceKey())
-			return err
+			return
 		}
 		c.ReceptionMap.Lock() // one object shared in two units, slice, and map
 		log.Println("processing", reqi)
