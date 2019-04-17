@@ -260,11 +260,11 @@ func (c *Channel) send() {
 	for {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
+			// TODO: error handling, e.g., insert to the response
 			log.Printf("canalyst client sender %v terminated\n", c.DeviceKey())
 			return
 		}
-		c.ReceptionMap.Lock() // one object shared in two units, slice, and map
-		log.Println("processing", reqi)
+		c.ReceptionMap.Lock()
 		req := reqi.(*Request)
 		c.ReceptionMap.SetLockless(
 			hex.EncodeToString([]byte{req.InstructionCode}),
