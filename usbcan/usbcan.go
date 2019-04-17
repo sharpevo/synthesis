@@ -299,12 +299,13 @@ func (c *Channel) transmit(req *Request) {
 		DataLen:    8,
 		Data:       data,
 	}
+	pSendList := []controlcan.CanObj{pSend}
 	if err := controlcan.Transmit(
 		c.DevType,
 		c.DevIndex,
 		c.CanIndex,
-		pSend,
-		1,
+		pSendList,
+		len(pSendList),
 	); err != nil {
 		log.Println(err)
 		resp.Error = err
