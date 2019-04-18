@@ -13,3 +13,7 @@ func AddInstance(client *Client) (*Client, bool) {
 func (c *Channel) Send() {
 	c.send()
 }
+
+func (c *Channel) UntilSendable() {
+	c.untilSendable()
+}

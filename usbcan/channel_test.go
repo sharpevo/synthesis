@@ -137,3 +137,36 @@ func TestChannelSend(t *testing.T) {
 		})
 	}
 }
+
+func TestUntilSendable(t *testing.T) {
+	cases := []struct {
+		leastTime int
+	}{
+		{
+			1,
+		},
+		{
+			2,
+		},
+	}
+	for _, c := range cases {
+		leastTime := time.Duration(c.leastTime)
+		channel := &usbcan.Channel{}
+		channel.SetSendable(false)
+		start := time.Now()
+		go func() {
+			<-time.After(leastTime * time.Second)
+			channel.SetSendable(true)
+		}()
+		channel.UntilSendable()
+		end := time.Now()
+		actual := end.Sub(start)
+		if actual < leastTime {
+			t.Errorf(
+				"\nEXPECT: %v\n GET: %v\n\n",
+				leastTime,
+				actual,
+			)
+		}
+	}
+}

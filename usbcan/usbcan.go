@@ -10,6 +10,7 @@ import (
 	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
+	"sync"
 	"time"
 )
 
@@ -151,7 +152,8 @@ type Channel struct {
 	ReceptionMap       *concurrentmap.ConcurrentMap
 	InstructionCodeMap *concurrentmap.ConcurrentMap
 
-	Sendable bool
+	sendableLock sync.Mutex
+	sendable     bool
 
 	//receiveo sync.Once
 	//sendo    sync.Once
@@ -178,7 +180,7 @@ func NewChannel(
 		Timing0:  timing0,
 		Timing1:  timing1,
 		Mode:     mode,
-		Sendable: true,
+		sendable: true,
 	}
 	channel.DevType = devType
 	channel.DevIndex = devIndex
@@ -281,15 +283,7 @@ var TransmitRequest = func(c *Channel, req *Request) {
 }
 
 func (c *Channel) transmit(req *Request) {
-	if !c.Sendable {
-		ticker := time.NewTicker(100 * time.Millisecond)
-		for _ = range ticker.C {
-			if c.Sendable {
-				ticker.Stop()
-				break
-			}
-		}
-	}
+	c.untilSendable()
 	respc := req.Responsec
 	resp := Response{}
 	log.Printf("sending request %#v\n", req.Message)
@@ -465,13 +459,37 @@ func (c *Channel) Reset() {
 	c.loadInstructionCode()
 }
 
+func (c *Channel) Sendable() bool {
+	c.sendableLock.Lock()
+	defer c.sendableLock.Unlock()
+	return c.sendable
+}
+
+func (c *Channel) SetSendable(sendable bool) {
+	c.sendableLock.Lock()
+	defer c.sendableLock.Unlock()
+	c.sendable = sendable
+}
+
+func (c *Channel) untilSendable() {
+	if !c.Sendable() {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		for _ = range ticker.C {
+			if c.Sendable() {
+				ticker.Stop()
+				break
+			}
+		}
+	}
+}
+
 // Helpers{{{
 
 func (c *Channel) parseFunctionCode(data []byte) (byte, error) {
 	code := data[0]
 	switch code {
 	case 0xE0:
-		c.Sendable = false
+		c.SetSendable(false)
 		return code, fmt.Errorf("mailbox is full (E0): %#v\n", data)
 	case 0xE1:
 		return code, fmt.Errorf("mailbox is overflow (E1): %#v\n", data)
