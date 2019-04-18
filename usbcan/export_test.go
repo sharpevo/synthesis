@@ -9,3 +9,7 @@ var (
 func AddInstance(client *Client) (*Client, bool) {
 	return addInstance(client)
 }
+
+func (c *Channel) Send() {
+	c.send()
+}
