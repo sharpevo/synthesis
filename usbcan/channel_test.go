@@ -144,10 +144,10 @@ func TestUntilSendable(t *testing.T) { // {{{
 		leastTime int
 	}{
 		{
-			1,
+			200,
 		},
 		{
-			2,
+			300,
 		},
 	}
 	for _, c := range cases {
@@ -156,7 +156,7 @@ func TestUntilSendable(t *testing.T) { // {{{
 		channel.SetSendable(false)
 		start := time.Now()
 		go func() {
-			<-time.After(leastTime * time.Second)
+			<-time.After(leastTime * time.Millisecond)
 			channel.SetSendable(true)
 		}()
 		channel.UntilSendable()
@@ -172,7 +172,7 @@ func TestUntilSendable(t *testing.T) { // {{{
 	}
 } // }}}
 
-func TestChannelTransmit(t *testing.T) {
+func TestChannelTransmit(t *testing.T) { // {{{
 	cases := []struct {
 		frameid     int
 		recexpected []byte
@@ -335,4 +335,4 @@ func TestChannelTransmit(t *testing.T) {
 			<-next
 		})
 	}
-}
+} // }}}
