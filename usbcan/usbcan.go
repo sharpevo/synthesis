@@ -332,22 +332,19 @@ func (c *Channel) Transmit(
 	}
 	defer c.releaseInstructionCode(code)
 	message = append(message, code)
-	respc := make(chan Response)
 	req := Request{
 		FrameId:         frameId,
 		InstructionCode: code,
 		Message:         message,
 		RecExpected:     recExpected,
 		ComExpected:     comExpected,
-		//Responsec:       make(chan Response), // unexpected fault address
-		Responsec: respc,
+		Responsec:       make(chan Response),
 	}
 	defer c.ReceptionMap.Del(hex.EncodeToString([]byte{req.InstructionCode}))
 	c.RequestQueue.Push(&req)
 	if len(recExpected) > 0 {
 		resp := <-req.Responsec
 		if resp.Error != nil {
-			// if timeout warning, the resp.Message is nil, so panic index out of range at the status line
 			return resp.Message, resp.Error
 		}
 		status := resp.Message[recIndex]
@@ -362,13 +359,12 @@ func (c *Channel) Transmit(
 	resp := <-req.Responsec
 	if len(comExpected) > 0 {
 		if resp.Error != nil {
-			// if timeout warning, the resp.Message is nil, so panic index out of range at the status line
 			return resp.Message, resp.Error
 		}
 		status := resp.Message[comIndex]
 		switch status {
 		case STATUS_CODE_COMPLETED:
-			return resp.Message, nil // should delete receptionmap key
+			return resp.Message, nil
 		case STATUS_CODE_ERROR:
 			return resp.Message,
 				fmt.Errorf("unknown error when execute %#v", message)
