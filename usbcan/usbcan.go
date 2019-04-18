@@ -318,9 +318,6 @@ func (c *Channel) transmit(req *Request) {
 // }}}
 
 // Transmit{{{
-// no ack, com: message, [], 0x01
-// ack com: message, 0x00, 0x01
-// no ack, no com: message, [], []
 func (c *Channel) Transmit(
 	frameId int,
 	message []byte,

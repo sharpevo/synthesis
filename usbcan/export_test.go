@@ -10,6 +10,10 @@ func AddInstance(client *Client) (*Client, bool) {
 	return addInstance(client)
 }
 
+func (c *Channel) Init() {
+	c.init()
+}
+
 func (c *Channel) Send() {
 	c.send()
 }
