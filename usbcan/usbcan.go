@@ -396,21 +396,6 @@ func (c *Channel) receive() {
 		if SHOW_RECEPTION {
 			log.Println("Receive", count)
 		}
-		if count == 0 {
-			// always check timeout aside of findRequestByResponse
-			now := time.Now()
-			for item := range c.ReceptionMap.Iter() {
-				reqi := item.Value
-				req, ok := reqi.(*Request)
-				if !ok {
-					err = fmt.Errorf("invalid request: %#v", reqi)
-					log.Println(err)
-					continue
-				}
-				c.tryResend(now, req)
-			}
-			continue
-		}
 		log.Printf("data received: %#v\n", pReceive[:count]) // unexpected fault address
 		for _, canObj := range pReceive[:count] {
 			data := make([]byte, len(canObj.Data))
@@ -439,8 +424,9 @@ func (c *Channel) receive() {
 				fmt.Println("response sent")
 			}()
 		}
+		// TODO: not the best time to do that
+		c.TryResend()
 	}
-	//})
 }
 
 func (c *Channel) Reset() {
@@ -512,7 +498,6 @@ func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Requ
 	}
 	//for item := range c.RequestQueue.Iter() {
 	//log.Printf("parsing request: %s\n", c.ReceptionMap) // unexpected fault address
-	now := time.Now()
 	for item := range c.ReceptionMap.Iter() {
 		fmt.Println("findRequestByResponse: iter receptionmap")
 		reqi := item.Value
@@ -532,81 +517,89 @@ func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Requ
 			err = nil
 			continue
 		}
-		// not matched
-		c.tryResend(now, req)
 	}
 	if request == nil {
 		return request, fmt.Errorf("invalid data instruction code %x", instCode)
 	}
-	fmt.Println("findRequestByResponse: request found")
 	return request, err
 }
 
-func (c *Channel) tryResend(now time.Time, req *Request) {
-	if INTERRUPT_WHEN_WARN {
-		warningTimeout := req.TimeSent.Add(WARN_TIMEOUT)
-		if warningTimeout.Before(now) {
-			resp := Response{}
-			resp.Error = fmt.Errorf("Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
-				req.FrameId,
-				req.Message,
-				req.TimeSent.Format("15:04:05.999999"),
-			)
-			go func() {
-				req.Responsec <- resp
-			}()
+func (c *Channel) TryResend() {
+	now := time.Now()
+	for item := range c.ReceptionMap.Iter() {
+		reqi := item.Value
+		req, ok := reqi.(*Request)
+		if !ok {
+			err := fmt.Errorf("invalid request: %#v", reqi)
+			log.Println(err)
+			continue
+		}
+		if INTERRUPT_WHEN_WARN {
+			warningTimeout := req.TimeSent.Add(WARN_TIMEOUT)
+			if warningTimeout.Before(now) {
+				resp := Response{}
+				resp.Error = fmt.Errorf("Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
+					req.FrameId,
+					req.Message,
+					req.TimeSent.Format("15:04:05.999999"),
+				)
+				go func() {
+					req.Responsec <- resp
+				}()
+			}
+		}
+		if !RESEND_ALL {
+			if req.Message[0] != 10 {
+				continue
+			}
+		}
+		timeout := req.TimeSent.Add(SEND_TIMEOUT)
+		if timeout.Before(now) {
+			c.resend(now, req)
 		}
 	}
-	if !RESEND_ALL {
-		if req.Message[0] != 10 {
-			return
-		}
-	}
+}
 
-	timeout := req.TimeSent.Add(SEND_TIMEOUT)
-	if timeout.Before(now) {
-		fmt.Printf("\n\n--------------------------------------------------\n\n")
-		log.Printf(
-			"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\nresend count: %v\n",
+func (c *Channel) resend(now time.Time, req *Request) {
+	fmt.Printf("\n\n--------------------------------------------------\n\n")
+	log.Printf(
+		"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\nresend count: %v\n",
+		req.FrameId,
+		req.InstructionCode,
+		req.Message,
+		req.ResendCount,
+	)
+	if RESEND_ONCE && req.ResendCount > 1 {
+		// blocked Del
+		c.ReceptionMap.DelLockless(hex.EncodeToString([]byte{req.InstructionCode}))
+		resp := Response{}
+		errmsg := fmt.Errorf(
+			"error: failed to resend request\nframe id: %v\ndata: %v\n",
 			req.FrameId,
-			req.InstructionCode,
-			req.Message,
-			req.ResendCount,
-		)
-		if RESEND_ONCE && req.ResendCount > 1 {
-			// blocked Del
-			c.ReceptionMap.DelLockless(hex.EncodeToString([]byte{req.InstructionCode}))
-			resp := Response{}
-			errmsg := fmt.Errorf(
-				"error: failed to resend request\nframe id: %v\ndata: %v\n",
-				req.FrameId,
-				req.Message,
-			)
-			log.Println(errmsg)
-
-			//resp.Error = errmsg
-			resp.Message = []byte{0x0}
-			go func() {
-				req.Responsec <- resp
-				if NOTIFY_RESEND_FAILURE {
-					uiutil.App.ShowMessageSlot(errmsg.Error())
-				}
-			}()
-			return
-		}
-		log.Printf(
-			"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
-			req.FrameId,
-			req.InstructionCode,
 			req.Message,
 		)
-		//c.transmit(req)
-		req.ResendCount++
-		req.TimeSent = now
-		c.RequestQueue.Push(req)
-		//c.RequestQueue.Insert(0, req)
-		fmt.Printf("--------------------------------------------------\n\n")
+		log.Println(errmsg)
+
+		//resp.Error = errmsg
+		resp.Message = []byte{0x0}
+		go func() {
+			req.Responsec <- resp
+			if NOTIFY_RESEND_FAILURE {
+				uiutil.App.ShowMessageSlot(errmsg.Error())
+			}
+		}()
+		return
 	}
+	log.Printf(
+		"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
+		req.FrameId,
+		req.InstructionCode,
+		req.Message,
+	)
+	req.ResendCount++
+	req.TimeSent = now
+	c.RequestQueue.Push(req)
+	fmt.Printf("--------------------------------------------------\n\n")
 }
 
 func (c *Channel) getInstructionCode() (code byte, err error) {
