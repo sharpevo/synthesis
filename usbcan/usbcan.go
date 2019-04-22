@@ -27,7 +27,6 @@ var (
 	SEND_TIMEOUT          time.Duration
 	WARN_TIMEOUT          time.Duration
 	INTERRUPT_WHEN_WARN   = config.GetBool("can.transmission.interruptwhenwarning")
-	SHOW_RECEPTION        = config.GetBool("can.reception.debug")
 	RESEND_ALL            = config.GetBool("can.resend.all")
 	RESEND_ONCE           = config.GetBool("can.resend.once")
 	NOTIFY_RESEND_SUCCESS = config.GetBool("can.resend.notify.success")
@@ -386,46 +385,41 @@ func (c *Channel) receive() {
 			c.CanIndex,
 			100,
 		)
-		if err != nil || count < 0 {
-			log.Printf(
-				"canalyst client receiver %v terminated\n",
-				c.DeviceKey(),
-			)
+		if err != nil || count == controlcan.MINUS_ONE {
+			log.Printf("canalyst client receiver %v terminated\n", c.DeviceKey())
 			return
 		}
-		if SHOW_RECEPTION {
-			log.Println("Receive", count)
-		}
-		log.Printf("data received: %#v\n", pReceive[:count]) // unexpected fault address
-		for _, canObj := range pReceive[:count] {
-			data := make([]byte, len(canObj.Data))
-			copy(data, canObj.Data[:])
-			resp := Response{}
-			req, err := c.findRequestByResponse(data, canObj.ID)
-			if err != nil {
-				log.Println(err)
-				// TODO: notification
-				continue
-			}
-			if NOTIFY_RESEND_SUCCESS {
-				if req.ResendCount > 0 {
-					errmsg := fmt.Errorf(
-						"request resent\nframe id: %v\ndata: %v\n",
-						req.FrameId,
-						req.Message,
-					)
-					uiutil.App.ShowMessageSlot(errmsg.Error())
-				}
-			}
-			resp.Message = data
-			fmt.Println("request found")
-			go func() {
-				req.Responsec <- resp
-				fmt.Println("response sent")
-			}()
-		}
+		c.parseCanObjects(pReceive[:count])
 		// TODO: not the best time to do that
 		c.TryResend()
+	}
+}
+
+func (c *Channel) parseCanObjects(pReceive []controlcan.CanObj) {
+	for _, canObj := range pReceive {
+		data := make([]byte, len(canObj.Data))
+		copy(data, canObj.Data[:])
+		resp := Response{}
+		req, err := c.findRequestByResponse(data, canObj.ID)
+		if err != nil {
+			log.Println(err)
+			// TODO: notification
+			continue
+		}
+		if NOTIFY_RESEND_SUCCESS {
+			if req.ResendCount > 0 {
+				msg := fmt.Sprintf(
+					"request resent\nframe id: %v\ndata: %v\n",
+					req.FrameId,
+					req.Message,
+				)
+				uiutil.App.ShowMessageSlot(msg)
+			}
+		}
+		resp.Message = data
+		go func() {
+			req.Responsec <- resp
+		}()
 	}
 }
 
