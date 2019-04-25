@@ -389,18 +389,18 @@ func (c *Channel) receive() {
 			log.Printf("canalyst client receiver %v terminated\n", c.DeviceKey())
 			return
 		}
-		c.parseCanObjects(pReceive[:count])
+		parseCanObjects(c, pReceive[:count])
 		// TODO: not the best time to do that
 		c.TryResend()
 	}
 }
 
-func (c *Channel) parseCanObjects(pReceive []controlcan.CanObj) {
+var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
 	for _, canObj := range pReceive {
 		data := make([]byte, len(canObj.Data))
 		copy(data, canObj.Data[:])
 		resp := Response{}
-		req, err := c.findRequestByResponse(data, canObj.ID)
+		req, err := findRequestByResponse(c, data, canObj.ID)
 		if err != nil {
 			log.Println(err)
 			// TODO: notification
@@ -458,7 +458,7 @@ func (c *Channel) untilSendable() {
 
 // Helpers{{{
 
-func (c *Channel) parseFunctionCode(data []byte) (byte, error) {
+var parseFunctionCode = func(c *Channel, data []byte) (byte, error) {
 	code := data[0]
 	switch code {
 	case 0xE0:
@@ -471,7 +471,7 @@ func (c *Channel) parseFunctionCode(data []byte) (byte, error) {
 	return code, nil
 }
 
-func (c *Channel) parseInstructionCode(data []byte) (code byte, err error) {
+var parseInstructionCode = func(c *Channel, data []byte) (code byte, err error) {
 	code = data[7]
 	if _, ok := c.InstructionCodeMap.Get(
 		hex.EncodeToString([]byte{code}),
@@ -481,12 +481,16 @@ func (c *Channel) parseInstructionCode(data []byte) (code byte, err error) {
 	return code, nil
 }
 
-func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Request, err error) {
-	_, err = c.parseFunctionCode(data[:])
+var findRequestByResponse = func(
+	c *Channel,
+	data []byte,
+	frameId int,
+) (request *Request, err error) {
+	_, err = parseFunctionCode(c, data[:])
 	if err != nil {
 		return request, err
 	}
-	instCode, err := c.parseInstructionCode(data)
+	instCode, err := parseInstructionCode(c, data)
 	if err != nil {
 		return request, err
 	}
