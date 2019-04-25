@@ -494,8 +494,6 @@ var findRequestByResponse = func(
 	if err != nil {
 		return request, err
 	}
-	//for item := range c.RequestQueue.Iter() {
-	//log.Printf("parsing request: %s\n", c.ReceptionMap) // unexpected fault address
 	for item := range c.ReceptionMap.Iter() {
 		fmt.Println("findRequestByResponse: iter receptionmap")
 		reqi := item.Value
