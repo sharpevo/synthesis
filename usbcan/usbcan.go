@@ -375,7 +375,7 @@ func (c *Channel) receive() {
 		}
 		parseCanObjects(c, pReceive[:count])
 		// TODO: not the best time to do that
-		c.TryResend()
+		tryResend(c)
 	}
 }
 
@@ -504,7 +504,7 @@ var findRequestByResponse = func(
 	return request, err
 }
 
-func (c *Channel) TryResend() {
+var tryResend = func(c *Channel) {
 	now := time.Now()
 	for item := range c.ReceptionMap.Iter() {
 		reqi := item.Value
