@@ -27,10 +27,10 @@ func TestNewDevice(t *testing.T) { // {{{
 	defer func() { OpenDevice = originOpenDevice }()
 	OpenDevice = func(device *Device) error {
 		called = true
-		if device.DeviceKey() == "1-1" {
+		if device.deviceKey() == "1-1" {
 			return fmt.Errorf("error expected")
 		}
-		t.Log("device opened", device.DeviceKey())
+		t.Log("device opened", device.deviceKey())
 		return nil
 	}
 
@@ -39,7 +39,7 @@ func TestNewDevice(t *testing.T) { // {{{
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, ok := DeviceMap.Get(device.DeviceKey())
+	_, ok := DeviceMap.Get(device.deviceKey())
 	if !ok || !called {
 		t.Errorf(
 			"\nEXPECT: %v\n GET: %v\n\n",
@@ -72,12 +72,36 @@ func TestNewDevice(t *testing.T) { // {{{
 			"nil error",
 		)
 	}
-	_, ok = DeviceMap.Get(device.DeviceKey())
+	_, ok = DeviceMap.Get(device.deviceKey())
 	if ok || !called {
 		t.Errorf(
 			"\nEXPECT: %v\n GET: %v\n\n",
 			fmt.Sprintf("ok: %v; called: %v", false, true),
 			fmt.Sprintf("ok: %v; called: %v", ok, called),
 		)
+	}
+} // }}}
+
+func TestDeviceKey(t *testing.T) { // {{{
+	cases := []struct {
+		devtype  int
+		devindex int
+		expected string
+	}{
+		{
+			0, 0, "0-0",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.expected, func(t *testing.T) {
+			d := Device{c.devtype, c.devindex}
+			if d.deviceKey() != c.expected {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.expected,
+					d.deviceKey(),
+				)
+			}
+		})
 	}
 } // }}}

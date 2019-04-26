@@ -98,13 +98,13 @@ var newDevice = func(
 		DevType:  devType,
 		DevIndex: devIndex,
 	}
-	if d, found := deviceMap.Get(device.DeviceKey()); found {
+	if d, found := deviceMap.Get(device.deviceKey()); found {
 		return d.(*Device), nil
 	}
 	if err := OpenDevice(device); err != nil {
 		return device, err
 	}
-	deviceMap.Set(device.DeviceKey(), device)
+	deviceMap.Set(device.deviceKey(), device)
 	return device, nil
 
 }
@@ -129,7 +129,7 @@ func (d *Device) Open() error {
 	return nil
 }
 
-func (d *Device) DeviceKey() string {
+func (d *Device) deviceKey() string {
 	return fmt.Sprintf("%v-%v", d.DevType, d.DevIndex)
 }
 
@@ -258,7 +258,7 @@ func (c *Channel) send() {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
 			// TODO: error handling, e.g., insert to the response
-			log.Printf("canalyst client sender %v terminated\n", c.DeviceKey())
+			log.Printf("canalyst client sender %v terminated\n", c.deviceKey())
 			return
 		}
 		c.ReceptionMap.Lock()
@@ -382,7 +382,7 @@ func (c *Channel) receive() {
 			100,
 		)
 		if err != nil || count == controlcan.MINUS_ONE {
-			log.Printf("canalyst client receiver %v terminated\n", c.DeviceKey())
+			log.Printf("canalyst client receiver %v terminated\n", c.deviceKey())
 			return
 		}
 		parseCanObjects(c, pReceive[:count])
