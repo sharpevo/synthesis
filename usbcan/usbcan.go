@@ -416,23 +416,23 @@ func (c *Channel) Reset() {
 	c.loadInstructionCode()
 }
 
-func (c *Channel) Sendable() bool {
+func (c *Channel) isSendable() bool {
 	c.sendableLock.Lock()
 	defer c.sendableLock.Unlock()
 	return c.sendable
 }
 
-func (c *Channel) SetSendable(sendable bool) {
+func (c *Channel) setSendable(sendable bool) {
 	c.sendableLock.Lock()
 	defer c.sendableLock.Unlock()
 	c.sendable = sendable
 }
 
 func (c *Channel) untilSendable() {
-	if !c.Sendable() {
+	if !c.isSendable() {
 		ticker := time.NewTicker(100 * time.Millisecond)
 		for _ = range ticker.C {
-			if c.Sendable() {
+			if c.isSendable() {
 				ticker.Stop()
 				break
 			}
@@ -446,7 +446,7 @@ var parseFunctionCode = func(c *Channel, data []byte) (byte, error) {
 	code := data[0]
 	switch code {
 	case 0xE0:
-		c.SetSendable(false)
+		c.setSendable(false)
 		return code, fmt.Errorf("mailbox is full (E0): %#v\n", data)
 	case 0xE1:
 		return code, fmt.Errorf("mailbox is overflow (E1): %#v\n", data)

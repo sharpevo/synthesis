@@ -136,3 +136,36 @@ func TestChannelSend(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestUntilSendable(t *testing.T) { // {{{
+	cases := []struct {
+		leastTime int
+	}{
+		{
+			200,
+		},
+		{
+			300,
+		},
+	}
+	for _, c := range cases {
+		leastTime := time.Duration(c.leastTime)
+		channel := &Channel{}
+		channel.setSendable(false)
+		start := time.Now()
+		go func() {
+			<-time.After(leastTime * time.Millisecond)
+			channel.setSendable(true)
+		}()
+		channel.UntilSendable()
+		end := time.Now()
+		actual := end.Sub(start)
+		if actual < leastTime {
+			t.Errorf(
+				"\nEXPECT: %v\n GET: %v\n\n",
+				leastTime,
+				actual,
+			)
+		}
+	}
+} // }}}

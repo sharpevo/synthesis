@@ -6,41 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
-
-func TestUntilSendable(t *testing.T) { // {{{
-	cases := []struct {
-		leastTime int
-	}{
-		{
-			200,
-		},
-		{
-			300,
-		},
-	}
-	for _, c := range cases {
-		leastTime := time.Duration(c.leastTime)
-		channel := &usbcan.Channel{}
-		channel.SetSendable(false)
-		start := time.Now()
-		go func() {
-			<-time.After(leastTime * time.Millisecond)
-			channel.SetSendable(true)
-		}()
-		channel.UntilSendable()
-		end := time.Now()
-		actual := end.Sub(start)
-		if actual < leastTime {
-			t.Errorf(
-				"\nEXPECT: %v\n GET: %v\n\n",
-				leastTime,
-				actual,
-			)
-		}
-	}
-} // }}}
 
 func TestChannelTransmit(t *testing.T) { // {{{
 	cases := []struct {
