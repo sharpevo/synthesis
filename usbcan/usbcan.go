@@ -620,11 +620,6 @@ func (c *Channel) releaseInstructionCode(code byte) {
 	log.Println("release instruction code: ", code)
 } // }}}
 
-type Clienter interface {
-	//connect() error
-	Send([]byte, []byte, int, []byte, int) ([]byte, error)
-}
-
 type Client struct {
 	Channel *Channel
 	DevID   int // used as frame id
