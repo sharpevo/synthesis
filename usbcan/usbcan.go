@@ -82,14 +82,15 @@ func ResetInstance() {
 	channelMap = concurrentmap.NewConcurrentMap()
 }
 
+// A device is the abstraction of CANalyst device, which contains multiple
+// channels. Note that the value of `DevIndex` is different between Liunx and
+// Windows.
 type Device struct {
 	DevType  int
 	DevIndex int
 }
 
-var NewDevice = newDevice
-
-func newDevice(
+var newDevice = func(
 	devType int,
 	devIndex int,
 ) (*Device, error) {
@@ -178,7 +179,7 @@ func NewChannel(
 	}
 	channel.DevType = devType
 	channel.DevIndex = devIndex
-	if _, err := NewDevice(channel.DevType, channel.DevIndex); err != nil {
+	if _, err := newDevice(channel.DevType, channel.DevIndex); err != nil {
 		return channel, err
 	}
 	if c, found := channelMap.Get(channel.ChannelKey()); found {
