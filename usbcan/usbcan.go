@@ -129,8 +129,9 @@ func (d *Device) deviceKey() string {
 	return fmt.Sprintf("%v-%v", d.DevType, d.DevIndex)
 }
 
+// A Channel is the object used to manage CAN channels on CANalyst. Usually, there are more than one channels, and each of them send and receive messages individually.
 type Channel struct {
-	Device   //   *Device
+	Device
 	CanIndex int
 	AccCode  int
 	AccMask  int
@@ -145,11 +146,6 @@ type Channel struct {
 
 	sendableLock sync.Mutex
 	sendable     bool
-
-	//receiveo sync.Once
-	//sendo    sync.Once
-	senderLaunched   bool
-	receiverLaunched bool
 }
 
 func newChannel(
