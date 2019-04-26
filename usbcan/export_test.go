@@ -21,3 +21,7 @@ func (c *Channel) Send() {
 func (c *Channel) UntilSendable() {
 	c.untilSendable()
 }
+
+func Instance(key string) (client *Client) {
+	return instance(key)
+}
