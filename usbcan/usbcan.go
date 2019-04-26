@@ -182,15 +182,11 @@ func newChannel(
 		return c.(*Channel), nil
 	}
 	channel.init()
-	if err := StartChannel(channel); err != nil {
+	if err := startChannel(channel); err != nil {
 		return channel, err
 	}
 	channelMap.Set(channel.ChannelKey(), channel)
 	return channel, nil
-}
-
-var StartChannel = func(channel *Channel) error {
-	return channel.Start()
 }
 
 func (c *Channel) init() {
@@ -209,7 +205,7 @@ func (c *Channel) loadInstructionCode() {
 	}
 }
 
-func (c *Channel) Start() error {
+var startChannel = func(c *Channel) error {
 	config := controlcan.InitConfig{
 		AccCode: c.AccCode,
 		AccMask: c.AccMask,

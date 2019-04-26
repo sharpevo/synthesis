@@ -47,9 +47,9 @@ func TestNewChannel(t *testing.T) { // {{{
 		return nil, nil
 	}
 	sIndex := 0
-	originStartChannel := StartChannel
-	defer func() { StartChannel = originStartChannel }()
-	StartChannel = func(*Channel) error {
+	originStartChannel := startChannel
+	defer func() { startChannel = originStartChannel }()
+	startChannel = func(*Channel) error {
 		defer func() { sIndex++ }()
 		msg := cases[sIndex].expectStartError
 		if msg != "" {
