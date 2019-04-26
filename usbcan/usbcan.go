@@ -82,11 +82,6 @@ func ResetInstance() {
 	channelMap = concurrentmap.NewConcurrentMap()
 }
 
-type Devicer interface {
-	Open() error
-	DeviceKey() string
-}
-
 type Device struct {
 	DevType  int
 	DevIndex int
@@ -113,7 +108,7 @@ func newDevice(
 
 }
 
-var OpenDevice = func(device Devicer) error {
+var OpenDevice = func(device *Device) error {
 	return device.Open()
 }
 

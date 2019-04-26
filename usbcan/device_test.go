@@ -97,7 +97,7 @@ func TestNewDevice(t *testing.T) { // {{{
 	called := false
 	originOpenDevice := usbcan.OpenDevice
 	defer func() { usbcan.OpenDevice = originOpenDevice }()
-	usbcan.OpenDevice = func(device usbcan.Devicer) error {
+	usbcan.OpenDevice = func(device *usbcan.Device) error {
 		called = true
 		if device.DeviceKey() == "1-1" {
 			return fmt.Errorf("error expected")
