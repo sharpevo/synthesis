@@ -23,9 +23,9 @@ func TestNewDevice(t *testing.T) { // {{{
 		},
 	}
 	called := false
-	originOpenDevice := OpenDevice
-	defer func() { OpenDevice = originOpenDevice }()
-	OpenDevice = func(device *Device) error {
+	originOpenDevice := openDevice
+	defer func() { openDevice = originOpenDevice }()
+	openDevice = func(device *Device) error {
 		called = true
 		if device.deviceKey() == "1-1" {
 			return fmt.Errorf("error expected")

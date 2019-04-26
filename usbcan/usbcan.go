@@ -101,7 +101,7 @@ var newDevice = func(
 	if d, found := deviceMap.Get(device.deviceKey()); found {
 		return d.(*Device), nil
 	}
-	if err := OpenDevice(device); err != nil {
+	if err := openDevice(device); err != nil {
 		return device, err
 	}
 	deviceMap.Set(device.deviceKey(), device)
@@ -109,11 +109,7 @@ var newDevice = func(
 
 }
 
-var OpenDevice = func(device *Device) error {
-	return device.Open()
-}
-
-func (d *Device) Open() error {
+var openDevice = func(d *Device) error {
 	log.Printf(
 		"Opening device(type %v, index %#v)...\n",
 		d.DevType,
