@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+// status codes parsed from messages on the bus. see more of the CAN doc.
+// https://tower.im/teams/139368/uploads/11011
 const (
 	STATUS_CODE_RECEIVED         = 0x00
 	STATUS_CODE_COMPLETED        = 0x01
@@ -72,6 +74,8 @@ func addInstance(client *Client) (*Client, bool) {
 	}
 }
 
+// ResetInstance is going to reset status of canalyst client, including
+// clients, channels, and devices, by DevId. Not tested yet.
 func ResetInstance() {
 	for item := range clientMap.Iter() {
 		client := item.Value.(*Client)
@@ -297,6 +301,11 @@ var transmitRequest = func(c *Channel, req *Request) {
 // }}}
 
 // Transmit{{{
+
+// Transmit builds a slice of CAN objects from request, then sends to CANalyst.
+// For different types of response, e.g. ACK & CMP, or CMP-only, the responses
+// should be one or more coordinally, depends on the bytes of recExpected and
+// comExpected.
 func (c *Channel) Transmit(
 	frameId int,
 	message []byte,
@@ -403,6 +412,9 @@ var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
 	}
 }
 
+// Reset of Channel is going to reset request queue and reception map, in order
+// to eliminate legacy expectations. Additionally, the pool of instruciton
+// codes will be reset at the same time.
 func (c *Channel) Reset() {
 	if c == nil {
 		return
@@ -620,9 +632,12 @@ func (c *Channel) releaseInstructionCode(code byte) {
 	log.Println("release instruction code: ", code)
 } // }}}
 
+// A Client is the object refered by DAO(Device Access Object). It takes the
+// charge of init and manage relationship with the physical connections.
 type Client struct {
 	Channel *Channel
-	DevID   int // used as frame id
+	// DevID will be used as frame id of CAN message
+	DevID int
 }
 
 func NewClient(
@@ -663,11 +678,10 @@ func NewClient(
 	if c, found := addInstance(client); found {
 		return c, fmt.Errorf("client existed")
 	}
-	//go client.Channel.receive()
-	//go client.Channel.send()
 	return client, nil
 }
 
+// A Request is the data prepared to send to CANalyst.
 type Request struct {
 	FrameId         int
 	InstructionCode byte
@@ -675,18 +689,21 @@ type Request struct {
 	RecExpected     []byte
 	ComExpected     []byte
 	Responsec       chan Response
-	TimeSent        time.Time
-	ResendCount     int
+	// TimeSent records the timestamp of the object creation, and the Request
+	// will be resent if expired.
+	TimeSent time.Time
+	// Currently the resend action will be stopped when the ResendCount is
+	// greater than 2.
+	ResendCount int
 }
 
+// A Response collects messages from CAN object.
 type Response struct {
 	Message []byte
 	Error   error
 }
 
-// no ack, com: message, [], 0x01
-// ack com: message, 0x00, 0x01
-// no ack, no com: message, [], []
+// Sends data via the specific channel.
 func (c *Client) Send(
 	message []byte,
 	recExpected []byte,
@@ -704,6 +721,7 @@ func (c *Client) Send(
 	)
 }
 
+// Resetting Client is implemented by the channel temporarily.
 func (c *Client) Reset() {
 	c.Channel.Reset()
 }
