@@ -1,8 +1,13 @@
 package usbcan
 
 import (
+	"encoding/hex"
 	"fmt"
+	"posam/util/blockingqueue"
+	"posam/util/concurrentmap"
+	"reflect"
 	"testing"
+	"time"
 )
 
 func TestNewChannel(t *testing.T) { // {{{
@@ -86,6 +91,46 @@ func TestNewChannel(t *testing.T) { // {{{
 					"\nEXPECT: %v\n GET: %v\n\n",
 					c.expectStartError,
 					err,
+				)
+			}
+		})
+	}
+} // }}}
+
+func TestChannelSend(t *testing.T) { // {{{
+	cases := []struct {
+		id  int
+		req *Request
+		//response string
+	}{
+		{
+			0,
+			&Request{InstructionCode: byte(5)},
+		},
+	}
+	originTransmitRequest := transmitRequest
+	defer func() { transmitRequest = originTransmitRequest }()
+	transmitRequest = func(c *Channel, req *Request) {
+		fmt.Println("fake transmit")
+		return
+	}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("%v", c.id), func(t *testing.T) {
+			channel := Channel{}
+			channel.RequestQueue = blockingqueue.NewBlockingQueue()
+			channel.ReceptionMap = concurrentmap.NewConcurrentMap()
+			go channel.Send() // receiver should be ahead of sender
+			channel.RequestQueue.Push(c.req)
+			<-time.After(1 * time.Second) // wait for sending
+			channel.RequestQueue.Reset()
+			reqReception, ok := channel.ReceptionMap.Get(
+				hex.EncodeToString([]byte{c.req.InstructionCode}))
+			fmt.Println(reqReception, ok)
+			if !ok || !reflect.DeepEqual(reqReception, c.req) {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.req,
+					reqReception,
 				)
 			}
 		})

@@ -1,56 +1,13 @@
 package usbcan_test
 
 import (
-	"encoding/hex"
 	"fmt"
 	"posam/protocol/usbcan"
-	"posam/util/blockingqueue"
-	"posam/util/concurrentmap"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 )
-
-func TestChannelSend(t *testing.T) { // {{{
-	cases := []struct {
-		id  int
-		req *usbcan.Request
-		//response string
-	}{
-		{
-			0,
-			&usbcan.Request{InstructionCode: byte(5)},
-		},
-	}
-	originTransmitRequest := usbcan.TransmitRequest
-	defer func() { usbcan.TransmitRequest = originTransmitRequest }()
-	usbcan.TransmitRequest = func(c *usbcan.Channel, req *usbcan.Request) {
-		fmt.Println("fake transmit")
-		return
-	}
-	for _, c := range cases {
-		t.Run(fmt.Sprintf("%v", c.id), func(t *testing.T) {
-			channel := usbcan.Channel{}
-			channel.RequestQueue = blockingqueue.NewBlockingQueue()
-			channel.ReceptionMap = concurrentmap.NewConcurrentMap()
-			go channel.Send() // receiver should be ahead of sender
-			channel.RequestQueue.Push(c.req)
-			<-time.After(1 * time.Second) // wait for sending
-			channel.RequestQueue.Reset()
-			reqReception, ok := channel.ReceptionMap.Get(
-				hex.EncodeToString([]byte{c.req.InstructionCode}))
-			fmt.Println(reqReception, ok)
-			if !ok || !reflect.DeepEqual(reqReception, c.req) {
-				t.Errorf(
-					"\nEXPECT: %v\n GET: %v\n\n",
-					c.req,
-					reqReception,
-				)
-			}
-		})
-	}
-} // }}}
 
 func TestUntilSendable(t *testing.T) { // {{{
 	cases := []struct {

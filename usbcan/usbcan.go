@@ -259,17 +259,13 @@ func (c *Channel) send() {
 			hex.EncodeToString([]byte{req.InstructionCode}),
 			req,
 		)
-		TransmitRequest(c, req)
+		transmitRequest(c, req)
 		c.ReceptionMap.Unlock()
 		<-time.After(7 * time.Millisecond)
 	}
 }
 
-var TransmitRequest = func(c *Channel, req *Request) {
-	c.transmit(req)
-}
-
-func (c *Channel) transmit(req *Request) {
+var transmitRequest = func(c *Channel, req *Request) {
 	c.untilSendable()
 	respc := req.Responsec
 	resp := Response{}
