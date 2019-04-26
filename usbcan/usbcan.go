@@ -178,14 +178,14 @@ func newChannel(
 	if _, err := newDevice(channel.DevType, channel.DevIndex); err != nil {
 		return channel, err
 	}
-	if c, found := channelMap.Get(channel.ChannelKey()); found {
+	if c, found := channelMap.Get(channel.channelKey()); found {
 		return c.(*Channel), nil
 	}
 	channel.init()
 	if err := startChannel(channel); err != nil {
 		return channel, err
 	}
-	channelMap.Set(channel.ChannelKey(), channel)
+	channelMap.Set(channel.channelKey(), channel)
 	return channel, nil
 }
 
@@ -241,7 +241,7 @@ var startChannel = func(c *Channel) error {
 	return nil
 }
 
-func (c *Channel) ChannelKey() string {
+func (c *Channel) channelKey() string {
 	return fmt.Sprintf("%v-%v-%v", c.DevType, c.DevIndex, c.CanIndex)
 }
 
