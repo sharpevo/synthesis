@@ -156,7 +156,7 @@ type Channel struct {
 	receiverLaunched bool
 }
 
-func NewChannel(
+func newChannel(
 	devType int,
 	devIndex int,
 	canIndex int,
@@ -659,7 +659,7 @@ func NewClient(
 	mode int,
 ) (*Client, error) {
 	client := &Client{}
-	channel, err := NewChannel(
+	channel, err := newChannel(
 		devType,
 		devIndex,
 		canIndex,
