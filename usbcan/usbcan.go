@@ -1,3 +1,4 @@
+// Package usbcan encapsulates interactions with CANalyst SDK, i.e., ControlCAN.dll on Windows or libcontrolcan.so on Linux, in order to provide a more friendly and more tranparent inerface, as well as isolate physical changes from upper layer of the architecture, e.g., ZLG or products of other brands.
 package usbcan
 
 import (
@@ -10,9 +11,13 @@ import (
 	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
+	"sync"
 	"time"
 )
 
+// Status code parsed from CAN messages on the bus will be refered by
+// DAO(Device Access Object) and PDU(Protocol Data Unit). See more of the CAN
+// doc, https://tower.im/teams/139368/uploads/11011.
 const (
 	STATUS_CODE_RECEIVED         = 0x00
 	STATUS_CODE_COMPLETED        = 0x01
@@ -23,50 +28,42 @@ const (
 )
 
 var (
-	SEND_TIMEOUT          time.Duration
-	WARN_TIMEOUT          time.Duration
-	INTERRUPT_WHEN_WARN   = config.GetBool("can.transmission.interruptwhenwarning")
-	SHOW_RECEPTION        = config.GetBool("can.reception.debug")
-	RESEND_ALL            = config.GetBool("can.resend.all")
-	RESEND_ONCE           = config.GetBool("can.resend.once")
-	NOTIFY_RESEND_SUCCESS = config.GetBool("can.resend.notify.success")
-	NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
+	_SEND_TIMEOUT          time.Duration
+	_WARN_TIMEOUT          time.Duration
+	_INTERRUPT_WHEN_WARN   = config.GetBool("can.transmission.interruptwhenwarning")
+	_RESEND_ALL            = config.GetBool("can.resend.all")
+	_RESEND_ONCE           = config.GetBool("can.resend.once")
+	_NOTIFY_RESEND_SUCCESS = config.GetBool("can.resend.notify.success")
+	_NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
 )
 
-var deviceMap *concurrentmap.ConcurrentMap
-var channelMap *concurrentmap.ConcurrentMap
-var clientMap *concurrentmap.ConcurrentMap
-
-var receptMap map[string]*Client
-var connMap map[string]*Client
+var (
+	deviceMap  = concurrentmap.NewConcurrentMap()
+	channelMap = concurrentmap.NewConcurrentMap()
+	clientMap  = concurrentmap.NewConcurrentMap()
+)
 
 func init() {
-	clientMap = concurrentmap.NewConcurrentMap()
-	deviceMap = concurrentmap.NewConcurrentMap()
-	channelMap = concurrentmap.NewConcurrentMap()
-
-	receptMap = make(map[string]*Client)
-	connMap = make(map[string]*Client)
-
 	config.SetDefault("can.transmission.timeout", 500)
-	SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
+	_SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
 	config.SetDefault("can.transmission.warningtimeout", 5000)
-	WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) * time.Millisecond
+	_WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) * time.Millisecond
 }
 
-func Instance(key string) *Client {
+func instance(key string) (client *Client) {
 	if key == "" {
 		for item := range clientMap.Iter() {
-			return item.Value.(*Client)
+			if client == nil {
+				client = item.Value.(*Client)
+			}
 		}
+		return client
 	} else {
 		if clienti, ok := clientMap.Get(key); ok {
 			return clienti.(*Client)
-		} else {
-			return nil
 		}
 	}
-	return nil
+	return client
 }
 
 func addInstance(client *Client) (*Client, bool) {
@@ -79,25 +76,27 @@ func addInstance(client *Client) (*Client, bool) {
 	}
 }
 
+// ResetInstance is going to reset status of CANalyst client, including
+// clients, channels, and devices, by DevId. Not tested yet.
 func ResetInstance() {
 	for item := range clientMap.Iter() {
 		client := item.Value.(*Client)
-		log.Println("terminating client: ", client.DevID)
-		//client.RequestQueue.Reset()
+		client.Reset()
 	}
 	clientMap = concurrentmap.NewConcurrentMap()
 	deviceMap = concurrentmap.NewConcurrentMap()
 	channelMap = concurrentmap.NewConcurrentMap()
-	receptMap = make(map[string]*Client)
-	connMap = make(map[string]*Client)
 }
 
+// A device is the abstraction of CANalyst device, which contains multiple
+// channels. Note that the value of DevIndex is different between Linux and
+// Windows.
 type Device struct {
 	DevType  int
 	DevIndex int
 }
 
-func NewDevice(
+var newDevice = func(
 	devType int,
 	devIndex int,
 ) (*Device, error) {
@@ -105,19 +104,18 @@ func NewDevice(
 		DevType:  devType,
 		DevIndex: devIndex,
 	}
-	if d, found := deviceMap.Get(device.DeviceKey()); found {
+	if d, found := deviceMap.Get(device.deviceKey()); found {
 		return d.(*Device), nil
 	}
-	if err := device.Open(); err != nil {
-		log.Println(err)
+	if err := openDevice(device); err != nil {
 		return device, err
 	}
-	deviceMap.Set(device.DeviceKey(), device)
+	deviceMap.Set(device.deviceKey(), device)
 	return device, nil
 
 }
 
-func (d *Device) Open() error {
+var openDevice = func(d *Device) error {
 	log.Printf(
 		"Opening device(type %v, index %#v)...\n",
 		d.DevType,
@@ -130,16 +128,16 @@ func (d *Device) Open() error {
 	); err != nil {
 		return err
 	}
-	//deviceMap.Set(d.DeviceKey(), true)
 	return nil
 }
 
-func (d *Device) DeviceKey() string {
+func (d *Device) deviceKey() string {
 	return fmt.Sprintf("%v-%v", d.DevType, d.DevIndex)
 }
 
+// A Channel is the object used to manage CAN channels on CANalyst. Usually, there are more than one channels, and each of them send and receive messages individually.
 type Channel struct {
-	Device   //   *Device
+	Device
 	CanIndex int
 	AccCode  int
 	AccMask  int
@@ -152,15 +150,11 @@ type Channel struct {
 	ReceptionMap       *concurrentmap.ConcurrentMap
 	InstructionCodeMap *concurrentmap.ConcurrentMap
 
-	Sendable bool
-
-	//receiveo sync.Once
-	//sendo    sync.Once
-	senderLaunched   bool
-	receiverLaunched bool
+	sendableLock sync.Mutex
+	sendable     bool
 }
 
-func NewChannel(
+func newChannel(
 	devType int,
 	devIndex int,
 	canIndex int,
@@ -179,36 +173,41 @@ func NewChannel(
 		Timing0:  timing0,
 		Timing1:  timing1,
 		Mode:     mode,
-		Sendable: true,
+		sendable: true,
 	}
 	channel.DevType = devType
 	channel.DevIndex = devIndex
-	_, err := NewDevice(channel.DevType, channel.DevIndex)
-	if err != nil {
-		log.Println(err)
+	if _, err := newDevice(channel.DevType, channel.DevIndex); err != nil {
 		return channel, err
 	}
-	if c, found := channelMap.Get(channel.ChannelKey()); found {
+	if c, found := channelMap.Get(channel.channelKey()); found {
 		return c.(*Channel), nil
 	}
-	channel.RequestQueue = blockingqueue.NewBlockingQueue()
-	channel.ReceptionMap = concurrentmap.NewConcurrentMap()
-	channel.InstructionCodeMap = concurrentmap.NewConcurrentMap()
+	channel.init()
+	if err := startChannel(channel); err != nil {
+		return channel, err
+	}
+	channelMap.Set(channel.channelKey(), channel)
+	return channel, nil
+}
+
+func (c *Channel) init() {
+	c.RequestQueue = blockingqueue.NewBlockingQueue()
+	c.ReceptionMap = concurrentmap.NewConcurrentMap()
+	c.InstructionCodeMap = concurrentmap.NewConcurrentMap()
+	c.loadInstructionCode()
+}
+
+func (c *Channel) loadInstructionCode() {
 	for index := range [256]byte{} {
-		channel.InstructionCodeMap.Set(
+		c.InstructionCodeMap.Set(
 			hex.EncodeToString([]byte{byte(index)}),
 			false,
 		)
 	}
-	if err := channel.Start(); err != nil {
-		log.Println(err)
-		return channel, err
-	}
-	channelMap.Set(channel.ChannelKey(), channel)
-	return channel, nil
 }
 
-func (c *Channel) Start() error {
+var startChannel = func(c *Channel) error {
 	config := controlcan.InitConfig{
 		AccCode: c.AccCode,
 		AccMask: c.AccMask,
@@ -239,53 +238,37 @@ func (c *Channel) Start() error {
 	); err != nil {
 		return err
 	}
-	go c.send()
-	//go c.receive()
+	util.Go(c.send)
 	util.Go(c.receive)
 	return nil
 }
 
-func (c *Channel) ChannelKey() string {
+func (c *Channel) channelKey() string {
 	return fmt.Sprintf("%v-%v-%v", c.DevType, c.DevIndex, c.CanIndex)
 }
 
-func (c *Channel) send() error { // {{{
-	//func (c *Channel) send() {
-	//c.sendo.Do(func() {
-	//if c.senderLaunched {
-	//return nil
-	//}
-	//c.senderLaunched = true
+func (c *Channel) send() {
 	for {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
-			log.Printf("canalyst client sender %v terminated\n", c.DeviceKey())
-			return err
+			// TODO: error handling, e.g., insert to the response
+			log.Printf("canalyst client sender %v terminated\n", c.deviceKey())
+			return
 		}
-		c.ReceptionMap.Lock() // one object shared in two units, slice, and map
-		log.Println("processing", reqi)
+		c.ReceptionMap.Lock()
 		req := reqi.(*Request)
 		c.ReceptionMap.SetLockless(
 			hex.EncodeToString([]byte{req.InstructionCode}),
 			req,
 		)
-		c.transmit(req)
-		<-time.After(7 * time.Millisecond)
+		transmitRequest(c, req)
 		c.ReceptionMap.Unlock()
+		<-time.After(7 * time.Millisecond)
 	}
-	//})
 }
 
-func (c *Channel) transmit(req *Request) {
-	if !c.Sendable {
-		ticker := time.NewTicker(100 * time.Millisecond)
-		for _ = range ticker.C {
-			if c.Sendable {
-				ticker.Stop()
-				break
-			}
-		}
-	}
+var transmitRequest = func(c *Channel, req *Request) {
+	c.untilSendable()
 	respc := req.Responsec
 	resp := Response{}
 	log.Printf("sending request %#v\n", req.Message)
@@ -299,12 +282,13 @@ func (c *Channel) transmit(req *Request) {
 		DataLen:    8,
 		Data:       data,
 	}
+	pSendList := []controlcan.CanObj{pSend}
 	if err := controlcan.Transmit(
 		c.DevType,
 		c.DevIndex,
 		c.CanIndex,
-		pSend,
-		1,
+		pSendList,
+		len(pSendList),
 	); err != nil {
 		log.Println(err)
 		resp.Error = err
@@ -319,9 +303,11 @@ func (c *Channel) transmit(req *Request) {
 // }}}
 
 // Transmit{{{
-// no ack, com: message, [], 0x01
-// ack com: message, 0x00, 0x01
-// no ack, no com: message, [], []
+
+// Transmit builds a slice of CAN objects from request, then sends to CANalyst.
+// For different types of responses, e.g. ACK & CMP, or CMP-only, there might
+// be one or more responses coordinally, depends on the bytes of recExpected
+// and comExpected.
 func (c *Channel) Transmit(
 	frameId int,
 	message []byte,
@@ -336,22 +322,19 @@ func (c *Channel) Transmit(
 	}
 	defer c.releaseInstructionCode(code)
 	message = append(message, code)
-	respc := make(chan Response)
 	req := Request{
 		FrameId:         frameId,
 		InstructionCode: code,
 		Message:         message,
 		RecExpected:     recExpected,
 		ComExpected:     comExpected,
-		//Responsec:       make(chan Response), // unexpected fault address
-		Responsec: respc,
+		Responsec:       make(chan Response),
 	}
 	defer c.ReceptionMap.Del(hex.EncodeToString([]byte{req.InstructionCode}))
 	c.RequestQueue.Push(&req)
 	if len(recExpected) > 0 {
 		resp := <-req.Responsec
 		if resp.Error != nil {
-			// if timeout warning, the resp.Message is nil, so panic index out of range at the status line
 			return resp.Message, resp.Error
 		}
 		status := resp.Message[recIndex]
@@ -366,13 +349,12 @@ func (c *Channel) Transmit(
 	resp := <-req.Responsec
 	if len(comExpected) > 0 {
 		if resp.Error != nil {
-			// if timeout warning, the resp.Message is nil, so panic index out of range at the status line
 			return resp.Message, resp.Error
 		}
 		status := resp.Message[comIndex]
 		switch status {
 		case STATUS_CODE_COMPLETED:
-			return resp.Message, nil // should delete receptionmap key
+			return resp.Message, nil
 		case STATUS_CODE_ERROR:
 			return resp.Message,
 				fmt.Errorf("unknown error when execute %#v", message)
@@ -385,11 +367,6 @@ func (c *Channel) Transmit(
 } // }}}
 
 func (c *Channel) receive() {
-	//if c.receiverLaunched {
-	//return
-	//}
-	//c.receiverLaunched = true
-	//c.receiveo.Do(func() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for _ = range ticker.C {
@@ -399,70 +376,87 @@ func (c *Channel) receive() {
 			c.CanIndex,
 			100,
 		)
-		if err != nil || count < 0 {
-			log.Printf(
-				"canalyst client receiver %v terminated\n",
-				c.DeviceKey(),
-			)
+		if err != nil || count == controlcan.MINUS_ONE {
+			log.Printf("canalyst client receiver %v terminated\n", c.deviceKey())
 			return
 		}
-		if SHOW_RECEPTION {
-			log.Println("Receive", count)
-		}
-		if count == 0 {
-			// always check timeout aside of findRequestByResponse
-			now := time.Now()
-			for item := range c.ReceptionMap.Iter() {
-				reqi := item.Value
-				req, ok := reqi.(*Request)
-				if !ok {
-					err = fmt.Errorf("invalid request: %#v", reqi)
-					log.Println(err)
-					continue
-				}
-				c.tryResend(now, req)
-			}
+		parseCanObjects(c, pReceive[:count])
+		// TODO: not the best time to do that
+		tryResend(c)
+	}
+}
+
+var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
+	for _, canObj := range pReceive {
+		data := make([]byte, len(canObj.Data))
+		copy(data, canObj.Data[:])
+		resp := Response{}
+		req, err := findRequestByResponse(c, data, canObj.ID)
+		if err != nil {
+			log.Println(err)
+			// TODO: notification
 			continue
 		}
-		log.Printf("data received: %#v\n", pReceive[:count]) // unexpected fault address
-		for _, canObj := range pReceive[:count] {
-			data := make([]byte, len(canObj.Data))
-			copy(data, canObj.Data[:])
-			resp := Response{}
-			req, err := c.findRequestByResponse(data, canObj.ID)
-			if err != nil {
-				log.Println(err)
-				// TODO: notification
-				continue
+		if _NOTIFY_RESEND_SUCCESS {
+			if req.ResendCount > 0 {
+				msg := fmt.Sprintf(
+					"request resent\nframe id: %v\ndata: %v\n",
+					req.FrameId,
+					req.Message,
+				)
+				uiutil.App.ShowMessageSlot(msg)
 			}
-			if NOTIFY_RESEND_SUCCESS {
-				if req.ResendCount > 0 {
-					errmsg := fmt.Errorf(
-						"request resent\nframe id: %v\ndata: %v\n",
-						req.FrameId,
-						req.Message,
-					)
-					uiutil.App.ShowMessageSlot(errmsg.Error())
-				}
+		}
+		resp.Message = data
+		go func() {
+			req.Responsec <- resp
+		}()
+	}
+}
+
+// Reset of Channel is going to reset request queue and reception map for
+// eliminating legacy expectations. Additionally, the pool of instruciton codes
+// will be reset at the same time.
+func (c *Channel) Reset() {
+	if c == nil {
+		return
+	}
+	c.RequestQueue.Reset()
+	c.ReceptionMap = concurrentmap.NewConcurrentMap()
+	c.loadInstructionCode()
+}
+
+func (c *Channel) isSendable() bool {
+	c.sendableLock.Lock()
+	defer c.sendableLock.Unlock()
+	return c.sendable
+}
+
+func (c *Channel) setSendable(sendable bool) {
+	c.sendableLock.Lock()
+	defer c.sendableLock.Unlock()
+	c.sendable = sendable
+}
+
+func (c *Channel) untilSendable() {
+	if !c.isSendable() {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		for _ = range ticker.C {
+			if c.isSendable() {
+				ticker.Stop()
+				break
 			}
-			resp.Message = data
-			fmt.Println("request found")
-			go func() {
-				req.Responsec <- resp
-				fmt.Println("response sent")
-			}()
 		}
 	}
-	//})
 }
 
 // Helpers{{{
 
-func (c *Channel) parseFunctionCode(data []byte) (byte, error) {
+var parseFunctionCode = func(c *Channel, data []byte) (byte, error) {
 	code := data[0]
 	switch code {
 	case 0xE0:
-		c.Sendable = false
+		c.setSendable(false)
 		return code, fmt.Errorf("mailbox is full (E0): %#v\n", data)
 	case 0xE1:
 		return code, fmt.Errorf("mailbox is overflow (E1): %#v\n", data)
@@ -471,7 +465,7 @@ func (c *Channel) parseFunctionCode(data []byte) (byte, error) {
 	return code, nil
 }
 
-func (c *Channel) parseInstructionCode(data []byte) (code byte, err error) {
+var parseInstructionCode = func(c *Channel, data []byte) (code byte, err error) {
 	code = data[7]
 	if _, ok := c.InstructionCodeMap.Get(
 		hex.EncodeToString([]byte{code}),
@@ -481,18 +475,19 @@ func (c *Channel) parseInstructionCode(data []byte) (code byte, err error) {
 	return code, nil
 }
 
-func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Request, err error) {
-	_, err = c.parseFunctionCode(data[:])
+var findRequestByResponse = func(
+	c *Channel,
+	data []byte,
+	frameId int,
+) (request *Request, err error) {
+	_, err = parseFunctionCode(c, data[:])
 	if err != nil {
 		return request, err
 	}
-	instCode, err := c.parseInstructionCode(data)
+	instCode, err := parseInstructionCode(c, data)
 	if err != nil {
 		return request, err
 	}
-	//for item := range c.RequestQueue.Iter() {
-	//log.Printf("parsing request: %s\n", c.ReceptionMap) // unexpected fault address
-	now := time.Now()
 	for item := range c.ReceptionMap.Iter() {
 		fmt.Println("findRequestByResponse: iter receptionmap")
 		reqi := item.Value
@@ -512,81 +507,89 @@ func (c *Channel) findRequestByResponse(data []byte, frameId int) (request *Requ
 			err = nil
 			continue
 		}
-		// not matched
-		c.tryResend(now, req)
 	}
 	if request == nil {
 		return request, fmt.Errorf("invalid data instruction code %x", instCode)
 	}
-	fmt.Println("findRequestByResponse: request found")
 	return request, err
 }
 
-func (c *Channel) tryResend(now time.Time, req *Request) {
-	if INTERRUPT_WHEN_WARN {
-		warningTimeout := req.TimeSent.Add(WARN_TIMEOUT)
-		if warningTimeout.Before(now) {
-			resp := Response{}
-			resp.Error = fmt.Errorf("Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
-				req.FrameId,
-				req.Message,
-				req.TimeSent.Format("15:04:05.999999"),
-			)
-			go func() {
-				req.Responsec <- resp
-			}()
+var tryResend = func(c *Channel) {
+	now := time.Now()
+	for item := range c.ReceptionMap.Iter() {
+		reqi := item.Value
+		req, ok := reqi.(*Request)
+		if !ok {
+			err := fmt.Errorf("invalid request: %#v", reqi)
+			log.Println(err)
+			continue
+		}
+		if _INTERRUPT_WHEN_WARN {
+			warningTimeout := req.TimeSent.Add(_WARN_TIMEOUT)
+			if warningTimeout.Before(now) {
+				resp := Response{}
+				resp.Error = fmt.Errorf("Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
+					req.FrameId,
+					req.Message,
+					req.TimeSent.Format("15:04:05.999999"),
+				)
+				go func() {
+					req.Responsec <- resp
+				}()
+			}
+		}
+		if !_RESEND_ALL {
+			if req.Message[0] != 10 {
+				continue
+			}
+		}
+		timeout := req.TimeSent.Add(_SEND_TIMEOUT)
+		if timeout.Before(now) {
+			c.resend(now, req)
 		}
 	}
-	if !RESEND_ALL {
-		if req.Message[0] != 10 {
-			return
-		}
-	}
+}
 
-	timeout := req.TimeSent.Add(SEND_TIMEOUT)
-	if timeout.Before(now) {
-		fmt.Printf("\n\n--------------------------------------------------\n\n")
-		log.Printf(
-			"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\nresend count: %v\n",
+func (c *Channel) resend(now time.Time, req *Request) {
+	fmt.Printf("\n\n--------------------------------------------------\n\n")
+	log.Printf(
+		"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\nresend count: %v\n",
+		req.FrameId,
+		req.InstructionCode,
+		req.Message,
+		req.ResendCount,
+	)
+	if _RESEND_ONCE && req.ResendCount > 1 {
+		// blocked Del
+		c.ReceptionMap.DelLockless(hex.EncodeToString([]byte{req.InstructionCode}))
+		resp := Response{}
+		errmsg := fmt.Errorf(
+			"error: failed to resend request\nframe id: %v\ndata: %v\n",
 			req.FrameId,
-			req.InstructionCode,
-			req.Message,
-			req.ResendCount,
-		)
-		if RESEND_ONCE && req.ResendCount > 1 {
-			// blocked Del
-			c.ReceptionMap.DelLockless(hex.EncodeToString([]byte{req.InstructionCode}))
-			resp := Response{}
-			errmsg := fmt.Errorf(
-				"error: failed to resend request\nframe id: %v\ndata: %v\n",
-				req.FrameId,
-				req.Message,
-			)
-			log.Println(errmsg)
-
-			//resp.Error = errmsg
-			resp.Message = []byte{0x0}
-			go func() {
-				req.Responsec <- resp
-				if NOTIFY_RESEND_FAILURE {
-					uiutil.App.ShowMessageSlot(errmsg.Error())
-				}
-			}()
-			return
-		}
-		log.Printf(
-			"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
-			req.FrameId,
-			req.InstructionCode,
 			req.Message,
 		)
-		//c.transmit(req)
-		req.ResendCount++
-		req.TimeSent = now
-		c.RequestQueue.Push(req)
-		//c.RequestQueue.Insert(0, req)
-		fmt.Printf("--------------------------------------------------\n\n")
+		log.Println(errmsg)
+
+		//resp.Error = errmsg
+		resp.Message = []byte{0x0}
+		go func() {
+			req.Responsec <- resp
+			if _NOTIFY_RESEND_FAILURE {
+				uiutil.App.ShowMessageSlot(errmsg.Error())
+			}
+		}()
+		return
 	}
+	log.Printf(
+		"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
+		req.FrameId,
+		req.InstructionCode,
+		req.Message,
+	)
+	req.ResendCount++
+	req.TimeSent = now
+	c.RequestQueue.Push(req)
+	fmt.Printf("--------------------------------------------------\n\n")
 }
 
 func (c *Channel) getInstructionCode() (code byte, err error) {
@@ -631,16 +634,17 @@ func (c *Channel) releaseInstructionCode(code byte) {
 	log.Println("release instruction code: ", code)
 } // }}}
 
-type Clienter interface {
-	//connect() error
-	Send([]byte, []byte, int, []byte, int) ([]byte, error)
-}
-
+// A Client is the object refered by DAO(Device Access Object). It takes the
+// charge of initializaiton and relationship management of the physical
+// connections.
 type Client struct {
 	Channel *Channel
-	DevID   int // used as frame id
+	// DevID will be used as frame id of CAN message
+	DevID int
 }
 
+// NewClient returns a pointer of Client. Note that parameter SendType is
+// removed for the consideration of robustness and stability.
 func NewClient(
 	devType int,
 	devIndex int,
@@ -654,7 +658,7 @@ func NewClient(
 	mode int,
 ) (*Client, error) {
 	client := &Client{}
-	channel, err := NewChannel(
+	channel, err := newChannel(
 		devType,
 		devIndex,
 		canIndex,
@@ -679,11 +683,10 @@ func NewClient(
 	if c, found := addInstance(client); found {
 		return c, fmt.Errorf("client existed")
 	}
-	//go client.Channel.receive()
-	//go client.Channel.send()
 	return client, nil
 }
 
+// A Request is the data prepared to send to CANalyst.
 type Request struct {
 	FrameId         int
 	InstructionCode byte
@@ -691,18 +694,21 @@ type Request struct {
 	RecExpected     []byte
 	ComExpected     []byte
 	Responsec       chan Response
-	TimeSent        time.Time
-	ResendCount     int
+	// TimeSent records the timestamp of the object creation, and the Request
+	// will be resent if expired.
+	TimeSent time.Time
+	// Currently the resend action will be stopped when the ResendCount is
+	// greater than 2.
+	ResendCount int
 }
 
+// A Response collects messages from CAN object.
 type Response struct {
 	Message []byte
 	Error   error
 }
 
-// no ack, com: message, [], 0x01
-// ack com: message, 0x00, 0x01
-// no ack, no com: message, [], []
+// Sends data via the specific channel.
 func (c *Client) Send(
 	message []byte,
 	recExpected []byte,
@@ -718,4 +724,9 @@ func (c *Client) Send(
 		comExpected,
 		comIndex,
 	)
+}
+
+// Resetting Client is implemented by the channel temporarily.
+func (c *Client) Reset() {
+	c.Channel.Reset()
 }
