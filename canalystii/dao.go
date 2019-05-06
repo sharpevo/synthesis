@@ -332,9 +332,9 @@ func (d *Dao) ReadHumiture() (resp interface{}, err error) {
 		log.Println(err)
 		return resp, err
 	}
-	temperature := binary.BigEndian.Uint16(output[1:3])
-	humidity := binary.BigEndian.Uint16(output[3:6])
-	resp = []float64{divideTen(temperature), divideTen(humidity)}
+	humidity := binary.BigEndian.Uint16(output[1:3])
+	temperature := binary.BigEndian.Uint16(output[3:6])
+	resp = []float64{divideTen(humidity), divideTen(temperature)}
 	return resp, nil
 }
 
