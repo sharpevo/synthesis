@@ -52,7 +52,7 @@ func init() {
 
 type Dao struct {
 	id           string
-	UsbcanClient usbcan.Clienter
+	UsbcanClient *usbcan.Client
 }
 
 func NewDao(
