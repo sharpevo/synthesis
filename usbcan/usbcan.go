@@ -1,3 +1,4 @@
+// Package usbcan encapsulates interactions with CANalyst SDK, i.e., ControlCAN.dll on Windows or libcontrolcan.so on Linux, in order to provide a more friendly and more tranparent inerface, as well as isolate physical changes from upper layer of the architecture, e.g., ZLG or products of other brands.
 package usbcan
 
 import (
@@ -14,8 +15,9 @@ import (
 	"time"
 )
 
-// status codes parsed from messages on the bus. see more of the CAN doc.
-// https://tower.im/teams/139368/uploads/11011
+// Status code parsed from CAN messages on the bus will be refered by
+// DAO(Device Access Object) and PDU(Protocol Data Unit). See more of the CAN
+// doc, https://tower.im/teams/139368/uploads/11011.
 const (
 	STATUS_CODE_RECEIVED         = 0x00
 	STATUS_CODE_COMPLETED        = 0x01
@@ -26,13 +28,13 @@ const (
 )
 
 var (
-	SEND_TIMEOUT          time.Duration
-	WARN_TIMEOUT          time.Duration
-	INTERRUPT_WHEN_WARN   = config.GetBool("can.transmission.interruptwhenwarning")
-	RESEND_ALL            = config.GetBool("can.resend.all")
-	RESEND_ONCE           = config.GetBool("can.resend.once")
-	NOTIFY_RESEND_SUCCESS = config.GetBool("can.resend.notify.success")
-	NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
+	_SEND_TIMEOUT          time.Duration
+	_WARN_TIMEOUT          time.Duration
+	_INTERRUPT_WHEN_WARN   = config.GetBool("can.transmission.interruptwhenwarning")
+	_RESEND_ALL            = config.GetBool("can.resend.all")
+	_RESEND_ONCE           = config.GetBool("can.resend.once")
+	_NOTIFY_RESEND_SUCCESS = config.GetBool("can.resend.notify.success")
+	_NOTIFY_RESEND_FAILURE = config.GetBool("can.resend.notify.failure")
 )
 
 var (
@@ -43,9 +45,9 @@ var (
 
 func init() {
 	config.SetDefault("can.transmission.timeout", 500)
-	SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
+	_SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
 	config.SetDefault("can.transmission.warningtimeout", 5000)
-	WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) * time.Millisecond
+	_WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) * time.Millisecond
 }
 
 func instance(key string) (client *Client) {
@@ -74,7 +76,7 @@ func addInstance(client *Client) (*Client, bool) {
 	}
 }
 
-// ResetInstance is going to reset status of canalyst client, including
+// ResetInstance is going to reset status of CANalyst client, including
 // clients, channels, and devices, by DevId. Not tested yet.
 func ResetInstance() {
 	for item := range clientMap.Iter() {
@@ -87,7 +89,7 @@ func ResetInstance() {
 }
 
 // A device is the abstraction of CANalyst device, which contains multiple
-// channels. Note that the value of `DevIndex` is different between Liunx and
+// channels. Note that the value of DevIndex is different between Linux and
 // Windows.
 type Device struct {
 	DevType  int
@@ -303,9 +305,9 @@ var transmitRequest = func(c *Channel, req *Request) {
 // Transmit{{{
 
 // Transmit builds a slice of CAN objects from request, then sends to CANalyst.
-// For different types of response, e.g. ACK & CMP, or CMP-only, the responses
-// should be one or more coordinally, depends on the bytes of recExpected and
-// comExpected.
+// For different types of responses, e.g. ACK & CMP, or CMP-only, there might
+// be one or more responses coordinally, depends on the bytes of recExpected
+// and comExpected.
 func (c *Channel) Transmit(
 	frameId int,
 	message []byte,
@@ -395,7 +397,7 @@ var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
 			// TODO: notification
 			continue
 		}
-		if NOTIFY_RESEND_SUCCESS {
+		if _NOTIFY_RESEND_SUCCESS {
 			if req.ResendCount > 0 {
 				msg := fmt.Sprintf(
 					"request resent\nframe id: %v\ndata: %v\n",
@@ -412,9 +414,9 @@ var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
 	}
 }
 
-// Reset of Channel is going to reset request queue and reception map, in order
-// to eliminate legacy expectations. Additionally, the pool of instruciton
-// codes will be reset at the same time.
+// Reset of Channel is going to reset request queue and reception map for
+// eliminating legacy expectations. Additionally, the pool of instruciton codes
+// will be reset at the same time.
 func (c *Channel) Reset() {
 	if c == nil {
 		return
@@ -522,8 +524,8 @@ var tryResend = func(c *Channel) {
 			log.Println(err)
 			continue
 		}
-		if INTERRUPT_WHEN_WARN {
-			warningTimeout := req.TimeSent.Add(WARN_TIMEOUT)
+		if _INTERRUPT_WHEN_WARN {
+			warningTimeout := req.TimeSent.Add(_WARN_TIMEOUT)
 			if warningTimeout.Before(now) {
 				resp := Response{}
 				resp.Error = fmt.Errorf("Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
@@ -536,12 +538,12 @@ var tryResend = func(c *Channel) {
 				}()
 			}
 		}
-		if !RESEND_ALL {
+		if !_RESEND_ALL {
 			if req.Message[0] != 10 {
 				continue
 			}
 		}
-		timeout := req.TimeSent.Add(SEND_TIMEOUT)
+		timeout := req.TimeSent.Add(_SEND_TIMEOUT)
 		if timeout.Before(now) {
 			c.resend(now, req)
 		}
@@ -557,7 +559,7 @@ func (c *Channel) resend(now time.Time, req *Request) {
 		req.Message,
 		req.ResendCount,
 	)
-	if RESEND_ONCE && req.ResendCount > 1 {
+	if _RESEND_ONCE && req.ResendCount > 1 {
 		// blocked Del
 		c.ReceptionMap.DelLockless(hex.EncodeToString([]byte{req.InstructionCode}))
 		resp := Response{}
@@ -572,7 +574,7 @@ func (c *Channel) resend(now time.Time, req *Request) {
 		resp.Message = []byte{0x0}
 		go func() {
 			req.Responsec <- resp
-			if NOTIFY_RESEND_FAILURE {
+			if _NOTIFY_RESEND_FAILURE {
 				uiutil.App.ShowMessageSlot(errmsg.Error())
 			}
 		}()
@@ -633,13 +635,16 @@ func (c *Channel) releaseInstructionCode(code byte) {
 } // }}}
 
 // A Client is the object refered by DAO(Device Access Object). It takes the
-// charge of init and manage relationship with the physical connections.
+// charge of initializaiton and relationship management of the physical
+// connections.
 type Client struct {
 	Channel *Channel
 	// DevID will be used as frame id of CAN message
 	DevID int
 }
 
+// NewClient returns a pointer of Client. Note that parameter SendType is
+// removed for the consideration of robustness and stability.
 func NewClient(
 	devType int,
 	devIndex int,
