@@ -12,6 +12,7 @@ import (
 	"strconv"
 )
 
+// Constants manage strings as the captions in the GUI. Note that the value of IDNAME is different according to the type of devices.
 const (
 	NAME         = "CANALYSTII"
 	DEVICE_TYPE  = "DEVICE_TYPE"
@@ -29,6 +30,8 @@ const (
 	IDNAME = FRAME_ID
 )
 
+// CONN_ATTRIBUTES is a collection that manage attributes listed in the Deivce
+// tree
 var CONN_ATTRIBUTES = []string{
 	DEVICE_TYPE,
 	DEVICE_INDEX,
@@ -42,6 +45,7 @@ var CONN_ATTRIBUTES = []string{
 	MODE,
 }
 
+// InstructionMap holds instructions registered in the instruction package.
 var InstructionMap *dao.InstructionMapt
 var deviceMap *concurrentmap.ConcurrentMap
 
@@ -55,6 +59,9 @@ type Dao struct {
 	usbcanClient *usbcan.Client
 }
 
+// NewDao is the constructor of canalystii.Dao, initializes Dao instance in
+// singleton as well as UsbClient. Frame ID is exposed as DevID in the argument
+// list.
 func NewDao(
 	devType string,
 	devIndex string,
@@ -141,6 +148,8 @@ func ResetInstance() {
 	usbcan.ResetInstance()
 }
 
+// Instance returns an instance of canalyst DAO by id, even id is an empty
+// string.
 func Instance(id string) (dao *Dao, err error) {
 	if id == "" {
 		for device := range deviceMap.Iter() {
@@ -166,6 +175,7 @@ func (d *Dao) setID(id string) error {
 	return nil
 }
 
+// MoveRelative sends data of relative motion to the motor.
 func (d *Dao) MoveRelative(
 	motorCode int,
 	direction int,
@@ -207,6 +217,7 @@ func (d *Dao) MoveRelative(
 	return resp, nil
 }
 
+// MoveAbsolute sends data of absolute motion to the motor.
 func (d *Dao) MoveAbsolute(
 	motorCode int,
 	position int,
@@ -237,6 +248,7 @@ func (d *Dao) MoveAbsolute(
 	return resp, nil
 }
 
+// ResetMotor sends data to reset the motor
 func (d *Dao) ResetMotor(
 	motorCode int,
 	direction int,
@@ -267,6 +279,7 @@ func (d *Dao) ResetMotor(
 	return resp, nil
 }
 
+// ControlSwitcher sends data to the switcher.
 func (d *Dao) ControlSwitcher(
 	data int,
 ) (resp interface{}, err error) {
@@ -289,6 +302,7 @@ func (d *Dao) ControlSwitcher(
 	return resp, nil
 }
 
+// ControlSwitcherAdvanced sends data to multiple switchers.
 func (d *Dao) ControlSwitcherAdvanced(
 	data int,
 	speed int,
@@ -325,6 +339,8 @@ func (d *Dao) ControlSwitcherAdvanced(
 	return resp, nil
 }
 
+// ReadHumiture sends data to require humiture from sensors. The first value in
+// the slice it returned is humidity, and the other one is temperature.
 func (d *Dao) ReadHumiture() (resp interface{}, err error) {
 	req := SensorHumitureUnit.Request()
 	output, err := d.send(req.Bytes())
@@ -338,6 +354,7 @@ func (d *Dao) ReadHumiture() (resp interface{}, err error) {
 	return resp, nil
 }
 
+// ReadOxygenConc sends data to require concentration of oxygen from sensors.
 func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 	req := SensorOxygenConcUnit.Request()
 	output, err := d.send(req.Bytes())
@@ -350,6 +367,8 @@ func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 	return resp, nil
 }
 
+// ReadPressure sends data to require pressure from sensors. It returs the
+// decimal value without convertion to the relative value based on the voltage.
 func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
 	deviceBytes, err := uint8Bytes(device)
 	if err != nil {
@@ -372,6 +391,7 @@ func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
 	return resp, nil
 }
 
+// WriteSystemRom sends data to setup the system parameter.
 func (d *Dao) WriteSystemRom(
 	address int,
 	value int,
@@ -401,6 +421,7 @@ func (d *Dao) WriteSystemRom(
 	return resp, nil
 }
 
+// ReadSystemRom sends data to require system parameter.
 func (d *Dao) ReadSystemRom(
 	address int,
 ) (resp interface{}, err error) {

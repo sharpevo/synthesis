@@ -5,6 +5,8 @@ import (
 	"posam/protocol/usbcan"
 )
 
+// The following variables defines basic protocol data units according to the
+// documents.
 var MotorMoveRelativeUnit,
 	MotorMoveAbsoluteUnit,
 	MotorResetUnit,
