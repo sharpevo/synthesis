@@ -135,7 +135,6 @@ func NewDao(
 	if err = dao.setID(fmt.Sprintf("%v", devIDInt)); err != nil {
 		return dao, err
 	}
-	addInstance(dao)
 	return dao, nil
 }
 
@@ -172,6 +171,7 @@ func (d *Dao) setID(id string) error {
 		return fmt.Errorf("ID %q is duplicated", id)
 	}
 	d._id = id
+	addInstance(d)
 	return nil
 }
 
