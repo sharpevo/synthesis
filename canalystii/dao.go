@@ -333,8 +333,8 @@ func (d *Dao) ControlSwitcherAdvanced(
 	output, err := sendAck6(
 		d,
 		message,
-		SwitcherControlUnit.RecResp(),
-		SwitcherControlUnit.ComResp(),
+		SwitcherControlAdvancedUnit.RecResp(),
+		SwitcherControlAdvancedUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
