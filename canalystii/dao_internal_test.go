@@ -481,3 +481,119 @@ func TestControlSwitcher(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestControlSwitcherAdvanced(t *testing.T) {
+	cases := []struct {
+		data  int
+		speed int
+		count int
+
+		message []byte
+		recresp []byte
+		comresp []byte
+		output  []byte
+		resp    []byte
+		err     error
+	}{
+		{
+			1, 2, 3,
+			[]byte{
+				SwitcherControlAdvancedUnit.Request().Function,
+				0, 1, 2, 0, 3, 0,
+			},
+			SwitcherControlAdvancedUnit.RecResp(),
+			SwitcherControlAdvancedUnit.ComResp(),
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			nil,
+		},
+		{
+			65536, 2, 3,
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			fmt.Errorf("65536 overflows uint16"),
+		},
+		{
+			1, 256, 3,
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			fmt.Errorf("256 overflows uint8"),
+		},
+		{
+			1, 2, 65536,
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			[]byte{},
+			fmt.Errorf("65536 overflows uint16"),
+		},
+		{
+			1, 2, 3,
+			[]byte{
+				SwitcherControlAdvancedUnit.Request().Function,
+				0, 1, 2, 0, 3, 0,
+			},
+			SwitcherControlAdvancedUnit.RecResp(),
+			SwitcherControlAdvancedUnit.ComResp(),
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			fmt.Errorf("some error"),
+		},
+	}
+	originSendAck6 := sendAck6
+	defer func() { sendAck6 = originSendAck6 }()
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
+			d := &Dao{}
+			sendAck6 = func(
+				d *Dao,
+				message []byte,
+				recResp []byte,
+				comResp []byte,
+			) ([]byte, error) {
+				if !reflect.DeepEqual(message, c.message) ||
+					!reflect.DeepEqual(recResp, c.recresp) ||
+					!reflect.DeepEqual(comResp, c.comresp) {
+					t.Errorf(
+						"\nEXPECT: %v %v %v\n GET: %v %v %v\n\n",
+						c.message, c.recresp, c.comresp,
+						message, recResp, comResp,
+					)
+				}
+				return c.output, c.err
+			}
+			resp, err := d.ControlSwitcherAdvanced(
+				c.data,
+				c.speed,
+				c.count,
+			)
+			if err != nil && c.err == nil {
+				t.Fatal(err)
+			}
+			if err != nil && !strings.Contains(err.Error(), c.err.Error()) {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.err.Error(),
+					err.Error(),
+				)
+			}
+			if err == nil {
+				if !reflect.DeepEqual(resp, c.resp) {
+					t.Errorf(
+						"\nEXPECT: %v\n GET: %v\n\n",
+						c.resp,
+						resp,
+					)
+				}
+			}
+		})
+	}
+
+}
