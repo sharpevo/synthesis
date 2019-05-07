@@ -408,9 +408,7 @@ var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
 			}
 		}
 		resp.Message = data
-		go func() {
-			req.Responsec <- resp
-		}()
+		req.Responsec <- resp
 	}
 }
 
