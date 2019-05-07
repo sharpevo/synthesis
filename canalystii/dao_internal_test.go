@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestAddInstance(t *testing.T) {
+func TestAddInstance(t *testing.T) { // {{{
 	deviceMap = concurrentmap.NewConcurrentMap()
 	d := &Dao{_id: "id"}
 	fmt.Println(d)
@@ -19,9 +19,9 @@ func TestAddInstance(t *testing.T) {
 			"not found",
 		)
 	}
-}
+} // }}}
 
-func TestSetID(t *testing.T) {
+func TestSetID(t *testing.T) { // {{{
 	cases := []struct {
 		id     string
 		errmsg string
@@ -64,4 +64,5 @@ func TestSetID(t *testing.T) {
 			}
 		})
 	}
+} // }}}
 }
