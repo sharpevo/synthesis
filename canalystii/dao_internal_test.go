@@ -482,7 +482,7 @@ func TestControlSwitcher(t *testing.T) { // {{{
 	}
 } // }}}
 
-func TestControlSwitcherAdvanced(t *testing.T) {
+func TestControlSwitcherAdvanced(t *testing.T) { // {{{
 	cases := []struct {
 		data  int
 		speed int
@@ -595,5 +595,4 @@ func TestControlSwitcherAdvanced(t *testing.T) {
 			}
 		})
 	}
-
-}
+} // }}}
