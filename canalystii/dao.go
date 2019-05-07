@@ -204,7 +204,8 @@ func (d *Dao) MoveRelative(
 	message = append(message, directionBytes...)
 	message = append(message, speedBytes...)
 	message = append(message, posBytes...)
-	output, err := d.sendAck2(
+	output, err := sendAck2(
+		d,
 		message,
 		MotorMoveRelativeUnit.RecResp(),
 		MotorMoveRelativeUnit.ComResp(),
@@ -235,7 +236,8 @@ func (d *Dao) MoveAbsolute(
 	message = append(message, motorCodeBytes...)
 	message = append(message, posBytes...)
 	message = append(message, []byte{0x00, 0x00, 0x00}...)
-	output, err := d.sendAck2(
+	output, err := sendAck2(
+		d,
 		message,
 		MotorMoveAbsoluteUnit.RecResp(),
 		MotorMoveAbsoluteUnit.ComResp(),
@@ -266,7 +268,8 @@ func (d *Dao) ResetMotor(
 	message = append(message, motorCodeBytes...)
 	message = append(message, directionBytes...)
 	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.sendAck2(
+	output, err := sendAck2(
+		d,
 		message,
 		MotorResetUnit.RecResp(),
 		MotorResetUnit.ComResp(),
@@ -291,7 +294,8 @@ func (d *Dao) ControlSwitcher(
 	message := req.Bytes()
 	message = append(message, dataBytes...)
 	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.send(
+	output, err := send(
+		d,
 		message,
 	)
 	if err != nil {
@@ -326,7 +330,8 @@ func (d *Dao) ControlSwitcherAdvanced(
 	message = append(message, speedBytes...)
 	message = append(message, countBytes...)
 	message = append(message, 0x00)
-	output, err := d.sendAck6(
+	output, err := sendAck6(
+		d,
 		message,
 		SwitcherControlUnit.RecResp(),
 		SwitcherControlUnit.ComResp(),
@@ -343,7 +348,7 @@ func (d *Dao) ControlSwitcherAdvanced(
 // the slice it returned is humidity, and the other one is temperature.
 func (d *Dao) ReadHumiture() (resp interface{}, err error) {
 	req := SensorHumitureUnit.Request()
-	output, err := d.send(req.Bytes())
+	output, err := send(d, req.Bytes())
 	if err != nil {
 		log.Println(err)
 		return resp, err
@@ -357,7 +362,7 @@ func (d *Dao) ReadHumiture() (resp interface{}, err error) {
 // ReadOxygenConc sends data to require concentration of oxygen from sensors.
 func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 	req := SensorOxygenConcUnit.Request()
-	output, err := d.send(req.Bytes())
+	output, err := send(d, req.Bytes())
 	if err != nil {
 		log.Println(err)
 		return resp, err
@@ -378,7 +383,7 @@ func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
 	message := req.Bytes()
 	message = append(message, deviceBytes...)
 	message = append(message, []byte{0x00, 0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.send(message)
+	output, err := send(d, message)
 	if err != nil {
 		log.Println(err)
 		return resp, err
@@ -409,7 +414,8 @@ func (d *Dao) WriteSystemRom(
 	message = append(message, addressBytes...)
 	message = append(message, valueBytes...)
 	message = append(message, []byte{0x00, 0x00}...)
-	output, err := d.send1(
+	output, err := send1(
+		d,
 		message,
 		SystemRomWriteUnit.ComResp(),
 	)
@@ -433,7 +439,8 @@ func (d *Dao) ReadSystemRom(
 	message := req.Bytes()
 	message = append(message, addressBytes...)
 	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.send1(
+	output, err := send1(
+		d,
 		message,
 		SystemRomReadUnit.ComResp(),
 	)
@@ -445,7 +452,8 @@ func (d *Dao) ReadSystemRom(
 	return resp, nil
 }
 
-func (d *Dao) send(
+var send = func(
+	d *Dao,
 	message []byte,
 ) ([]byte, error) {
 	return d.usbcanClient.Send(
@@ -457,7 +465,8 @@ func (d *Dao) send(
 	)
 }
 
-func (d *Dao) send1(
+var send1 = func(
+	d *Dao,
 	message []byte,
 	comResp []byte,
 ) ([]byte, error) {
@@ -470,7 +479,8 @@ func (d *Dao) send1(
 	)
 }
 
-func (d *Dao) sendAck1(
+var sendAck1 = func(
+	d *Dao,
 	message []byte,
 	recResp []byte,
 	comResp []byte,
@@ -484,7 +494,8 @@ func (d *Dao) sendAck1(
 	)
 }
 
-func (d *Dao) sendAck2(
+var sendAck2 = func(
+	d *Dao,
 	message []byte,
 	recResp []byte,
 	comResp []byte,
@@ -498,7 +509,8 @@ func (d *Dao) sendAck2(
 	)
 }
 
-func (d *Dao) sendAck6(
+var sendAck6 = func(
+	d *Dao,
 	message []byte,
 	recResp []byte,
 	comResp []byte,
