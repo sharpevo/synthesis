@@ -660,3 +660,180 @@ func TestReadHumiture(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestReadOxygenConc(t *testing.T) { // {{{
+	req := SensorOxygenConcUnit.Request()
+	message := req.Bytes() // method of pointer
+	cases := []struct {
+		message []byte
+		output  []byte
+		resp    float64
+		err     error
+	}{
+		{
+			message,
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			102.9,
+			nil,
+		},
+		{
+			message,
+			[]byte{},
+			0.0,
+			fmt.Errorf("some error"),
+		},
+	}
+	originSend := send
+	defer func() { send = originSend }()
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
+			d := &Dao{}
+			send = func(
+				d *Dao,
+				message []byte,
+			) ([]byte, error) {
+				if !reflect.DeepEqual(message, c.message) {
+					t.Errorf(
+						"\nEXPECT: %v\n GET: %v\n\n",
+						c.message,
+						message,
+					)
+				}
+				return c.output, c.err
+			}
+			resp, err := d.ReadOxygenConc()
+			if err != nil && c.err == nil {
+				t.Fatal(err)
+			}
+			if err != nil && !strings.Contains(err.Error(), c.err.Error()) {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.err.Error(),
+					err.Error(),
+				)
+			}
+			if err == nil {
+				if !reflect.DeepEqual(resp, c.resp) {
+					t.Errorf(
+						"\nEXPECT: %v\n GET: %v\n\n",
+						c.resp,
+						resp,
+					)
+				}
+			}
+		})
+	}
+} // }}}
+
+func TestReadPressure(t *testing.T) { // {{{
+	cases := []struct {
+		device int
+
+		message   []byte
+		output    []byte
+		outputerr error
+		resp      int64
+		err       error
+	}{
+		{
+			1,
+
+			[]byte{
+				SensorPressureUnit.Request().Function,
+				1, 0, 0, 0, 0, 0,
+			},
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			nil,
+			772, // float64 or not equal when reflect.DeepEqual
+			nil,
+		},
+		{
+			256,
+
+			[]byte{
+				SensorPressureUnit.Request().Function,
+				1, 0, 0, 0, 0, 0,
+			},
+			[]byte{},
+			nil,
+			0,
+			fmt.Errorf("256 overflows uint8"),
+		},
+		{
+			2,
+
+			[]byte{
+				SensorPressureUnit.Request().Function,
+				2, 0, 0, 0, 0, 0,
+			},
+			[]byte{1, 2, 0xff, 4, 5, 6, 7, 8},
+			nil,
+			0,
+			fmt.Errorf("invalid pressure device '2'"),
+		},
+		{
+			1,
+
+			[]byte{
+				SensorPressureUnit.Request().Function,
+				1, 0, 0, 0, 0, 0,
+			},
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			fmt.Errorf("some send error"),
+			772,
+			nil,
+		},
+		{
+			1,
+
+			[]byte{
+				SensorPressureUnit.Request().Function,
+				1, 0, 0, 0, 0, 0,
+			},
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+			nil,
+			772,
+			fmt.Errorf("some error"),
+		},
+	}
+	originSend := send
+	defer func() { send = originSend }()
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
+			d := &Dao{}
+			send = func(
+				d *Dao,
+				message []byte,
+			) ([]byte, error) {
+				if !reflect.DeepEqual(message, c.message) {
+					t.Errorf(
+						"\nEXPECT: %v\n GET: %v\n\n",
+						c.message,
+						message,
+					)
+				}
+				return c.output, c.outputerr
+			}
+			resp, err := d.ReadPressure(c.device)
+			if err != nil && c.err == nil {
+				t.Fatal(err)
+			}
+			if err != nil && !strings.Contains(err.Error(), c.err.Error()) {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.err.Error(),
+					err.Error(),
+				)
+			}
+			if err == nil {
+				if !reflect.DeepEqual(resp, c.resp) {
+					t.Errorf(
+						"\nEXPECT: %v\n GET: %v\n\n",
+						c.resp,
+						resp,
+					)
+				}
+			}
+		})
+	}
+} // }}}
