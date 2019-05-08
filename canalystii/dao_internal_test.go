@@ -67,6 +67,82 @@ func TestSetID(t *testing.T) { // {{{
 	}
 } // }}}
 
+func TestUint16Bytes(t *testing.T) { // {{{
+	cases := []struct {
+		input  int
+		output []byte
+		err    error
+	}{
+		{
+			1,
+			[]byte{0, 1},
+			nil,
+		},
+		{
+			512,
+			[]byte{2, 0},
+			nil,
+		},
+		{
+			65536,
+			[]byte{},
+			fmt.Errorf("65536 overflows uint16"),
+		},
+	}
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
+			output, err := uint16Bytes(c.input)
+			//if !reflect.DeepEqual(output, c.output) ||
+			if (output != nil && !reflect.DeepEqual(output, c.output)) ||
+				(err != nil && !strings.Contains(err.Error(), c.err.Error())) {
+				t.Errorf(
+					"\nEXPECT: %v %v\n GET: %v %v\n\n",
+					c.output, c.err,
+					output, err,
+				)
+			}
+		})
+	}
+} // }}}
+
+func TestUint8Bytes(t *testing.T) { // {{{
+	cases := []struct {
+		input  int
+		output []byte
+		err    error
+	}{
+		{
+			1,
+			[]byte{1},
+			nil,
+		},
+		{
+			250,
+			[]byte{250},
+			nil,
+		},
+		{
+			256,
+			[]byte{},
+			fmt.Errorf("256 overflows uint8"),
+		},
+	}
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
+			output, err := uint8Bytes(c.input)
+			// for the 3rd case:  output: []byte(nil), c.output: []byte{}
+			if (output != nil && !reflect.DeepEqual(output, c.output)) ||
+				(err != nil && !strings.Contains(err.Error(), c.err.Error())) {
+				t.Errorf(
+					"\nEXPECT: %v %v\n GET: %v %v\n\n",
+					c.output, c.err,
+					output, err,
+				)
+			}
+		})
+	}
+} // }}}
+
 func TestMoveRelative(t *testing.T) { // {{{
 	cases := []struct {
 		motorcode int
