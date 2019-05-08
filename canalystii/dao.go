@@ -525,10 +525,6 @@ var sendAck6 = func(
 }
 
 func uint16Bytes(input int) (output []byte, err error) {
-	//if input < 0 {
-	//input = -input
-	//isNegtive = true
-	//}
 	if input > math.MaxUint16 {
 		return output, fmt.Errorf("%v overflows uint16", input)
 	}
