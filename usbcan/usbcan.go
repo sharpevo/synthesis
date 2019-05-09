@@ -45,9 +45,11 @@ var (
 
 func init() {
 	config.SetDefault("can.transmission.timeout", 500)
-	_SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) * time.Millisecond
+	_SEND_TIMEOUT = time.Duration(config.GetInt("can.transmission.timeout")) *
+		time.Millisecond
 	config.SetDefault("can.transmission.warningtimeout", 5000)
-	_WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) * time.Millisecond
+	_WARN_TIMEOUT = time.Duration(config.GetInt("can.transmission.warningtimeout")) *
+		time.Millisecond
 }
 
 func instance(key string) (client *Client) {
@@ -112,7 +114,6 @@ var newDevice = func(
 	}
 	deviceMap.Set(device.deviceKey(), device)
 	return device, nil
-
 }
 
 var openDevice = func(d *Device) error {
@@ -300,10 +301,6 @@ var transmitRequest = func(c *Channel, req *Request) {
 	return
 }
 
-// }}}
-
-// Transmit{{{
-
 // Transmit builds a slice of CAN objects from request, then sends to CANalyst.
 // For different types of responses, e.g. ACK & CMP, or CMP-only, there might
 // be one or more responses coordinally, depends on the bytes of recExpected
@@ -364,7 +361,7 @@ func (c *Channel) Transmit(
 		}
 	}
 	return resp.Message, resp.Error
-} // }}}
+}
 
 func (c *Channel) receive() {
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -448,8 +445,6 @@ func (c *Channel) untilSendable() {
 	}
 }
 
-// Helpers{{{
-
 var parseFunctionCode = func(c *Channel, data []byte) (byte, error) {
 	code := data[0]
 	switch code {
@@ -499,7 +494,8 @@ var findRequestByResponse = func(
 		if req.FrameId != frameId {
 			continue
 		}
-		log.Printf("checking instruction code %v == %v\n", req.InstructionCode, instCode)
+		log.Printf(
+			"checking instruction code %v == %v\n", req.InstructionCode, instCode)
 		if req.InstructionCode == instCode {
 			request = req
 			err = nil
@@ -526,7 +522,8 @@ var tryResend = func(c *Channel) {
 			warningTimeout := req.TimeSent.Add(_WARN_TIMEOUT)
 			if warningTimeout.Before(now) {
 				resp := Response{}
-				resp.Error = fmt.Errorf("Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
+				resp.Error = fmt.Errorf(
+					"Warning: no response for request\nframe id: %v\ndata: %v\ntime: %v",
 					req.FrameId,
 					req.Message,
 					req.TimeSent.Format("15:04:05.999999"),
@@ -630,7 +627,7 @@ func (c *Channel) releaseInstructionCode(code byte) {
 		false,
 	)
 	log.Println("release instruction code: ", code)
-} // }}}
+}
 
 // A Client is the object refered by DAO(Device Access Object). It takes the
 // charge of initializaiton and relationship management of the physical
