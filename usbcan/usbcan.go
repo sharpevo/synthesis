@@ -5,12 +5,12 @@ import (
 	"controlcan"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"posam/config"
 	"posam/gui/uiutil"
 	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
+	"posam/util/log"
 	"sync"
 	"time"
 )
@@ -117,7 +117,7 @@ var newDevice = func(
 }
 
 var openDevice = func(d *Device) error {
-	log.Printf(
+	log.If(
 		"Opening device(type %v, index %#v)...\n",
 		d.DevType,
 		d.DevIndex,
@@ -217,7 +217,7 @@ var startChannel = func(c *Channel) error {
 		Timing1: c.Timing1,
 		Mode:    c.Mode,
 	}
-	log.Printf(
+	log.If(
 		"Initiating CAN(type %v, index %v, can %v)...\n",
 		c.DevType,
 		c.DevIndex,
@@ -231,7 +231,7 @@ var startChannel = func(c *Channel) error {
 	); err != nil {
 		return err
 	}
-	log.Printf("Starting CAN(type %v, index %v, can %v)...\n", c.DevType, c.DevIndex, c.CanIndex)
+	log.If("Starting CAN(type %v, index %v, can %v)...\n", c.DevType, c.DevIndex, c.CanIndex)
 	if err := controlcan.StartCAN(
 		c.DevType,
 		c.DevIndex,
@@ -253,7 +253,7 @@ func (c *Channel) send() {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
 			// TODO: error handling, e.g., insert to the response
-			log.Printf("canalyst client sender %v terminated\n", c.deviceKey())
+			log.Ef("canalyst client sender %v terminated\n", c.deviceKey())
 			return
 		}
 		c.ReceptionMap.Lock()
@@ -272,7 +272,7 @@ var transmitRequest = func(c *Channel, req *Request) {
 	c.untilSendable()
 	respc := req.Responsec
 	resp := Response{}
-	log.Printf("sending request %#v\n", req.Message)
+	log.Df("sending request %#v\n", req.Message)
 	var data [8]byte
 	copy(data[:], req.Message)
 	pSend := controlcan.CanObj{
@@ -291,12 +291,12 @@ var transmitRequest = func(c *Channel, req *Request) {
 		pSendList,
 		len(pSendList),
 	); err != nil {
-		log.Println(err)
+		log.E(err)
 		resp.Error = err
 		respc <- resp
 		return
 	}
-	log.Printf("request sent: %v\n", pSend)
+	log.Df("request sent: %v\n", pSend)
 	req.TimeSent = time.Now()
 	return
 }
@@ -337,7 +337,7 @@ func (c *Channel) Transmit(
 		status := resp.Message[recIndex]
 		switch status {
 		case STATUS_CODE_RECEIVED:
-			log.Println("request received:", message)
+			log.Df("request received: %v", message)
 		default:
 			return resp.Message,
 				fmt.Errorf("invalid status code %#v", status)
@@ -374,7 +374,7 @@ func (c *Channel) receive() {
 			100,
 		)
 		if err != nil || count == controlcan.MINUS_ONE {
-			log.Printf("canalyst client receiver %v terminated\n", c.deviceKey())
+			log.Ef("canalyst client receiver %v terminated\n", c.deviceKey())
 			return
 		}
 		parseCanObjects(c, pReceive[:count])
@@ -390,7 +390,7 @@ var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
 		resp := Response{}
 		req, err := findRequestByResponse(c, data, canObj.ID)
 		if err != nil {
-			log.Println(err)
+			log.E(err)
 			// TODO: notification
 			continue
 		}
@@ -482,19 +482,18 @@ var findRequestByResponse = func(
 		return request, err
 	}
 	for item := range c.ReceptionMap.Iter() {
-		fmt.Println("findRequestByResponse: iter receptionmap")
 		reqi := item.Value
 		req, ok := reqi.(*Request)
 		if !ok {
 			err = fmt.Errorf("invalid request: %#v", reqi)
-			log.Println(err)
+			log.E(err)
 			continue
 		}
-		log.Printf("checking frame id %v == %v\n", req.FrameId, frameId)
+		log.Df("checking frame id %v == %v\n", req.FrameId, frameId)
 		if req.FrameId != frameId {
 			continue
 		}
-		log.Printf(
+		log.Df(
 			"checking instruction code %v == %v\n", req.InstructionCode, instCode)
 		if req.InstructionCode == instCode {
 			request = req
@@ -515,7 +514,7 @@ var tryResend = func(c *Channel) {
 		req, ok := reqi.(*Request)
 		if !ok {
 			err := fmt.Errorf("invalid request: %#v", reqi)
-			log.Println(err)
+			log.E(err)
 			continue
 		}
 		if _INTERRUPT_WHEN_WARN {
@@ -546,8 +545,7 @@ var tryResend = func(c *Channel) {
 }
 
 func (c *Channel) resend(now time.Time, req *Request) {
-	fmt.Printf("\n\n--------------------------------------------------\n\n")
-	log.Printf(
+	log.Wf(
 		"error: can comm timeout\nframe id: %v\ncode: %v\ndata: %v\nresend count: %v\n",
 		req.FrameId,
 		req.InstructionCode,
@@ -563,7 +561,7 @@ func (c *Channel) resend(now time.Time, req *Request) {
 			req.FrameId,
 			req.Message,
 		)
-		log.Println(errmsg)
+		log.D(errmsg)
 
 		//resp.Error = errmsg
 		resp.Message = []byte{0x0}
@@ -575,7 +573,7 @@ func (c *Channel) resend(now time.Time, req *Request) {
 		}()
 		return
 	}
-	log.Printf(
+	log.Df(
 		"resending...\nframe id: %v\ncode: %v\ndata: %v\n",
 		req.FrameId,
 		req.InstructionCode,
@@ -584,19 +582,18 @@ func (c *Channel) resend(now time.Time, req *Request) {
 	req.ResendCount++
 	req.TimeSent = now
 	c.RequestQueue.Push(req)
-	fmt.Printf("--------------------------------------------------\n\n")
 }
 
 func (c *Channel) getInstructionCode() (code byte, err error) {
 	var origin, update interface{}
 	origin = false
 	update = true
-	log.Printf("allocating instruction code...")
+	log.D("allocating instruction code...")
 	key, err := c.InstructionCodeMap.Replace(origin, update)
 	if err == nil {
 		codeSlice, err := hex.DecodeString(key)
 		if err != nil {
-			log.Println(err)
+			log.E(err)
 			return code, err
 		}
 		code = codeSlice[0]
@@ -605,18 +602,18 @@ func (c *Channel) getInstructionCode() (code byte, err error) {
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	defer ticker.Stop()
 	for _ = range ticker.C {
-		log.Printf("waiting for instruction code...")
+		log.D("waiting for instruction code...")
 		key, err := c.InstructionCodeMap.Replace(origin, update)
 		if err == nil {
 			codeSlice, err := hex.DecodeString(key)
 			if err != nil {
-				log.Println(err)
+				log.E(err)
 				return code, err
 			}
 			code = codeSlice[0]
 			return code, nil
 		}
-		log.Printf("not enough instruction code, wait 5 seconds\n")
+		log.W("not enough instruction code, wait 5 seconds\n")
 	}
 	return code, fmt.Errorf("not valid instruction code")
 }
@@ -626,7 +623,7 @@ func (c *Channel) releaseInstructionCode(code byte) {
 		hex.EncodeToString([]byte{code}),
 		false,
 	)
-	log.Println("release instruction code: ", code)
+	log.Df("release instruction code: %v", code)
 }
 
 // A Client is the object refered by DAO(Device Access Object). It takes the
@@ -665,7 +662,7 @@ func NewClient(
 		mode,
 	)
 	if err != nil {
-		log.Println(err)
+		log.E(err)
 		return client, err
 	}
 	client.DevID = devID
