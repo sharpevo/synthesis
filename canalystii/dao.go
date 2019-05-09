@@ -199,14 +199,10 @@ func (d *Dao) MoveRelative(
 		return resp, err
 	}
 	req := MotorMoveRelativeUnit.Request()
-	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
-	message = append(message, directionBytes...)
-	message = append(message, speedBytes...)
-	message = append(message, posBytes...)
 	output, err := sendAck2(
 		d,
-		message,
+		composeBytes(req.Bytes(), motorCodeBytes, directionBytes, speedBytes,
+			posBytes),
 		MotorMoveRelativeUnit.RecResp(),
 		MotorMoveRelativeUnit.ComResp(),
 	)
@@ -232,13 +228,9 @@ func (d *Dao) MoveAbsolute(
 		return resp, err
 	}
 	req := MotorMoveAbsoluteUnit.Request()
-	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
-	message = append(message, posBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00}...)
 	output, err := sendAck2(
 		d,
-		message,
+		composeBytes(req.Bytes(), motorCodeBytes, posBytes, make([]byte, 3)),
 		MotorMoveAbsoluteUnit.RecResp(),
 		MotorMoveAbsoluteUnit.ComResp(),
 	)
@@ -264,13 +256,9 @@ func (d *Dao) ResetMotor(
 		return resp, err
 	}
 	req := MotorResetUnit.Request()
-	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
-	message = append(message, directionBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
 	output, err := sendAck2(
 		d,
-		message,
+		composeBytes(req.Bytes(), motorCodeBytes, directionBytes, make([]byte, 4)),
 		MotorResetUnit.RecResp(),
 		MotorResetUnit.ComResp(),
 	)
@@ -291,12 +279,9 @@ func (d *Dao) ControlSwitcher(
 		return resp, err
 	}
 	req := SwitcherControlUnit.Request()
-	message := req.Bytes()
-	message = append(message, dataBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
 	output, err := send(
 		d,
-		message,
+		composeBytes(req.Bytes(), dataBytes, make([]byte, 4)),
 	)
 	if err != nil {
 		log.Println(err)
@@ -325,14 +310,9 @@ func (d *Dao) ControlSwitcherAdvanced(
 		return resp, err
 	}
 	req := SwitcherControlAdvancedUnit.Request()
-	message := req.Bytes()
-	message = append(message, dataBytes...)
-	message = append(message, speedBytes...)
-	message = append(message, countBytes...)
-	message = append(message, 0x00)
 	output, err := sendAck6(
 		d,
-		message,
+		composeBytes(req.Bytes(), dataBytes, speedBytes, countBytes, []byte{0}),
 		SwitcherControlAdvancedUnit.RecResp(),
 		SwitcherControlAdvancedUnit.ComResp(),
 	)
@@ -380,10 +360,7 @@ func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
 		return resp, err
 	}
 	req := SensorPressureUnit.Request()
-	message := req.Bytes()
-	message = append(message, deviceBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00, 0x00}...)
-	output, err := send(d, message)
+	output, err := send(d, composeBytes(req.Bytes(), deviceBytes, make([]byte, 5)))
 	if err != nil {
 		log.Println(err)
 		return resp, err
@@ -410,13 +387,9 @@ func (d *Dao) WriteSystemRom(
 		return resp, err
 	}
 	req := SystemRomWriteUnit.Request()
-	message := req.Bytes()
-	message = append(message, addressBytes...)
-	message = append(message, valueBytes...)
-	message = append(message, []byte{0x00, 0x00}...)
 	output, err := send1(
 		d,
-		message,
+		composeBytes(req.Bytes(), addressBytes, valueBytes, []byte{0, 0}),
 		SystemRomWriteUnit.ComResp(),
 	)
 	if err != nil {
@@ -436,12 +409,9 @@ func (d *Dao) ReadSystemRom(
 		return resp, err
 	}
 	req := SystemRomWriteUnit.Request()
-	message := req.Bytes()
-	message = append(message, addressBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
 	output, err := send1(
 		d,
-		message,
+		composeBytes(req.Bytes(), addressBytes, make([]byte, 4)),
 		SystemRomReadUnit.ComResp(),
 	)
 	if err != nil {
