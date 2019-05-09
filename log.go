@@ -14,7 +14,7 @@ var (
 
 func init() {
 	if ENV_PRODUCTION {
-		file, err := os.OpenFile("log.json", os.O_CREATE|os.O_WRONLY, 0666)
+		file, err := os.OpenFile("log.json", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		if err == nil {
 			log.Out = file
 		} else {
