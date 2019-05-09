@@ -561,3 +561,10 @@ func uint8Bytes(input int) (output []byte, err error) {
 func divideTen(input uint16) float64 {
 	return float64(input) / 10.0
 }
+
+func composeBytes(target []byte, slices ...[]byte) []byte {
+	for _, slice := range slices {
+		target = append(target, slice...)
+	}
+	return target
+}

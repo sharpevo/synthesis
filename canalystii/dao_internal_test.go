@@ -1106,3 +1106,33 @@ func TestReadSystemRom(t *testing.T) { // {{{
 		})
 	}
 } // }}}
+
+func TestComposeBytes(t *testing.T) {
+	cases := []struct {
+		target []byte
+		slices [][]byte
+		expect []byte
+	}{
+		{
+			[]byte{1},
+			[][]byte{
+				[]byte{2, 3, 4},
+				[]byte{5},
+				[]byte{6, 7, 8},
+			},
+			[]byte{1, 2, 3, 4, 5, 6, 7, 8},
+		},
+	}
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
+			actual := composeBytes(c.target, c.slices...)
+			if !reflect.DeepEqual(actual, c.expect) {
+				t.Errorf(
+					"\nEXPECT: %v\n GET: %v\n\n",
+					c.expect,
+					c.target,
+				)
+			}
+		})
+	}
+}
