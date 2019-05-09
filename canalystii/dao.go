@@ -354,7 +354,7 @@ func (d *Dao) ReadHumiture() (resp interface{}, err error) {
 	}
 	humidity := binary.BigEndian.Uint16(output[1:3])
 	temperature := binary.BigEndian.Uint16(output[3:6])
-	resp = []float64{divideTen(humidity), divideTen(temperature)}
+	resp = []float64{dividedByTen(humidity), dividedByTen(temperature)}
 	return resp, nil
 }
 
@@ -367,7 +367,7 @@ func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 		return resp, err
 	}
 	conc := binary.BigEndian.Uint16(output[3:5])
-	resp = divideTen(conc)
+	resp = dividedByTen(conc)
 	return resp, nil
 }
 
@@ -559,7 +559,7 @@ func uint8Bytes(input int) (output []byte, err error) {
 	return output, err
 }
 
-func divideTen(input uint16) float64 {
+func dividedByTen(input uint16) float64 {
 	return float64(input) / 10.0
 }
 
