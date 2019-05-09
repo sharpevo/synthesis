@@ -63,7 +63,7 @@ func V(key string, value interface{}) *logrus.Entry {
 }
 
 func T(args ...interface{}) {
-	log.Trace(S(args)...)
+	log.Trace(S(args...)...)
 }
 
 func Tv(fields M) {
@@ -71,11 +71,11 @@ func Tv(fields M) {
 }
 
 func Tf(format string, args ...interface{}) {
-	log.Tracef(format, S(args)...)
+	log.Tracef(format, S(args...)...)
 }
 
 func D(args ...interface{}) {
-	log.Debug(S(args)...)
+	log.Debug(S(args...)...)
 }
 
 func Dv(fields M) {
@@ -83,11 +83,11 @@ func Dv(fields M) {
 }
 
 func Df(format string, args ...interface{}) {
-	log.Debugf(format, S(args)...)
+	log.Debugf(format, S(args...)...)
 }
 
 func I(args ...interface{}) {
-	log.Info(S(args)...)
+	log.Info(S(args...)...)
 }
 
 func Iv(fields M) {
@@ -95,11 +95,11 @@ func Iv(fields M) {
 }
 
 func If(format string, args ...interface{}) {
-	log.Infof(format, S(args)...)
+	log.Infof(format, S(args...)...)
 }
 
 func W(args ...interface{}) {
-	log.Warn(S(args)...)
+	log.Warn(S(args...)...)
 }
 
 func Wv(fields M) {
@@ -107,11 +107,11 @@ func Wv(fields M) {
 }
 
 func Wf(format string, args ...interface{}) {
-	log.Warnf(format, S(args)...)
+	log.Warnf(format, S(args...)...)
 }
 
 func E(args ...interface{}) {
-	log.Error(S(args)...)
+	log.Error(S(args...)...)
 }
 
 func Ev(fields M) {
@@ -119,11 +119,11 @@ func Ev(fields M) {
 }
 
 func Ef(format string, args ...interface{}) {
-	log.Errorf(format, S(args)...)
+	log.Errorf(format, S(args...)...)
 }
 
 func F(args ...interface{}) {
-	log.Fatal(S(args)...)
+	log.Fatal(S(args...)...)
 }
 
 func Fv(fields M) {
@@ -131,11 +131,11 @@ func Fv(fields M) {
 }
 
 func Ff(format string, args ...interface{}) {
-	log.Fatalf(format, S(args)...)
+	log.Fatalf(format, S(args...)...)
 }
 
 func P(args ...interface{}) {
-	log.Panic(S(args)...)
+	log.Panic(S(args...)...)
 }
 
 func Pv(fields M) {
@@ -143,11 +143,11 @@ func Pv(fields M) {
 }
 
 func Pf(format string, args ...interface{}) {
-	log.Panicf(format, S(args)...)
+	log.Panicf(format, S(args...)...)
 }
 
 func S(args ...interface{}) []interface{} {
-	r := make([]interface{}, len(args))
+	r := []interface{}{}
 	for _, v := range args {
 		r = append(r, fmt.Sprintf("%v", v))
 	}
