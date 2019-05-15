@@ -18,10 +18,15 @@ var (
 	SET_TONPOSOK          = config.GetBool("tml.tonposok")
 	COMPENSATION          = config.GetBool("tml.compensation.basic")
 	COMPENSATION_ADVANCED = config.GetBool("tml.compensation.advanced")
+	_MTIMEOUT time.Duration
+
+	_CONFIG_MOTION_TIMEOUT = "tml.motion.timeout"
 )
 
 func init() {
 	clientMap = concurrentmap.NewConcurrentMap()
+	config.SetDefault(_CONFIG_MOTION_TIMEOUT, 100)
+	_MTIMEOUT = time.Duration(config.GetInt(_CONFIG_MOTION_TIMEOUT)) * time.Second
 }
 
 func Instance(key string) *Client {
@@ -424,13 +429,17 @@ func (c *Client) MoveRelative(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	xcompleted := false
-	for !xcompleted {
-		fmt.Println("checking position...")
-		if err = tml.SelectAxis(c.AxisXID); err != nil {
-			log.Println(err)
+	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
+		select {
+		case <-tc:
+			xc = true
+			return fmt.Errorf("Aoztech timeout")
+		default:
+			if err = tml.SelectAxis(c.AxisXID); err != nil {
+				log.Println(err)
+			}
+			tml.CheckEvent(&xc)
 		}
-		tml.CheckEvent(&xcompleted)
 	}
 	fmt.Println("done")
 	return nil
@@ -526,13 +535,17 @@ func (c *Client) MoveAbsolute(
 		fmt.Println("2nd compensation")
 		c.CompensateMotion(c.AxisYID, posy)
 	}
-	xcompleted := false
-	for !xcompleted {
-		fmt.Println("checking position...")
-		if err = tml.SelectAxis(c.AxisXID); err != nil {
-			log.Println(err)
+	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
+		select {
+		case <-tc:
+			xc = true
+			return fmt.Errorf("Aoztech timeout")
+		default:
+			if err = tml.SelectAxis(c.AxisXID); err != nil {
+				log.Println(err)
+			}
+			tml.CheckEvent(&xc)
 		}
-		tml.CheckEvent(&xcompleted)
 	}
 	fmt.Println("done")
 	return nil
