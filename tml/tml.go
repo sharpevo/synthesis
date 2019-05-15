@@ -12,15 +12,18 @@ import (
 	"tml"
 )
 
-var clientMap *concurrentmap.ConcurrentMap
-
 var (
-	SET_TONPOSOK          = config.GetBool("tml.tonposok")
-	COMPENSATION          = config.GetBool("tml.compensation.basic")
-	COMPENSATION_ADVANCED = config.GetBool("tml.compensation.advanced")
+	clientMap *concurrentmap.ConcurrentMap
 	_MTIMEOUT time.Duration
 
-	_CONFIG_MOTION_TIMEOUT = "tml.motion.timeout"
+	_CONFIG_MOTION_TIMEOUT        = "tml.motion.timeout"
+	_CONFIG_TONPOSOK              = "tml.tonposok"
+	_CONFIG_COMPENSATION_BASIC    = "tml.compensation.basic"
+	_CONFIG_COMPENSATION_ADVANCED = "tml.compensation.advanced"
+
+	_SET_TONPOSOK          = config.GetBool(_CONFIG_TONPOSOK)
+	_COMPENSATION          = config.GetBool(_CONFIG_COMPENSATION_BASIC)
+	_COMPENSATION_ADVANCED = config.GetBool(_CONFIG_COMPENSATION_ADVANCED)
 )
 
 func init() {
@@ -497,7 +500,7 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SelectAxis(c.AxisXID); err != nil {
 		return err
 	}
-	if SET_TONPOSOK {
+	if _SET_TONPOSOK {
 		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
@@ -515,7 +518,7 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SelectAxis(c.AxisYID); err != nil {
 		return err
 	}
-	if SET_TONPOSOK {
+	if _SET_TONPOSOK {
 		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
@@ -531,7 +534,7 @@ func (c *Client) MoveAbsolute(
 		return err
 	}
 	c.CompensateMotion(c.AxisYID, posy)
-	if COMPENSATION && COMPENSATION_ADVANCED {
+	if _COMPENSATION && _COMPENSATION_ADVANCED {
 		fmt.Println("2nd compensation")
 		c.CompensateMotion(c.AxisYID, posy)
 	}
@@ -666,7 +669,7 @@ func (c *Client) UpdateMotionStatus() (err error) {
 }
 
 func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
-	if !COMPENSATION {
+	if !_COMPENSATION {
 		return nil
 	}
 	switch axisID {
@@ -699,7 +702,7 @@ func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
 }
 
 func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
-	if !COMPENSATION {
+	if !_COMPENSATION {
 		return nil
 	}
 	switch axisID {
