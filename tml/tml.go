@@ -2,11 +2,11 @@ package tml
 
 import (
 	"fmt"
-	"log"
 	"posam/config"
 	"posam/gui/uiutil"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
+	"posam/util/log"
 	"reflect"
 	"time"
 	"tml"
@@ -52,7 +52,7 @@ func addInstance(client *Client) (*Client, bool) {
 func ResetInstance() {
 	for item := range clientMap.Iter() {
 		client := item.Value.(*Client)
-		log.Println("terminating client: ", client.Name)
+		log.Df("terminating client: %v", client.Name)
 		//client.Stop()
 	}
 	clientMap = concurrentmap.NewConcurrentMap()
@@ -96,12 +96,13 @@ func NewClient(
 		return c, fmt.Errorf("client existed")
 	}
 	go client.launch()
-	log.Println(">>> client: ", client.AxisXID, client.AxisYID)
+	log.Df(
+		"client launched(AxisXID: %v, AxisYID: %v)", client.AxisXID, client.AxisYID)
 	return client, nil
 }
 
 func (c *Client) connect() (err error) {
-	log.Printf("Connecting the motor %q...\n", c.Name)
+	log.Df("Connecting the motor %q...", c.Name)
 
 	commType := tml.CHANNEL_RS232
 	hostID := 1
@@ -151,7 +152,7 @@ func (c *Client) connect() (err error) {
 		return err
 	}
 
-	log.Println("checking status...")
+	log.D("checking status...")
 	var statusx int
 	var statusy int
 	for i := 0; i < 15; i++ {
@@ -187,7 +188,7 @@ func (c *Client) connect() (err error) {
 		return fmt.Errorf("failed to enable power on axes: x(%d) / y(%d)", statusx, statusy)
 	}
 
-	log.Printf("motor %q is ready\n", c.Name)
+	log.Df("motor %q is ready", c.Name)
 	return nil
 }
 
@@ -203,13 +204,13 @@ type Response struct {
 }
 
 func (c *Client) launch() {
-	log.Println("motor client launched")
+	log.D("motor client launched")
 	c.connect()
 
 	for {
 		reqi, err := c.RequestQueue.Pop()
 		if err != nil {
-			log.Println("motor client terminated")
+			log.E("motor client terminated")
 			return
 		}
 		req := reqi.(*Request)
@@ -231,7 +232,7 @@ func (c *Client) launch() {
 			continue
 		}
 		if err := c.UpdateMotionStatus(); err != nil {
-			log.Println(err)
+			log.E(err)
 		}
 		req.Responsec <- Response{Error: nil}
 	}
@@ -253,7 +254,7 @@ func (c *Client) MoveAbsoluteByAxis(
 	if err != nil {
 		return err
 	}
-	fmt.Printf("moving axis %d to %v...", aid, pos)
+	log.If("moving axis %d to %v...", aid, pos)
 	if err = tml.SelectAxis(aid); err != nil {
 		return err
 	}
@@ -269,7 +270,7 @@ func (c *Client) MoveAbsoluteByAxis(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	fmt.Printf("done\n")
+	log.D("done")
 	c.CompensateMotion(aid, pos)
 	return nil
 }
@@ -291,7 +292,7 @@ func (c *Client) MoveRelativeByAxis(
 	if err != nil {
 		return err
 	}
-	fmt.Printf("moving axis %d by %v...", aid, pos)
+	log.If("moving axis %d by %v...", aid, pos)
 	if err = tml.SelectAxis(aid); err != nil {
 		return err
 	}
@@ -308,7 +309,7 @@ func (c *Client) MoveRelativeByAxis(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	fmt.Printf("done\n")
+	log.D("done")
 	return nil
 	//c.CompensateMotion(aid, pos)
 }
@@ -332,8 +333,8 @@ func (c *Client) MoveAbsByAxis(
 		},
 	}
 	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for axis %d response: absolute motion to %v\n",
+	log.Df(
+		"waiting for axis %d response: absolute motion to %v",
 		axisID,
 		pos,
 	)
@@ -364,8 +365,8 @@ func (c *Client) MoveRelByAxis(
 		},
 	}
 	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for axis %d response: relative motion to %v\n",
+	log.Df(
+		"waiting for axis %d response: relative motion to %v",
 		axisID,
 		pos,
 	)
@@ -393,7 +394,7 @@ func (c *Client) MoveRelative(
 	if !ok {
 		return fmt.Errorf("failed to convert posy %v", posyi)
 	}
-	fmt.Printf("moving by (%v,%v)...", posx, posy)
+	log.If("moving by (%v,%v)...", posx, posy)
 	if err = tml.SelectAxis(c.AxisXID); err != nil {
 		return err
 	}
@@ -433,12 +434,12 @@ func (c *Client) MoveRelative(
 			return fmt.Errorf("Aoztech timeout")
 		default:
 			if err = tml.SelectAxis(c.AxisXID); err != nil {
-				log.Println(err)
+				log.E(err)
 			}
 			tml.CheckEvent(&xc)
 		}
 	}
-	fmt.Println("done")
+	log.D("done")
 	return nil
 }
 
@@ -462,8 +463,8 @@ func (c *Client) MoveRel(
 		},
 	}
 	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for response: relative motion to (%v, %v)\n",
+	log.Df(
+		"waiting for response: relative motion to (%v, %v)",
 		posx,
 		posy,
 	)
@@ -490,12 +491,12 @@ func (c *Client) MoveAbsolute(
 	if !ok {
 		return fmt.Errorf("failed to convert posy %v", posyi)
 	}
-	fmt.Printf("moving to (%v,%v)...", posx, posy)
+	log.If("moving to (%v,%v)...", posx, posy)
 	if err = tml.SelectAxis(c.AxisXID); err != nil {
 		return err
 	}
 	if _SET_TONPOSOK {
-		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
+		log.Df("set TONPOSOK %v", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
 		tml.CalcPosition(c.AxisXID, posx),
@@ -513,7 +514,7 @@ func (c *Client) MoveAbsolute(
 		return err
 	}
 	if _SET_TONPOSOK {
-		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
+		log.Df("set TONPOSOK %v", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
 		tml.CalcPosition(c.AxisYID, posy),
@@ -529,7 +530,7 @@ func (c *Client) MoveAbsolute(
 	}
 	c.CompensateMotion(c.AxisYID, posy)
 	if _COMPENSATION && _COMPENSATION_ADVANCED {
-		fmt.Println("2nd compensation")
+		log.I("2nd compensation")
 		c.CompensateMotion(c.AxisYID, posy)
 	}
 	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
@@ -539,12 +540,12 @@ func (c *Client) MoveAbsolute(
 			return fmt.Errorf("Aoztech timeout")
 		default:
 			if err = tml.SelectAxis(c.AxisXID); err != nil {
-				log.Println(err)
+				log.E(err)
 			}
 			tml.CheckEvent(&xc)
 		}
 	}
-	fmt.Println("done")
+	log.D("done")
 	return nil
 }
 
@@ -567,8 +568,8 @@ func (c *Client) MoveAbs(
 		},
 	}
 	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for response: absolute motion to (%v, %v)\n",
+	log.Ef(
+		"waiting for response: absolute motion to (%v, %v)",
 		posx,
 		posy,
 	)
@@ -671,7 +672,7 @@ func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
 		pos, err := tml.ActualPosition(c.AxisYID)
 		diffPos := target - pos
 		offset := tml.CalcPosition(c.AxisYID, diffPos)
-		fmt.Printf("compensating axis %d by %v (diff apos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
+		log.Df("compensating axis %d by %v (diff apos %v, actual pos %v)...", c.AxisYID, diffPos, offset, pos)
 		if err = tml.SelectAxis(c.AxisYID); err != nil {
 			return err
 		}
@@ -688,7 +689,7 @@ func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
 		if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 			return err
 		}
-		fmt.Printf("done\n")
+		log.D("done")
 		return nil
 	default:
 		return nil
@@ -705,10 +706,10 @@ func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
 		diffPos := target - pos
 		offset := tml.CalcPosition(c.AxisYID, diffPos)
 		if diffPos == 0 {
-			fmt.Printf("not compensate axis %d by %v (diff tpos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
+			log.Df("not compensate axis %d by %v (diff tpos %v, actual pos %v)...", c.AxisYID, diffPos, offset, pos)
 			return nil
 		}
-		fmt.Printf("compensating axis %d by %v (diff tpos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
+		log.Df("compensating axis %d by %v (diff tpos %v, actual pos %v)...", c.AxisYID, diffPos, offset, pos)
 		if err = tml.SelectAxis(c.AxisYID); err != nil {
 			return err
 		}
@@ -725,7 +726,7 @@ func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
 		if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 			return err
 		}
-		fmt.Printf("done\n")
+		log.D("done")
 		return nil
 	default:
 		return nil
