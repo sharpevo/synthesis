@@ -214,12 +214,6 @@ func (c *Client) launch() {
 			return
 		}
 		req := reqi.(*Request)
-		//err = c.checkAxisReady(req.AxisID)
-		//if err != nil {
-		//req.Responsec <- Response{Error: err}
-		//continue
-		//}
-		//c.execute(req)
 		function := reflect.ValueOf(c).MethodByName(req.Function)
 		args := []reflect.Value{}
 		for _, v := range req.Arguments {
