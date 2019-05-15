@@ -408,7 +408,6 @@ func (c *Client) MoveRelative(
 	if err = tml.SetEventOnMotionComplete(false, false); err != nil {
 		return err
 	}
-	xcompleted := false
 	if err = tml.SelectAxis(c.AxisYID); err != nil {
 		return err
 	}
@@ -425,15 +424,13 @@ func (c *Client) MoveRelative(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	for {
-		<-time.After(200 * time.Millisecond)
+	xcompleted := false
+	for !xcompleted {
+		fmt.Println("checking position...")
 		if err = tml.SelectAxis(c.AxisXID); err != nil {
 			log.Println(err)
 		}
 		tml.CheckEvent(&xcompleted)
-		if xcompleted {
-			break
-		}
 	}
 	fmt.Println("done")
 	return nil
@@ -506,7 +503,6 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SetEventOnMotionComplete(false, false); err != nil {
 		return err
 	}
-	xcompleted := false
 	if err = tml.SelectAxis(c.AxisYID); err != nil {
 		return err
 	}
@@ -530,15 +526,13 @@ func (c *Client) MoveAbsolute(
 		fmt.Println("2nd compensation")
 		c.CompensateMotion(c.AxisYID, posy)
 	}
-	for {
-		<-time.After(200 * time.Millisecond)
+	xcompleted := false
+	for !xcompleted {
+		fmt.Println("checking position...")
 		if err = tml.SelectAxis(c.AxisXID); err != nil {
 			log.Println(err)
 		}
 		tml.CheckEvent(&xcompleted)
-		if xcompleted {
-			break
-		}
 	}
 	fmt.Println("done")
 	return nil
