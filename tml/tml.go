@@ -58,12 +58,6 @@ func ResetInstance() {
 	clientMap = concurrentmap.NewConcurrentMap()
 }
 
-type Clienter interface {
-	connect() error
-	MoveRelative(int, int, float64, float64, float64) error
-	MoveAbsolute(int, int, float64, float64, float64) error
-}
-
 type Client struct {
 	Name           string
 	BaudRate       int
