@@ -702,23 +702,28 @@ func (c *Client) UpdateMotionStatus() (err error) {
 	return nil
 }
 
+// PosX returns the x-axis position of motor
 func (c *Client) PosX() float64 {
 	return c.posX
 }
 
+// PosY returns the y-axis position of motor
 func (c *Client) PosY() float64 {
 	return c.posY
 }
 
+// AxisXID returns the id of x-axis
 func (c *Client) AxisXID() int {
 	return c.axisXID
 }
 
+// AxisYID returns the id of y-axis
 func (c *Client) AxisYID() int {
 	return c.axisYID
 }
 
 func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
+	// TODO: relative compensation
 	if !_COMPENSATION {
 		return nil
 	}
