@@ -92,7 +92,7 @@ func NewClient(
 	if c, found := addInstance(client); found {
 		return c, fmt.Errorf("client existed")
 	}
-	go client.launch()
+	go launchClient(client)
 	log.Df(
 		"client launched(AxisXID: %v, AxisYID: %v)", client.AxisXID, client.AxisYID)
 	return client, nil
@@ -200,7 +200,7 @@ type Response struct {
 	Error error
 }
 
-func (c *Client) launch() {
+var launchClient = func(c *Client) {
 	log.D("motor client launched")
 	c.connect()
 
