@@ -15,8 +15,10 @@ import (
 var (
 	clientMap *concurrentmap.ConcurrentMap
 	_MTIMEOUT time.Duration
+	_MDELAY   time.Duration
 
 	_CONFIG_MOTION_TIMEOUT        = "tml.motion.timeout"
+	_CONFIG_MOTION_DELAY          = "tml.motion.delay"
 	_CONFIG_TONPOSOK              = "tml.tonposok"
 	_CONFIG_COMPENSATION_BASIC    = "tml.compensation.basic"
 	_CONFIG_COMPENSATION_ADVANCED = "tml.compensation.advanced"
@@ -30,6 +32,8 @@ func init() {
 	clientMap = concurrentmap.NewConcurrentMap()
 	config.SetDefault(_CONFIG_MOTION_TIMEOUT, 100)
 	_MTIMEOUT = time.Duration(config.GetInt(_CONFIG_MOTION_TIMEOUT)) * time.Second
+	config.SetDefault(_CONFIG_MOTION_DELAY, 0)
+	_MDELAY = time.Duration(config.GetInt(_CONFIG_MOTION_DELAY)) * time.Millisecond
 }
 
 func Instance(key string) *Client {
@@ -422,6 +426,9 @@ func (c *Client) MoveRelative(
 		return err
 	}
 	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
+		if _MDELAY != 0 {
+			<-time.After(_MDELAY)
+		}
 		select {
 		case <-tc:
 			xc = true
@@ -528,6 +535,9 @@ func (c *Client) MoveAbsolute(
 		c.CompensateMotion(c.AxisYID, posy)
 	}
 	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
+		if _MDELAY != 0 {
+			<-time.After(_MDELAY)
+		}
 		select {
 		case <-tc:
 			xc = true
