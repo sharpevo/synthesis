@@ -29,7 +29,7 @@ func TestAddInstance(t *testing.T) { // {{{
 	launchClient = func(client *Client) {}
 	for index, c := range cases {
 		t.Run(fmt.Sprintf("%v", index), func(t *testing.T) {
-			client := &Client{Name: c.name}
+			client := &Client{name: c.name}
 			rclient, found := addInstance(client)
 			if !reflect.DeepEqual(rclient, client) ||
 				found != c.found {
