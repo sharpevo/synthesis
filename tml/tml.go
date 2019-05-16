@@ -196,13 +196,13 @@ func (c *Client) connect() (err error) {
 
 type request struct {
 	//AxisID    int
-	responsec chan Response
+	responsec chan response
 	function  string
 	arguments []interface{}
 }
 
-type Response struct {
-	Error error
+type response struct {
+	err error
 }
 
 var launchClient = func(c *Client) {
@@ -224,13 +224,13 @@ var launchClient = func(c *Client) {
 		result := function.Call(args)
 		erri := result[0].Interface()
 		if erri != nil {
-			req.responsec <- Response{Error: erri.(error)}
+			req.responsec <- response{err: erri.(error)}
 			continue
 		}
 		if err := c.UpdateMotionStatus(); err != nil {
 			log.E(err)
 		}
-		req.responsec <- Response{Error: nil}
+		req.responsec <- response{err: nil}
 	}
 }
 
@@ -317,7 +317,7 @@ func (c *Client) MoveAbsByAxis(
 	accel float64,
 ) error {
 	req := request{
-		responsec: make(chan Response),
+		responsec: make(chan response),
 		function:  "MoveAbsoluteByAxis",
 		arguments: []interface{}{
 			axisID,
@@ -335,8 +335,8 @@ func (c *Client) MoveAbsByAxis(
 		pos,
 	)
 	resp := <-req.responsec
-	if resp.Error != nil {
-		return resp.Error
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
@@ -348,7 +348,7 @@ func (c *Client) MoveRelByAxis(
 	accel float64,
 ) error {
 	req := request{
-		responsec: make(chan Response),
+		responsec: make(chan response),
 		function:  "MoveRelativeByAxis",
 		arguments: []interface{}{
 			axisID,
@@ -367,8 +367,8 @@ func (c *Client) MoveRelByAxis(
 		pos,
 	)
 	resp := <-req.responsec
-	if resp.Error != nil {
-		return resp.Error
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
@@ -449,7 +449,7 @@ func (c *Client) MoveRel(
 	accel float64,
 ) error {
 	req := request{
-		responsec: make(chan Response),
+		responsec: make(chan response),
 		function:  "MoveRelative",
 		arguments: []interface{}{
 			posx,
@@ -468,8 +468,8 @@ func (c *Client) MoveRel(
 		posy,
 	)
 	resp := <-req.responsec
-	if resp.Error != nil {
-		return resp.Error
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
@@ -558,7 +558,7 @@ func (c *Client) MoveAbs(
 	accel float64,
 ) error {
 	req := request{
-		responsec: make(chan Response),
+		responsec: make(chan response),
 		function:  "MoveAbsolute",
 		arguments: []interface{}{
 			posx,
@@ -576,8 +576,8 @@ func (c *Client) MoveAbs(
 		posy,
 	)
 	resp := <-req.responsec
-	if resp.Error != nil {
-		return resp.Error
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
