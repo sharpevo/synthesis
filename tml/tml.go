@@ -233,19 +233,37 @@ var launchClient = func(c *Client) {
 	}
 }
 
+// MoveAbsoluteByAxis moves the motor by axis with the following arguments:
+//
+// - aida: axis id of X or Y;
+//
+// - posa: position to reached expressed in TML position units;
+//
+// - spda: slew speed expressed in TML speed units. If the value is zero the
+// drive/motor will use the previously value set for speed;
+//
+// - acca: acceleration/deceleration rate expressed in TML acceleration
+// units. If its value is zero the drive/motor will use the previously value
+// set for acceleration;
+//
+// - mmta: defines the moment when the motion is started;
+//
+// - refa: specifies how the motion reference is computed: from actual values
+// of position and speed reference or from actual values of load/motor position
+// and speed
 func (c *Client) MoveAbsoluteByAxis(
-	aidi interface{},
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	mmti interface{},
-	refi interface{},
+	aida interface{},
+	posa interface{},
+	spda interface{},
+	acca interface{},
+	mmta interface{},
+	refa interface{},
 ) (err error) {
-	aid, ok := aidi.(int)
+	aid, ok := aida.(int)
 	if !ok {
-		return fmt.Errorf("failed to convert aid %v", aidi)
+		return fmt.Errorf("failed to convert aid %v", aida)
 	}
-	pos, spd, acc, mmt, ref, err := parseAbsArgs(posi, spdi, acci, mmti, refi)
+	pos, spd, acc, mmt, ref, err := parseAbsArgs(posa, spda, acca, mmta, refa)
 	if err != nil {
 		return err
 	}
@@ -270,20 +288,40 @@ func (c *Client) MoveAbsoluteByAxis(
 	return nil
 }
 
+// MoveRelativeByAxis moves the motor by axis with the following arguments:
+//
+// - aida: axis id of X or Y;
+//
+// - posa: position increment expressed in TML position units;
+//
+// - spda: slew speed expressed in TML speed units. If the value is zero the
+// drive/motor will use the previously value set for speed;
+//
+// - acca: acceleration/deceleration rate expressed in TML acceleration
+// units. If its value is zero the drive/motor will use the previously value
+// set for acceleration;
+//
+// - adda: specifies how is computed the position to reach;
+//
+// - mmta: defines the moment when the motion is started;
+//
+// - refa: specifies how the motion reference is computed: from actual values
+// of position and speed reference or from actual values of load/motor position
+// and speed
 func (c *Client) MoveRelativeByAxis(
-	aidi interface{},
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	addi interface{},
-	mmti interface{},
-	refi interface{},
+	aida interface{},
+	posa interface{},
+	spda interface{},
+	acca interface{},
+	adda interface{},
+	mmta interface{},
+	refa interface{},
 ) (err error) {
-	aid, ok := aidi.(int)
+	aid, ok := aida.(int)
 	if !ok {
-		return fmt.Errorf("failed to convert aid %v", aidi)
+		return fmt.Errorf("failed to convert aid %v", aida)
 	}
-	pos, spd, acc, add, mmt, ref, err := parseRelArgs(posi, spdi, acci, addi, mmti, refi)
+	pos, spd, acc, add, mmt, ref, err := parseRelArgs(posa, spda, acca, adda, mmta, refa)
 	if err != nil {
 		return err
 	}
