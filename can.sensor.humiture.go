@@ -2,6 +2,7 @@ package instruction
 
 import (
 	"fmt"
+	"math/big"
 	"posam/dao/canalystii"
 )
 
@@ -39,11 +40,11 @@ func (i *InstructionCANSensorHumiture) Execute(args ...string) (resp interface{}
 	}
 	tempCM.Lock()
 	tempVariable, _ := i.GetVarLockless(tempCM, args[1])
-	tempVariable.SetValue(humiture[0])
+	tempVariable.SetValue(big.NewFloat(humiture[0]))
 	tempCM.Unlock()
 	humiCM.Lock()
 	humiVariable, _ := i.GetVarLockless(humiCM, args[2])
-	humiVariable.SetValue(humiture[1])
+	humiVariable.SetValue(big.NewFloat(humiture[1]))
 	humiCM.Unlock()
 	return resp, err
 }
