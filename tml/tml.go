@@ -56,6 +56,9 @@ func ResetInstance() {
 	clientMap = concurrentmap.NewConcurrentMap()
 }
 
+// A client is the abstraction of TML devices connected via RS232. Note that
+// the communication channel file descriptor is named as channelDescriptor,
+// although it's not required right now for single channel apps.
 type Client struct {
 	name           string
 	baudRate       int
@@ -69,8 +72,11 @@ type Client struct {
 
 	posX float64
 	posY float64
+	//TODO: speeds
 }
 
+// NewClient returns TML device connection instance which been initialized
+// and launched at the same time.
 func NewClient(
 	name string,
 	baud int,
