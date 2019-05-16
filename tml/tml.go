@@ -347,6 +347,7 @@ func (c *Client) MoveRelativeByAxis(
 	return nil
 }
 
+// MoveAbsByAxis create a MoveAbsoluteByAxis request and send it to the queue.
 func (c *Client) MoveAbsByAxis(
 	axisID int,
 	pos float64,
@@ -378,6 +379,7 @@ func (c *Client) MoveAbsByAxis(
 	return nil
 }
 
+// MoveRelByAxis create a MoveRelativeByAxis request and send it to the queue.
 func (c *Client) MoveRelByAxis(
 	axisID int,
 	pos float64,
@@ -410,22 +412,24 @@ func (c *Client) MoveRelByAxis(
 	return nil
 }
 
+// MoveRelative moves motor with the position increments of x-axis and y-axis
+// at the same time.
 func (c *Client) MoveRelative(
-	posxi interface{},
-	posyi interface{},
-	spdi interface{},
-	acci interface{},
-	addi interface{},
-	mmti interface{},
-	refi interface{},
+	posxa interface{},
+	posya interface{},
+	spda interface{},
+	acca interface{},
+	adda interface{},
+	mmta interface{},
+	refa interface{},
 ) (err error) {
-	posx, spd, acc, add, mmt, ref, err := parseRelArgs(posxi, spdi, acci, addi, mmti, refi)
+	posx, spd, acc, add, mmt, ref, err := parseRelArgs(posxa, spda, acca, adda, mmta, refa)
 	if err != nil {
 		return err
 	}
-	posy, ok := posyi.(float64)
+	posy, ok := posya.(float64)
 	if !ok {
-		return fmt.Errorf("failed to convert posy %v", posyi)
+		return fmt.Errorf("failed to convert posy %v", posya)
 	}
 	log.If("moving by (%v,%v)...", posx, posy)
 	if err = tml.SelectAxis(c.axisXID); err != nil {
@@ -479,6 +483,7 @@ func (c *Client) MoveRelative(
 	return nil
 }
 
+// MoveRel creates a MoveRelative request and send it to the queue.
 func (c *Client) MoveRel(
 	posx float64,
 	posy float64,
@@ -511,6 +516,8 @@ func (c *Client) MoveRel(
 	return nil
 }
 
+// MoveAbosolute moves motor to the given x-axis position and y-axis position
+// at the same time.
 func (c *Client) MoveAbsolute(
 	posxi interface{},
 	posyi interface{},
@@ -588,6 +595,7 @@ func (c *Client) MoveAbsolute(
 	return nil
 }
 
+// MoveAbs creates a MoveAbsolute request and send it to the queue.
 func (c *Client) MoveAbs(
 	posx float64,
 	posy float64,
@@ -691,6 +699,7 @@ func parseRelArgs(
 	return pos, spd, acc, add, mmt, ref, nil
 }
 
+// UpadteMotionStatus updates the position of x-axis and y-axis.
 func (c *Client) UpdateMotionStatus() (err error) {
 	if c.posX, err = tml.ActualPosition(c.axisXID); err != nil {
 		return err
@@ -722,6 +731,8 @@ func (c *Client) AxisYID() int {
 	return c.axisYID
 }
 
+// CompensateMotion moves the motor forward or backward according to the actual
+// position and the expectation once or twice if _COMPENSATION is specified.
 func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
 	// TODO: relative compensation
 	if !_COMPENSATION {
@@ -756,6 +767,7 @@ func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
 	}
 }
 
+// CompensateMotionTPOS compensates the motion by TPOS.
 func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
 	if !_COMPENSATION {
 		return nil
