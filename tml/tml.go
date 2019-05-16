@@ -306,8 +306,8 @@ func (c *Client) MoveRelativeByAxis(
 		return err
 	}
 	log.D("done")
+	// TODO: compensate
 	return nil
-	//c.CompensateMotion(aid, pos)
 }
 
 func (c *Client) MoveAbsByAxis(
