@@ -37,7 +37,7 @@ func init() {
 }
 
 func addInstance(client *Client) (*Client, bool) {
-	key := string(client.Name)
+	key := string(client.name)
 	if c, ok := clientMap.Get(key); ok {
 		return c.(*Client), true
 	} else {
@@ -50,27 +50,25 @@ func addInstance(client *Client) (*Client, bool) {
 func ResetInstance() {
 	for item := range clientMap.Iter() {
 		client := item.Value.(*Client)
-		log.Df("to terminate client: %v", client.Name)
+		log.Df("to terminate client: %v", client.name)
 		// TODO: terminate client
 	}
 	clientMap = concurrentmap.NewConcurrentMap()
 }
 
 type Client struct {
-	Name           string
-	BaudRate       int
-	AxisXID        int
-	AxisXSetupFile string
-	AxisYID        int
-	AxisYSetupFile string
+	name           string
+	baudRate       int
+	axisXID        int
+	axisXSetupFile string
+	axisYID        int
+	axisYSetupFile string
 
-	ChannelDescriptor int
-	RequestQueue      *blockingqueue.BlockingQueue
+	channelDescriptor int
+	requestQueue      *blockingqueue.BlockingQueue
 
-	PosX float64
-	PosY float64
-	SpdX float64
-	SpdY float64
+	posX float64
+	posY float64
 }
 
 func NewClient(
@@ -82,48 +80,48 @@ func NewClient(
 	axisYSetupFile string,
 ) (*Client, error) {
 	client := &Client{
-		Name:           name,
-		BaudRate:       baud,
-		AxisXID:        axisXID,
-		AxisXSetupFile: axisXSetupFile,
-		AxisYID:        axisYID,
-		AxisYSetupFile: axisYSetupFile,
-		RequestQueue:   blockingqueue.NewBlockingQueue(),
+		name:           name,
+		baudRate:       baud,
+		axisXID:        axisXID,
+		axisXSetupFile: axisXSetupFile,
+		axisYID:        axisYID,
+		axisYSetupFile: axisYSetupFile,
+		requestQueue:   blockingqueue.NewBlockingQueue(),
 	}
 	if c, found := addInstance(client); found {
 		return c, fmt.Errorf("client existed")
 	}
 	go launchClient(client)
 	log.Df(
-		"client launched(AxisXID: %v, AxisYID: %v)", client.AxisXID, client.AxisYID)
+		"client launched(AxisXID: %v, AxisYID: %v)", client.axisXID, client.axisYID)
 	return client, nil
 }
 
 func (c *Client) connect() (err error) {
-	log.Df("Connecting the motor %q...", c.Name)
+	log.Df("Connecting the motor %q...", c.name)
 
 	commType := tml.CHANNEL_RS232
 	hostID := 1
 
 	descriptor, err := tml.OpenChannel(
-		c.Name,
+		c.name,
 		commType,
 		hostID,
-		c.BaudRate,
+		c.baudRate,
 	)
 	if err != nil {
 		return err
 	}
-	c.ChannelDescriptor = descriptor
+	c.channelDescriptor = descriptor
 
-	idxSetup, err := tml.LoadSetup(c.AxisXSetupFile)
+	idxSetup, err := tml.LoadSetup(c.axisXSetupFile)
 	if err != nil {
 		return err
 	}
-	if err = tml.SetupAxis(c.AxisXID, idxSetup); err != nil {
+	if err = tml.SetupAxis(c.axisXID, idxSetup); err != nil {
 		return err
 	}
-	if err = tml.SelectAxis(c.AxisXID); err != nil {
+	if err = tml.SelectAxis(c.axisXID); err != nil {
 		return err
 	}
 	if err = tml.DriveInitialisation(); err != nil {
@@ -133,14 +131,14 @@ func (c *Client) connect() (err error) {
 		return err
 	}
 
-	idxSetup, err = tml.LoadSetup(c.AxisYSetupFile)
+	idxSetup, err = tml.LoadSetup(c.axisYSetupFile)
 	if err != nil {
 		return err
 	}
-	if err = tml.SetupAxis(c.AxisYID, idxSetup); err != nil {
+	if err = tml.SetupAxis(c.axisYID, idxSetup); err != nil {
 		return err
 	}
-	if err = tml.SelectAxis(c.AxisYID); err != nil {
+	if err = tml.SelectAxis(c.axisYID); err != nil {
 		return err
 	}
 	if err = tml.DriveInitialisation(); err != nil {
@@ -155,7 +153,7 @@ func (c *Client) connect() (err error) {
 	var statusy int
 	for i := 0; i < 15; i++ {
 		if statusx == 0 {
-			err = tml.SelectAxis(c.AxisXID)
+			err = tml.SelectAxis(c.axisXID)
 			if err != nil {
 				return err
 			}
@@ -167,7 +165,7 @@ func (c *Client) connect() (err error) {
 		}
 
 		if statusy == 0 {
-			err = tml.SelectAxis(c.AxisYID)
+			err = tml.SelectAxis(c.axisYID)
 			if err != nil {
 				return err
 			}
@@ -186,7 +184,7 @@ func (c *Client) connect() (err error) {
 		return fmt.Errorf("failed to enable power on axes: x(%d) / y(%d)", statusx, statusy)
 	}
 
-	log.Df("motor %q is ready", c.Name)
+	log.Df("motor %q is ready", c.name)
 	return nil
 }
 
@@ -206,7 +204,7 @@ var launchClient = func(c *Client) {
 	c.connect()
 
 	for {
-		reqi, err := c.RequestQueue.Pop()
+		reqi, err := c.requestQueue.Pop()
 		if err != nil {
 			log.E("motor client terminated")
 			return
@@ -324,7 +322,7 @@ func (c *Client) MoveAbsByAxis(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
+	c.requestQueue.Push(&req)
 	log.Df(
 		"waiting for axis %d response: absolute motion to %v",
 		axisID,
@@ -356,7 +354,7 @@ func (c *Client) MoveRelByAxis(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
+	c.requestQueue.Push(&req)
 	log.Df(
 		"waiting for axis %d response: relative motion to %v",
 		axisID,
@@ -387,13 +385,13 @@ func (c *Client) MoveRelative(
 		return fmt.Errorf("failed to convert posy %v", posyi)
 	}
 	log.If("moving by (%v,%v)...", posx, posy)
-	if err = tml.SelectAxis(c.AxisXID); err != nil {
+	if err = tml.SelectAxis(c.axisXID); err != nil {
 		return err
 	}
 	if err = tml.MoveRelative(
-		tml.CalcPosition(c.AxisXID, posx),
-		tml.CalcSpeed(c.AxisXID, spd),
-		tml.CalcAccel(c.AxisXID, acc),
+		tml.CalcPosition(c.axisXID, posx),
+		tml.CalcSpeed(c.axisXID, spd),
+		tml.CalcAccel(c.axisXID, acc),
 		add,
 		mmt,
 		ref,
@@ -403,13 +401,13 @@ func (c *Client) MoveRelative(
 	if err = tml.SetEventOnMotionComplete(false, false); err != nil {
 		return err
 	}
-	if err = tml.SelectAxis(c.AxisYID); err != nil {
+	if err = tml.SelectAxis(c.axisYID); err != nil {
 		return err
 	}
 	if err = tml.MoveRelative(
-		tml.CalcPosition(c.AxisYID, posy),
-		tml.CalcSpeed(c.AxisYID, spd),
-		tml.CalcAccel(c.AxisYID, acc),
+		tml.CalcPosition(c.axisYID, posy),
+		tml.CalcSpeed(c.axisYID, spd),
+		tml.CalcAccel(c.axisYID, acc),
 		add,
 		mmt,
 		ref,
@@ -428,7 +426,7 @@ func (c *Client) MoveRelative(
 			xc = true
 			return fmt.Errorf("Aoztech timeout")
 		default:
-			if err = tml.SelectAxis(c.AxisXID); err != nil {
+			if err = tml.SelectAxis(c.axisXID); err != nil {
 				log.E(err)
 			}
 			tml.CheckEvent(&xc)
@@ -457,7 +455,7 @@ func (c *Client) MoveRel(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
+	c.requestQueue.Push(&req)
 	log.Df(
 		"waiting for response: relative motion to (%v, %v)",
 		posx,
@@ -487,16 +485,16 @@ func (c *Client) MoveAbsolute(
 		return fmt.Errorf("failed to convert posy %v", posyi)
 	}
 	log.If("moving to (%v,%v)...", posx, posy)
-	if err = tml.SelectAxis(c.AxisXID); err != nil {
+	if err = tml.SelectAxis(c.axisXID); err != nil {
 		return err
 	}
 	if _SET_TONPOSOK {
 		log.Df("set TONPOSOK %v", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
-		tml.CalcPosition(c.AxisXID, posx),
-		tml.CalcSpeed(c.AxisXID, spd),
-		tml.CalcAccel(c.AxisXID, acc),
+		tml.CalcPosition(c.axisXID, posx),
+		tml.CalcSpeed(c.axisXID, spd),
+		tml.CalcAccel(c.axisXID, acc),
 		mmt,
 		ref,
 	); err != nil {
@@ -505,16 +503,16 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SetEventOnMotionComplete(false, false); err != nil {
 		return err
 	}
-	if err = tml.SelectAxis(c.AxisYID); err != nil {
+	if err = tml.SelectAxis(c.axisYID); err != nil {
 		return err
 	}
 	if _SET_TONPOSOK {
 		log.Df("set TONPOSOK %v", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
-		tml.CalcPosition(c.AxisYID, posy),
-		tml.CalcSpeed(c.AxisYID, spd),
-		tml.CalcAccel(c.AxisYID, acc),
+		tml.CalcPosition(c.axisYID, posy),
+		tml.CalcSpeed(c.axisYID, spd),
+		tml.CalcAccel(c.axisYID, acc),
 		mmt,
 		ref,
 	); err != nil {
@@ -523,10 +521,10 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	c.CompensateMotion(c.AxisYID, posy)
+	c.CompensateMotion(c.axisYID, posy)
 	if _COMPENSATION && _COMPENSATION_ADVANCED {
 		log.I("2nd compensation")
-		c.CompensateMotion(c.AxisYID, posy)
+		c.CompensateMotion(c.axisYID, posy)
 	}
 	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
 		if _MDELAY != 0 {
@@ -537,7 +535,7 @@ func (c *Client) MoveAbsolute(
 			xc = true
 			return fmt.Errorf("Aoztech timeout")
 		default:
-			if err = tml.SelectAxis(c.AxisXID); err != nil {
+			if err = tml.SelectAxis(c.axisXID); err != nil {
 				log.E(err)
 			}
 			tml.CheckEvent(&xc)
@@ -565,7 +563,7 @@ func (c *Client) MoveAbs(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
+	c.requestQueue.Push(&req)
 	log.Ef(
 		"waiting for response: absolute motion to (%v, %v)",
 		posx,
@@ -651,14 +649,30 @@ func parseRelArgs(
 }
 
 func (c *Client) UpdateMotionStatus() (err error) {
-	if c.PosX, err = tml.ActualPosition(c.AxisXID); err != nil {
+	if c.posX, err = tml.ActualPosition(c.axisXID); err != nil {
 		return err
 	}
-	if c.PosY, err = tml.ActualPosition(c.AxisYID); err != nil {
+	if c.posY, err = tml.ActualPosition(c.axisYID); err != nil {
 		return err
 	}
-	uiutil.App.UpdateMotorStatusSlot(fmt.Sprintf("Motor: (%v, %v)", c.PosX, c.PosY))
+	uiutil.App.UpdateMotorStatusSlot(fmt.Sprintf("Motor: (%v, %v)", c.posX, c.posY))
 	return nil
+}
+
+func (c *Client) PosX() float64 {
+	return c.posX
+}
+
+func (c *Client) PosY() float64 {
+	return c.posY
+}
+
+func (c *Client) AxisXID() int {
+	return c.axisXID
+}
+
+func (c *Client) AxisYID() int {
+	return c.axisYID
 }
 
 func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
@@ -666,18 +680,18 @@ func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
 		return nil
 	}
 	switch axisID {
-	case c.AxisYID:
-		pos, err := tml.ActualPosition(c.AxisYID)
+	case c.axisYID:
+		pos, err := tml.ActualPosition(c.axisYID)
 		diffPos := target - pos
-		offset := tml.CalcPosition(c.AxisYID, diffPos)
-		log.Df("compensating axis %d by %v (diff apos %v, actual pos %v)...", c.AxisYID, diffPos, offset, pos)
-		if err = tml.SelectAxis(c.AxisYID); err != nil {
+		offset := tml.CalcPosition(c.axisYID, diffPos)
+		log.Df("compensating axis %d by %v (diff apos %v, actual pos %v)...", c.axisYID, diffPos, offset, pos)
+		if err = tml.SelectAxis(c.axisYID); err != nil {
 			return err
 		}
 		if err = tml.MoveRelative(
-			tml.CalcPosition(c.AxisYID, diffPos),
-			tml.CalcSpeed(c.AxisYID, 5),
-			tml.CalcAccel(c.AxisYID, 50),
+			tml.CalcPosition(c.axisYID, diffPos),
+			tml.CalcSpeed(c.axisYID, 5),
+			tml.CalcAccel(c.axisYID, 50),
 			true,
 			1,
 			1,
@@ -699,22 +713,22 @@ func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
 		return nil
 	}
 	switch axisID {
-	case c.AxisYID:
-		pos, err := tml.TargetPosition(c.AxisYID)
+	case c.axisYID:
+		pos, err := tml.TargetPosition(c.axisYID)
 		diffPos := target - pos
-		offset := tml.CalcPosition(c.AxisYID, diffPos)
+		offset := tml.CalcPosition(c.axisYID, diffPos)
 		if diffPos == 0 {
-			log.Df("not compensate axis %d by %v (diff tpos %v, actual pos %v)...", c.AxisYID, diffPos, offset, pos)
+			log.Df("not compensate axis %d by %v (diff tpos %v, actual pos %v)...", c.axisYID, diffPos, offset, pos)
 			return nil
 		}
-		log.Df("compensating axis %d by %v (diff tpos %v, actual pos %v)...", c.AxisYID, diffPos, offset, pos)
-		if err = tml.SelectAxis(c.AxisYID); err != nil {
+		log.Df("compensating axis %d by %v (diff tpos %v, actual pos %v)...", c.axisYID, diffPos, offset, pos)
+		if err = tml.SelectAxis(c.axisYID); err != nil {
 			return err
 		}
 		if err = tml.MoveRelative(
-			tml.CalcPosition(c.AxisYID, diffPos),
-			tml.CalcSpeed(c.AxisYID, 5),
-			tml.CalcAccel(c.AxisYID, 50),
+			tml.CalcPosition(c.axisYID, diffPos),
+			tml.CalcSpeed(c.axisYID, 5),
+			tml.CalcAccel(c.axisYID, 50),
 			true,
 			1,
 			1,
