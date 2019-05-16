@@ -195,7 +195,6 @@ func (c *Client) connect() (err error) {
 }
 
 type request struct {
-	//AxisID    int
 	responsec chan response
 	function  string
 	arguments []interface{}
