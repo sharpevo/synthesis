@@ -235,35 +235,35 @@ var launchClient = func(c *Client) {
 
 // MoveAbsoluteByAxis moves the motor by axis with the following arguments:
 //
-// - aida: axis id of X or Y;
+// - _aid: axis id of X or Y;
 //
-// - posa: position to reached expressed in TML position units;
+// - _pos: position to reached expressed in TML position units;
 //
-// - spda: slew speed expressed in TML speed units. If the value is zero the
+// - _spd: slew speed expressed in TML speed units. If the value is zero the
 // drive/motor will use the previously value set for speed;
 //
-// - acca: acceleration/deceleration rate expressed in TML acceleration
+// - _acc: acceleration/deceleration rate expressed in TML acceleration
 // units. If its value is zero the drive/motor will use the previously value
 // set for acceleration;
 //
-// - mmta: defines the moment when the motion is started;
+// - _mmt: defines the moment when the motion is started;
 //
-// - refa: specifies how the motion reference is computed: from actual values
+// - _ref: specifies how the motion reference is computed: from actual values
 // of position and speed reference or from actual values of load/motor position
 // and speed
 func (c *Client) MoveAbsoluteByAxis(
-	aida interface{},
-	posa interface{},
-	spda interface{},
-	acca interface{},
-	mmta interface{},
-	refa interface{},
+	_aid interface{},
+	_pos interface{},
+	_spd interface{},
+	_acc interface{},
+	_mmt interface{},
+	_ref interface{},
 ) (err error) {
-	aid, ok := aida.(int)
+	aid, ok := _aid.(int)
 	if !ok {
-		return fmt.Errorf("failed to convert aid %v", aida)
+		return fmt.Errorf("failed to convert aid %v", _aid)
 	}
-	pos, spd, acc, mmt, ref, err := parseAbsArgs(posa, spda, acca, mmta, refa)
+	pos, spd, acc, mmt, ref, err := parseAbsArgs(_pos, _spd, _acc, _mmt, _ref)
 	if err != nil {
 		return err
 	}
@@ -290,38 +290,38 @@ func (c *Client) MoveAbsoluteByAxis(
 
 // MoveRelativeByAxis moves the motor by axis with the following arguments:
 //
-// - aida: axis id of X or Y;
+// - _aid: axis id of X or Y;
 //
-// - posa: position increment expressed in TML position units;
+// - _pos: position increment expressed in TML position units;
 //
-// - spda: slew speed expressed in TML speed units. If the value is zero the
+// - _spd: slew speed expressed in TML speed units. If the value is zero the
 // drive/motor will use the previously value set for speed;
 //
-// - acca: acceleration/deceleration rate expressed in TML acceleration
+// - _acc: acceleration/deceleration rate expressed in TML acceleration
 // units. If its value is zero the drive/motor will use the previously value
 // set for acceleration;
 //
-// - adda: specifies how is computed the position to reach;
+// - _add: specifies how is computed the position to reach;
 //
-// - mmta: defines the moment when the motion is started;
+// - _mmt: defines the moment when the motion is started;
 //
 // - refa: specifies how the motion reference is computed: from actual values
 // of position and speed reference or from actual values of load/motor position
 // and speed
 func (c *Client) MoveRelativeByAxis(
-	aida interface{},
-	posa interface{},
-	spda interface{},
-	acca interface{},
-	adda interface{},
-	mmta interface{},
-	refa interface{},
+	_aid interface{},
+	_pos interface{},
+	_spd interface{},
+	_acc interface{},
+	_add interface{},
+	_mmt interface{},
+	_ref interface{},
 ) (err error) {
-	aid, ok := aida.(int)
+	aid, ok := _aid.(int)
 	if !ok {
-		return fmt.Errorf("failed to convert aid %v", aida)
+		return fmt.Errorf("failed to convert aid %v", _aid)
 	}
-	pos, spd, acc, add, mmt, ref, err := parseRelArgs(posa, spda, acca, adda, mmta, refa)
+	pos, spd, acc, add, mmt, ref, err := parseRelArgs(_pos, _spd, _acc, _add, _mmt, _ref)
 	if err != nil {
 		return err
 	}
@@ -415,21 +415,21 @@ func (c *Client) MoveRelByAxis(
 // MoveRelative moves motor with the position increments of x-axis and y-axis
 // at the same time.
 func (c *Client) MoveRelative(
-	posxa interface{},
-	posya interface{},
-	spda interface{},
-	acca interface{},
-	adda interface{},
-	mmta interface{},
-	refa interface{},
+	_posx interface{},
+	_posy interface{},
+	_spd interface{},
+	_acc interface{},
+	_add interface{},
+	_mmt interface{},
+	_ref interface{},
 ) (err error) {
-	posx, spd, acc, add, mmt, ref, err := parseRelArgs(posxa, spda, acca, adda, mmta, refa)
+	posx, spd, acc, add, mmt, ref, err := parseRelArgs(_posx, _spd, _acc, _add, _mmt, _ref)
 	if err != nil {
 		return err
 	}
-	posy, ok := posya.(float64)
+	posy, ok := _posy.(float64)
 	if !ok {
-		return fmt.Errorf("failed to convert posy %v", posya)
+		return fmt.Errorf("failed to convert posy %v", _posy)
 	}
 	log.If("moving by (%v,%v)...", posx, posy)
 	if err = tml.SelectAxis(c.axisXID); err != nil {
@@ -519,20 +519,20 @@ func (c *Client) MoveRel(
 // MoveAbosolute moves motor to the given x-axis position and y-axis position
 // at the same time.
 func (c *Client) MoveAbsolute(
-	posxi interface{},
-	posyi interface{},
-	spdi interface{},
-	acci interface{},
-	mmti interface{},
-	refi interface{},
+	_posx interface{},
+	_posy interface{},
+	_spd interface{},
+	_acc interface{},
+	_mmt interface{},
+	_ref interface{},
 ) (err error) {
-	posx, spd, acc, mmt, ref, err := parseAbsArgs(posxi, spdi, acci, mmti, refi)
+	posx, spd, acc, mmt, ref, err := parseAbsArgs(_posx, _spd, _acc, _mmt, _ref)
 	if err != nil {
 		return err
 	}
-	posy, ok := posyi.(float64)
+	posy, ok := _posy.(float64)
 	if !ok {
-		return fmt.Errorf("failed to convert posy %v", posyi)
+		return fmt.Errorf("failed to convert posy %v", _posy)
 	}
 	log.If("moving to (%v,%v)...", posx, posy)
 	if err = tml.SelectAxis(c.axisXID); err != nil {
@@ -628,11 +628,11 @@ func (c *Client) MoveAbs(
 }
 
 func parseAbsArgs(
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	mmti interface{},
-	refi interface{},
+	_pos interface{},
+	_spd interface{},
+	_acc interface{},
+	_mmt interface{},
+	_ref interface{},
 ) (
 	pos float64,
 	spd float64,
@@ -642,41 +642,41 @@ func parseAbsArgs(
 	err error,
 ) {
 	var ok bool
-	pos, ok = posi.(float64)
+	pos, ok = _pos.(float64)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert pos %v", posi)
+			fmt.Errorf("failed to convert pos %v", _pos)
 	}
-	spd, ok = spdi.(float64)
+	spd, ok = _spd.(float64)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert spd %v", spdi)
+			fmt.Errorf("failed to convert spd %v", _spd)
 	}
-	acc, ok = acci.(float64)
+	acc, ok = _acc.(float64)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert acc %v", acci)
+			fmt.Errorf("failed to convert acc %v", _acc)
 	}
-	mmt, ok = mmti.(int)
+	mmt, ok = _mmt.(int)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert mmt %v", mmti)
+			fmt.Errorf("failed to convert mmt %v", _mmt)
 	}
-	ref, ok = refi.(int)
+	ref, ok = _ref.(int)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert ref %v", refi)
+			fmt.Errorf("failed to convert ref %v", _ref)
 	}
 	return pos, spd, acc, mmt, ref, nil
 }
 
 func parseRelArgs(
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	addi interface{},
-	mmti interface{},
-	refi interface{},
+	_pos interface{},
+	_spd interface{},
+	_acc interface{},
+	_add interface{},
+	_mmt interface{},
+	_ref interface{},
 ) (
 	pos float64,
 	spd float64,
@@ -686,15 +686,15 @@ func parseRelArgs(
 	ref int,
 	err error,
 ) {
-	pos, spd, acc, mmt, ref, err = parseAbsArgs(posi, spdi, acci, mmti, refi)
+	pos, spd, acc, mmt, ref, err = parseAbsArgs(_pos, _spd, _acc, _mmt, _ref)
 	if err != nil {
 		return pos, spd, acc, add, mmt, ref, err
 	}
 	var ok bool
-	add, ok = addi.(bool)
+	add, ok = _add.(bool)
 	if !ok {
 		return pos, spd, acc, add, mmt, ref,
-			fmt.Errorf("failed to convert add %v", addi)
+			fmt.Errorf("failed to convert add %v", _add)
 	}
 	return pos, spd, acc, add, mmt, ref, nil
 }
