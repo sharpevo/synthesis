@@ -21,7 +21,7 @@ func (i *InstructionTMLMoveAbsY) Execute(args ...string) (
 		return resp, err
 	}
 	resp, err = instance.MoveAbsByAxis(
-		instance.TMLClient.AxisYID,
+		instance.TMLClient.AxisYID(),
 		pos,
 		speed,
 		accel,

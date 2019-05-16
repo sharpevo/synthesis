@@ -21,7 +21,7 @@ func (i *InstructionTMLMoveRelY) Execute(args ...string) (
 		return resp, err
 	}
 	resp, err = instance.MoveRelByAxis(
-		instance.TMLClient.AxisYID,
+		instance.TMLClient.AxisYID(),
 		pos,
 		speed,
 		accel,

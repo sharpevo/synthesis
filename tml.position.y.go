@@ -28,7 +28,7 @@ func (i *InstructionTMLPositionY) Execute(args ...string) (
 	if err != nil {
 		return resp, err
 	}
-	positionFloat := instance.TMLClient.PosY
+	positionFloat := instance.TMLClient.PosY()
 	positionBigFloat, err := i.PositionToBigFloat(positionFloat)
 	if err != nil {
 		return resp, err
