@@ -36,13 +36,6 @@ func init() {
 	_MDELAY = time.Duration(config.GetInt(_CONFIG_MOTION_DELAY)) * time.Millisecond
 }
 
-func Instance(key string) *Client {
-	if clienti, ok := clientMap.Get(key); ok {
-		return clienti.(*Client)
-	}
-	return nil
-}
-
 func addInstance(client *Client) (*Client, bool) {
 	key := string(client.Name)
 	if c, ok := clientMap.Get(key); ok {
