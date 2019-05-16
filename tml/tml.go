@@ -46,11 +46,12 @@ func addInstance(client *Client) (*Client, bool) {
 	}
 }
 
+// ResetInstance resets instance map. Not tested yet.
 func ResetInstance() {
 	for item := range clientMap.Iter() {
 		client := item.Value.(*Client)
-		log.Df("terminating client: %v", client.Name)
-		//client.Stop()
+		log.Df("to terminate client: %v", client.Name)
+		// TODO: terminate client
 	}
 	clientMap = concurrentmap.NewConcurrentMap()
 }
