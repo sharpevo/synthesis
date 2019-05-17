@@ -266,7 +266,7 @@ func (c *Client) MoveAbsoluteByAxis(
 	if err != nil {
 		return err
 	}
-	log.If("moving axis %d to %v...", aid, pos)
+	log.If("moving axis %v to %v...", aid, pos)
 	if err = tml.SelectAxis(aid); err != nil {
 		return err
 	}
@@ -318,7 +318,7 @@ func (c *Client) MoveRelativeByAxis(
 	if err != nil {
 		return err
 	}
-	log.If("moving axis %d by %v...", aid, pos)
+	log.If("moving axis %v by %v...", aid, pos)
 	if err = tml.SelectAxis(aid); err != nil {
 		return err
 	}
