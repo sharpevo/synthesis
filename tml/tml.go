@@ -252,12 +252,7 @@ var launchClient = func(c *Client) {
 // of position and speed reference or from actual values of load/motor position
 // and speed
 func (c *Client) MoveAbsoluteByAxis(
-	_aid interface{},
-	_pos interface{},
-	_spd interface{},
-	_acc interface{},
-	_mmt interface{},
-	_ref interface{},
+	_aid, _pos, _spd, _acc, _mmt, _ref interface{},
 ) (err error) {
 	aid, ok := _aid.(int)
 	if !ok {
@@ -309,13 +304,7 @@ func (c *Client) MoveAbsoluteByAxis(
 // of position and speed reference or from actual values of load/motor position
 // and speed
 func (c *Client) MoveRelativeByAxis(
-	_aid interface{},
-	_pos interface{},
-	_spd interface{},
-	_acc interface{},
-	_add interface{},
-	_mmt interface{},
-	_ref interface{},
+	_aid, _pos, _spd, _acc, _add, _mmt, _ref interface{},
 ) (err error) {
 	aid, ok := _aid.(int)
 	if !ok {
@@ -415,13 +404,7 @@ func (c *Client) MoveRelByAxis(
 // MoveRelative moves motor with the position increments of x-axis and y-axis
 // at the same time.
 func (c *Client) MoveRelative(
-	_posx interface{},
-	_posy interface{},
-	_spd interface{},
-	_acc interface{},
-	_add interface{},
-	_mmt interface{},
-	_ref interface{},
+	_posx, _posy, _spd, _acc, _add, _mmt, _ref interface{},
 ) (err error) {
 	posx, spd, acc, add, mmt, ref, err := parseRelArgs(_posx, _spd, _acc, _add, _mmt, _ref)
 	if err != nil {
@@ -485,10 +468,7 @@ func (c *Client) MoveRelative(
 
 // MoveRel creates a MoveRelative request and send it to the queue.
 func (c *Client) MoveRel(
-	posx float64,
-	posy float64,
-	speed float64,
-	accel float64,
+	posx, posy, speed, accel float64,
 ) error {
 	req := request{
 		responsec: make(chan response),
@@ -519,12 +499,7 @@ func (c *Client) MoveRel(
 // MoveAbosolute moves motor to the given x-axis position and y-axis position
 // at the same time.
 func (c *Client) MoveAbsolute(
-	_posx interface{},
-	_posy interface{},
-	_spd interface{},
-	_acc interface{},
-	_mmt interface{},
-	_ref interface{},
+	_posx, _posy, _spd, _acc, _mmt, _ref interface{},
 ) (err error) {
 	posx, spd, acc, mmt, ref, err := parseAbsArgs(_posx, _spd, _acc, _mmt, _ref)
 	if err != nil {
@@ -597,10 +572,7 @@ func (c *Client) MoveAbsolute(
 
 // MoveAbs creates a MoveAbsolute request and send it to the queue.
 func (c *Client) MoveAbs(
-	posx float64,
-	posy float64,
-	speed float64,
-	accel float64,
+	posx, posy, speed, accel float64,
 ) error {
 	req := request{
 		responsec: make(chan response),
@@ -628,11 +600,7 @@ func (c *Client) MoveAbs(
 }
 
 func parseAbsArgs(
-	_pos interface{},
-	_spd interface{},
-	_acc interface{},
-	_mmt interface{},
-	_ref interface{},
+	_pos, _spd, _acc, _mmt, _ref interface{},
 ) (
 	pos float64,
 	spd float64,
@@ -671,12 +639,7 @@ func parseAbsArgs(
 }
 
 func parseRelArgs(
-	_pos interface{},
-	_spd interface{},
-	_acc interface{},
-	_add interface{},
-	_mmt interface{},
-	_ref interface{},
+	_pos, _spd, _acc, _add, _mmt, _ref interface{},
 ) (
 	pos float64,
 	spd float64,
