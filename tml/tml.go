@@ -1,7 +1,7 @@
 // Package tml provides functions for TML_Lib, an SDK from Technosoft. Be sure
 // to read the offical document before importing this package. Actually, there
-// is a more concise and effective implementation, but requires more time for
-// testing.
+// is a more concise and effective implementation for the TLS facility based
+// library, but requires more time for testing.
 package tml
 
 import (
@@ -244,10 +244,10 @@ var launchClient = func(c *Client) {
 // - _pos: position to reached expressed in TML position units;
 //
 // - _spd: slew speed expressed in TML speed units. If the value is zero the
-// drive/motor will use the previously value set for speed;
+// motor will use the previously value set for speed;
 //
 // - _acc: acceleration/deceleration rate expressed in TML acceleration
-// units. If its value is zero the drive/motor will use the previously value
+// units. If its value is zero the motor will use the previously value
 // set for acceleration;
 //
 // - _mmt: defines the moment when the motion is started;
@@ -294,10 +294,10 @@ func (c *Client) MoveAbsoluteByAxis(
 // - _pos: position increment expressed in TML position units;
 //
 // - _spd: slew speed expressed in TML speed units. If the value is zero the
-// drive/motor will use the previously value set for speed;
+// motor will use the previously value set for speed;
 //
 // - _acc: acceleration/deceleration rate expressed in TML acceleration
-// units. If its value is zero the drive/motor will use the previously value
+// units. If its value is zero the motor will use the previously value
 // set for acceleration;
 //
 // - _add: specifies how is computed the position to reach;
