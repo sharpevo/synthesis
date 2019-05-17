@@ -1,3 +1,7 @@
+// Package tml provides functions for TML_Lib, an SDK from Technosoft. Be sure
+// to read the offical document before importing this package. Actually, there
+// is a more concise and effective implementation, but requires more time for
+// testing.
 package tml
 
 import (
