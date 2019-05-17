@@ -230,7 +230,7 @@ var launchClient = func(c *Client) {
 			req.responsec <- response{err: erri.(error)}
 			continue
 		}
-		if err := c.UpdateMotionStatus(); err != nil {
+		if err := c.updateMotionStatus(); err != nil {
 			log.E(err)
 		}
 		req.responsec <- response{err: nil}
@@ -667,7 +667,7 @@ func parseRelArgs(
 }
 
 // UpadteMotionStatus updates the position of x-axis and y-axis.
-func (c *Client) UpdateMotionStatus() (err error) {
+func (c *Client) updateMotionStatus() (err error) {
 	if c.posX, err = tml.ActualPosition(c.axisXID); err != nil {
 		return err
 	}
