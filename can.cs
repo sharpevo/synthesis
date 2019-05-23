@@ -21,7 +21,7 @@ namespace TestCan
         //[DllImport("./can.dll", EntryPoint="ReadHumiture")]
         [DllImport("can.dll", EntryPoint="ReadHumiture")]
         //static extern GoSlice ReadHumiture();
-        static extern ReadHumiture_return ReadHumiture();
+        static extern int ReadHumiture(ref double p0, ref double p1);
 
         static void Main()
         {
@@ -44,10 +44,12 @@ namespace TestCan
             Console.WriteLine("ControlSwitcher");
             Console.WriteLine(ControlSwitcher(12));
             Console.WriteLine("Readhumiture");
-            ReadHumiture_return humiture = ReadHumiture();
+            double temp = 0; // if float, 32.8 -> 2.93
+            double humi = 0; // if float, 28.1 -> -1.58E23
+            int humiture = ReadHumiture(ref temp, ref humi);
             Console.WriteLine(humiture);
-            Console.WriteLine(humiture.r0);
-            Console.WriteLine(humiture.r1);
+            Console.WriteLine(temp);
+            Console.WriteLine(humi);
         }
     }
 }

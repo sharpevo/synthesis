@@ -99,16 +99,25 @@ func ControlSwitcherAdvanced(
 }
 
 //export ReadHumiture
-func ReadHumiture() (float64, float64) {
+func ReadHumiture(temp *float64, humi *float64) int {
 	resp, err := dao.ReadHumiture()
 	if err != nil {
 		fmt.Println(err)
-		return float64(0), float64(0)
-		// TODO: error handling
+		return 0
 	}
-	output := resp.([]float64)
+	output, ok := resp.([]float64)
+	if !ok {
+		fmt.Println("Error: invaild humiture data type")
+		return 1
+	}
+	if len(output) != 2 {
+		fmt.Println("Error: invaild humiture data")
+		return 1
+	}
 	fmt.Println("ReadHumiture:", output[0], output[1])
-	return output[0], output[1]
+	*temp = output[0]
+	*humi = output[1]
+	return 1
 }
 
 //export ReadOxygenConc
