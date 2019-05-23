@@ -1,11 +1,12 @@
 package main
 
+import "C"
+
 import (
 	"fmt"
 	"posam/dao/canalystii"
 	//"reflect"
 )
-import "C"
 
 func main() {}
 
@@ -24,15 +25,39 @@ func NewDao(
 	timing1Char *C.char,
 	modeChar *C.char,
 ) int {
-	devType, devIndex, devID, canIndex, accCode,
-		accMask, filter, timing0, timing1, mode := C.GoString(devTypeChar),
-		C.GoString(devIndexChar), C.GoString(devIDChar), C.GoString(canIndexChar), C.GoString(accCodeChar), C.GoString(accMaskChar), C.GoString(filterChar), C.GoString(timing0Char), C.GoString(timing1Char), C.GoString(modeChar)
+	devType,
+		devIndex,
+		devID,
+		canIndex,
+		accCode,
+		accMask,
+		filter,
+		timing0,
+		timing1,
+		mode := C.GoString(devTypeChar),
+		C.GoString(devIndexChar),
+		C.GoString(devIDChar),
+		C.GoString(canIndexChar),
+		C.GoString(accCodeChar),
+		C.GoString(accMaskChar),
+		C.GoString(filterChar),
+		C.GoString(timing0Char),
+		C.GoString(timing1Char),
+		C.GoString(modeChar)
 	var err error
 	fmt.Println(devType)
 	fmt.Println(devID)
 	dao, err = canalystii.NewDao(
-		devType, devIndex, devID, canIndex, accCode,
-		accMask, filter, timing0, timing1, mode,
+		devType,
+		devIndex,
+		devID,
+		canIndex,
+		accCode,
+		accMask,
+		filter,
+		timing0,
+		timing1,
+		mode,
 	)
 	if err != nil {
 		fmt.Println(err)
@@ -125,6 +150,19 @@ func ReadHumiture(temp *float64, humi *float64) int {
 	return 1
 }
 
+//func Test(inputChar *C.char, output *string) int {
+////fmt.Println(C.GoString(Input))
+///[>Output = C.CString(fmt.Sprintf("From DLL: Hello, %s!\n", C.GoString(Input)))
+////fmt.Println("Message: ", C.GoString(*Output))
+////return 1
+
+//input := C.GoString(inputChar)
+//fmt.Println("GO1", input)
+//*output = "中文" + input
+//fmt.Println("GO2", *output)
+//return 1
+//}
+
 //export Test
 func Test(inputChar *C.char, output **C.char) int {
 	//fmt.Println(C.GoString(Input))
@@ -137,32 +175,32 @@ func Test(inputChar *C.char, output **C.char) int {
 	rst := C.CString("中文" + input)
 	*output = rst
 	fmt.Println("GO2", C.GoString(*output))
-	//c.free(unsafe.Pointer(rst))
+	//C.free(unsafe.Pointer(rst))
 	return int(len(C.GoString(*output)))
 }
 
 //export ReadOxygenConc
-func ReadOxygenConc() float64 {
+func ReadOxygenConc(output *float64) int {
 	resp, err := dao.ReadOxygenConc()
 	if err != nil {
 		fmt.Println(err)
-		return float64(0)
+		return 0
 	}
 	fmt.Println("ReadOxygenConc:", resp)
-	output := resp.(float64)
-	return output
+	*output = resp.(float64)
+	return 1
 }
 
 //export ReadPressure
-func ReadPressure(device int) int64 {
+func ReadPressure(device int, output *int64) int {
 	resp, err := dao.ReadPressure(device)
 	if err != nil {
 		fmt.Println(err)
 		return 0
 	}
 	fmt.Println("ReadPressure:", resp)
-	output := resp.(int64)
-	return output
+	*output = resp.(int64)
+	return 1
 }
 
 //export WriteSystemRom
@@ -177,12 +215,13 @@ func WriteSystemRom(address int, value int) int {
 }
 
 //export ReadSystemRom
-func ReadSystemRom(address int) int {
+func ReadSystemRom(address int, output *int64) int {
 	resp, err := dao.ReadSystemRom(address)
 	if err != nil {
 		fmt.Println(err)
 		return 0
 	}
 	fmt.Println("WriteSystemRom:", resp)
+	*output = resp.(int64)
 	return 1
 }
