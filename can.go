@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"posam/dao/canalystii"
-	"reflect"
+	//"reflect"
 )
 import "C"
 
@@ -99,31 +99,16 @@ func ControlSwitcherAdvanced(
 }
 
 //export ReadHumiture
-func ReadHumiture() []float64 {
+func ReadHumiture() (float64, float64) {
 	resp, err := dao.ReadHumiture()
 	if err != nil {
 		fmt.Println(err)
-		return []float64{0}
+		return float64(0), float64(0)
 		// TODO: error handling
 	}
-	fmt.Println("ReadHumiture:", resp)
 	output := resp.([]float64)
-	return output
-}
-
-func ReadHumiture2() uintptr {
-	//func ReadHumiture() []float64 {
-	resp, err := dao.ReadHumiture()
-	if err != nil {
-		fmt.Println(err)
-		return []float64{0}
-		// TODO: error handling
-	}
-	fmt.Println("ReadHumiture:", resp)
-	output := resp.([]float64)
-
-	hdr := (*reflect.SliceHeader)(unsafe.Pointer(&output))
-	return hdr.Data
+	fmt.Println("ReadHumiture:", output[0], output[1])
+	return output[0], output[1]
 }
 
 //export ReadOxygenConc

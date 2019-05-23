@@ -20,7 +20,8 @@ namespace TestCan
 
         //[DllImport("./can.dll", EntryPoint="ReadHumiture")]
         [DllImport("can.dll", EntryPoint="ReadHumiture")]
-        static extern GoSlice ReadHumiture();
+        //static extern GoSlice ReadHumiture();
+        static extern ReadHumiture_return ReadHumiture();
 
         static void Main()
         {
@@ -43,39 +44,10 @@ namespace TestCan
             Console.WriteLine("ControlSwitcher");
             Console.WriteLine(ControlSwitcher(12));
             Console.WriteLine("Readhumiture");
-            GoSlice humiture = ReadHumiture();
-
-//uintptr_t resPtr = phew();
-    //uint8_t *res = (uint8_t*)resPtr;
-
-    //for (int i = 0; i < 2; i++){
-        //printf("%d\n", res[i]);
-    //}
-
-    //printf("Exiting gracefully\n");
-
-            //以下为GoSlice转Array
-            //byte[] bytes = new byte[humiture.len];
-            //for (int i = 0; i < humiture.len; i++)
-                //bytes[i] = Marshal.ReadByte(humiture.data, i);
-            ////Byte[] to String
-            //string s = Encoding.UTF8.GetString(bytes);
-            //Console.WriteLine(s); //输出结果 33 for 23.7, 27.8
-            //
-
-            //float[] floats = new float[humiture.len];
-            //for (int i = 0; i < humiture.len; i++)
-                //floats[i] = Marshal.ReadByte(humiture.data, i);
-            ////Byte[] to String
-            //string s = Encoding.UTF8.GetString(floats);
-            //Console.WriteLine(s); //输出结果 33 for 23.7, 27.8
-
-            double[] array = new double[humiture.len];
-            Console.WriteLine(humiture.len);
-
-            Marshal.Copy((IntPtr)humiture.data, array, 0, humiture.len);
-            Console.WriteLine(array[0]); //输出结果 33 for 23.7, 27.8
-            Console.WriteLine(array[1]); //输出结果 33 for 23.7, 27.8
+            ReadHumiture_return humiture = ReadHumiture();
+            Console.WriteLine(humiture);
+            Console.WriteLine(humiture.r0);
+            Console.WriteLine(humiture.r1);
         }
     }
 }

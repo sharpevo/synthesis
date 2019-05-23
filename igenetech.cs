@@ -18,3 +18,9 @@ public struct GoSlice
     public int len;
     public int cap;
 }
+
+public struct ReadHumiture_return
+{
+    public double r0;
+    public double r1;
+}
