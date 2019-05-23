@@ -13,18 +13,23 @@ var dao *canalystii.Dao
 
 //export NewDao
 func NewDao(
-	devType string,
-	devIndex string,
-	devID string,
-	canIndex string,
-	accCode string,
-	accMask string,
-	filter string,
-	timing0 string,
-	timing1 string,
-	mode string,
+	devTypeChar *C.char,
+	devIndexChar *C.char,
+	devIDChar *C.char,
+	canIndexChar *C.char,
+	accCodeChar *C.char,
+	accMaskChar *C.char,
+	filterChar *C.char,
+	timing0Char *C.char,
+	timing1Char *C.char,
+	modeChar *C.char,
 ) int {
+	devType, devIndex, devID, canIndex, accCode,
+		accMask, filter, timing0, timing1, mode := C.GoString(devTypeChar),
+		C.GoString(devIndexChar), C.GoString(devIDChar), C.GoString(canIndexChar), C.GoString(accCodeChar), C.GoString(accMaskChar), C.GoString(filterChar), C.GoString(timing0Char), C.GoString(timing1Char), C.GoString(modeChar)
 	var err error
+	fmt.Println(devType)
+	fmt.Println(devID)
 	dao, err = canalystii.NewDao(
 		devType, devIndex, devID, canIndex, accCode,
 		accMask, filter, timing0, timing1, mode,
@@ -118,6 +123,22 @@ func ReadHumiture(temp *float64, humi *float64) int {
 	*temp = output[0]
 	*humi = output[1]
 	return 1
+}
+
+//export Test
+func Test(inputChar *C.char, output **C.char) int {
+	//fmt.Println(C.GoString(Input))
+	//*Output = C.CString(fmt.Sprintf("From DLL: Hello, %s!\n", C.GoString(Input)))
+	//fmt.Println("Message: ", C.GoString(*Output))
+	//return 1
+
+	input := C.GoString(inputChar)
+	fmt.Println("GO1", input)
+	rst := C.CString("中文" + input)
+	*output = rst
+	fmt.Println("GO2", C.GoString(*output))
+	//c.free(unsafe.Pointer(rst))
+	return int(len(C.GoString(*output)))
 }
 
 //export ReadOxygenConc
