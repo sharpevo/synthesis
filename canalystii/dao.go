@@ -424,7 +424,7 @@ func (d *Dao) WriteSystemRom(
 		log.Println(err)
 		return resp, err
 	}
-	resp = output[2:4]
+	resp = binary.BigEndian.Uint16(output[2:4])
 	return resp, nil
 }
 
@@ -449,7 +449,7 @@ func (d *Dao) ReadSystemRom(
 		log.Println(err)
 		return resp, err
 	}
-	resp = output[2:4]
+	resp = binary.BigEndian.Uint16(output[2:4])
 	return resp, nil
 }
 
