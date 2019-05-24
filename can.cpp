@@ -1,5 +1,5 @@
-#include <iostream>
 #include <windows.h>
+#include <iostream>
 typedef int (__stdcall *f_init)(char*, char*, char*, char*, char*, char*,
     char*, char*, char*, char*);
 typedef int (__stdcall *f_controlswitcher)(int);
@@ -36,7 +36,7 @@ int main(){
         return 1;
     }
     if (!ControlSwitcher(12)) {
-        std::cout << "failed to read humiture" << std::endl;
+        std::cout << "failed to send switch instruction" << std::endl;
         return 1;
     }
     double humi, temp;
@@ -44,8 +44,8 @@ int main(){
         std::cout << "failed to read humiture" << std::endl;
         return 1;
     }
-    std::cout << "read humiture from C++: " << humi  << std::endl;
-    std::cout << "read temperature from C++: " << temp  << std::endl;
+    std::cout << "read humiture from C++: " << humi << std::endl;
+    std::cout << "read temperature from C++: " << temp << std::endl;
     return 0;
 }
 
