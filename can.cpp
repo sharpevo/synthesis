@@ -2,6 +2,7 @@
 #include <windows.h>
 typedef int (__stdcall *f_init)(char*, char*, char*, char*, char*, char*,
     char*, char*, char*, char*);
+typedef int (__stdcall *f_controlswitcher)(int);
 typedef int (__stdcall *f_readhumiture)(double*, double*);
 
 char* conv(std::string input){
@@ -18,34 +19,33 @@ int main(){
     if (!Init) {
         std::cout << "failed to load function NewDao" << std::endl;
     }
-    f_readhumiture ReadHumiture = (f_readhumiture)GetProcAddress(canlib, "ReadHumiture");
-    if (!ReadHumiture) {
-        std::cout << "could not locate the function ReadHumiture" << std::endl;
+    f_controlswitcher ControlSwitcher = (f_controlswitcher)GetProcAddress(canlib,
+            "ControlSwitcher");
+    if (!ControlSwitcher) {
+        std::cout << "failed to load function ControlSwitcher" << std::endl;
     }
-
-    std::string devtype, devindex, devid, canindex, acccode, accmask, filter,
-        timing0, timing1, mode;
-
-    devtype = "4";
-    devindex = "0";
-    devid = "0x00000001";
-    canindex = "0";
-    acccode = "0x00000000";
-    accmask = "0xFFFFFFFF";
-    filter = "0";
-    timing0 = "0x00";
-    timing1 = "0x1c";
-    mode = "0";
-
-    std::cout << "Init: " << Init(conv(devtype),conv(devindex),conv(devid),
-        conv(canindex), conv(acccode), conv(accmask), conv(filter),
-        conv(timing0), conv(timing1), conv(mode)) << std::endl;
-
+    f_readhumiture ReadHumiture = (f_readhumiture)GetProcAddress(canlib,
+            "ReadHumiture");
+    if (!ReadHumiture) {
+        std::cout << "failed to load function ReadHumiture" << std::endl;
+    }
+    if (!Init(conv("4"),conv("0"),conv("0x00000001"),
+        conv("0"), conv("0x00000000"), conv("0xFFFFFFFF"), conv("0"),
+        conv("0x00"), conv("0x1c"), conv("0"))){
+        std::cout << "failed to init can device" << std::endl;
+        return 1;
+    }
+    if (!ControlSwitcher(12)) {
+        std::cout << "failed to read humiture" << std::endl;
+        return 1;
+    }
     double humi, temp;
-    std::cout << "ReadHumiture: " << ReadHumiture(&humi, &temp) << std::endl;
-    std::cout << "humiture: " << humi  << std::endl;
-    std::cout << "temperature: " << temp  << std::endl;
-
+    if (!ReadHumiture(&humi, &temp)){
+        std::cout << "failed to read humiture" << std::endl;
+        return 1;
+    }
+    std::cout << "read humiture from C++: " << humi  << std::endl;
+    std::cout << "read temperature from C++: " << temp  << std::endl;
     return 0;
 }
 
