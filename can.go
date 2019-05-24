@@ -3,7 +3,7 @@ package main
 import "C"
 
 import (
-	"fmt"
+	"log"
 	"posam/dao/canalystii"
 	//"reflect"
 )
@@ -45,8 +45,8 @@ func NewDao(
 		C.GoString(timing1Char),
 		C.GoString(modeChar)
 	var err error
-	fmt.Println(devType)
-	fmt.Println(devID)
+	//fmt.Println(devType)
+	//fmt.Println(devID)
 	dao, err = canalystii.NewDao(
 		devType,
 		devIndex,
@@ -60,7 +60,7 @@ func NewDao(
 		mode,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
 	return 1
@@ -75,10 +75,10 @@ func MoveAbsolute(
 		motorCode, position,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("MoveAbosute:", resp)
+	log.Println("MoveAbosute:", resp)
 	return 1
 }
 
@@ -93,10 +93,10 @@ func MoveRelative(
 		motorCode, direction, speed, position,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("MoveRelative:", resp)
+	log.Println("MoveRelative:", resp)
 	return 1
 }
 
@@ -104,10 +104,10 @@ func MoveRelative(
 func ControlSwitcher(data int) int {
 	resp, err := dao.ControlSwitcher(data)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("ControSwitcher:", resp)
+	log.Println("ControSwitcher:", resp)
 	return 1
 }
 
@@ -121,10 +121,10 @@ func ControlSwitcherAdvanced(
 		data, speed, count,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("ControSwitcher:", resp)
+	log.Println("ControSwitcher:", resp)
 	return 1
 }
 
@@ -132,19 +132,19 @@ func ControlSwitcherAdvanced(
 func ReadHumiture(temp *float64, humi *float64) int {
 	resp, err := dao.ReadHumiture()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
 	output, ok := resp.([]float64)
 	if !ok {
-		fmt.Println("Error: invaild humiture data type")
+		log.Println("Error: invaild humiture data type")
 		return 1
 	}
 	if len(output) != 2 {
-		fmt.Println("Error: invaild humiture data")
+		log.Println("Error: invaild humiture data")
 		return 1
 	}
-	fmt.Println("ReadHumiture:", output[0], output[1])
+	log.Println("ReadHumiture:", output[0], output[1])
 	*temp = output[0]
 	*humi = output[1]
 	return 1
@@ -171,10 +171,10 @@ func Test(inputChar *C.char, output **C.char) int {
 	//return 1
 
 	input := C.GoString(inputChar)
-	fmt.Println("GO1", input)
+	log.Println("GO1", input)
 	rst := C.CString("中文" + input)
 	*output = rst
-	fmt.Println("GO2", C.GoString(*output))
+	log.Println("GO2", C.GoString(*output))
 	//C.free(unsafe.Pointer(rst))
 	return int(len(C.GoString(*output)))
 }
@@ -183,10 +183,10 @@ func Test(inputChar *C.char, output **C.char) int {
 func ReadOxygenConc(output *float64) int {
 	resp, err := dao.ReadOxygenConc()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("ReadOxygenConc:", resp)
+	log.Println("ReadOxygenConc:", resp)
 	*output = resp.(float64)
 	return 1
 }
@@ -195,10 +195,10 @@ func ReadOxygenConc(output *float64) int {
 func ReadPressure(device int, output *int64) int {
 	resp, err := dao.ReadPressure(device)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("ReadPressure:", resp)
+	log.Println("ReadPressure:", resp)
 	*output = resp.(int64)
 	return 1
 }
@@ -207,10 +207,10 @@ func ReadPressure(device int, output *int64) int {
 func WriteSystemRom(address int, value int) int {
 	resp, err := dao.WriteSystemRom(address, value)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("WriteSystemRom:", resp)
+	log.Println("WriteSystemRom:", resp)
 	return 1
 }
 
@@ -218,10 +218,10 @@ func WriteSystemRom(address int, value int) int {
 func ReadSystemRom(address int, output *int64) int {
 	resp, err := dao.ReadSystemRom(address)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("WriteSystemRom:", resp)
+	log.Println("WriteSystemRom:", resp)
 	*output = resp.(int64)
 	return 1
 }
