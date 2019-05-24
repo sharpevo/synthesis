@@ -5,7 +5,7 @@ typedef int (__stdcall *f_init)(char*, char*, char*, char*, char*, char*,
 typedef int (__stdcall *f_controlswitcher)(int);
 typedef int (__stdcall *f_readhumiture)(double*, double*);
 
-char* conv(std::string input){
+char* pchar(std::string input){
     return const_cast<char*>(input.c_str());
 }
 
@@ -29,9 +29,9 @@ int main(){
     if (!ReadHumiture) {
         std::cout << "failed to load function ReadHumiture" << std::endl;
     }
-    if (!Init(conv("4"),conv("0"),conv("0x00000001"),
-        conv("0"), conv("0x00000000"), conv("0xFFFFFFFF"), conv("0"),
-        conv("0x00"), conv("0x1c"), conv("0"))){
+    if (!Init(pchar("4"),pchar("0"),pchar("0x00000001"),
+        pchar("0"), pchar("0x00000000"), pchar("0xFFFFFFFF"), pchar("0"),
+        pchar("0x00"), pchar("0x1c"), pchar("0"))){
         std::cout << "failed to init can device" << std::endl;
         return 1;
     }
