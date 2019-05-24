@@ -10,7 +10,7 @@ char* pchar(std::string input){
 }
 
 int main(){
-    HINSTANCE canlib = LoadLibrary("can.dll"); 
+    HINSTANCE canlib = LoadLibrary("iGeneTechCAN.dll");
     if (!canlib) {
         std::cout << "failed to load dynamic library" << std::endl;
         return 1;
