@@ -163,7 +163,7 @@ func ReadHumiture(temp *float64, humi *float64) int {
 //return 1
 //}
 
-//export Test
+//not export Test
 func Test(inputChar *C.char, output **C.char) int {
 	//fmt.Println(C.GoString(Input))
 	//*Output = C.CString(fmt.Sprintf("From DLL: Hello, %s!\n", C.GoString(Input)))
