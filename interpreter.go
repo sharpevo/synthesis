@@ -148,7 +148,7 @@ func tryRead(terminatec <-chan interface{}, inputc <-chan Response) <-chan Respo
 			}
 		}
 	})
-	runtime.KeepAlive(outputc)
+	//runtime.KeepAlive(outputc)
 	return outputc
 }
 
