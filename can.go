@@ -1,11 +1,12 @@
 package main
 
+import "C"
+
 import (
-	"fmt"
+	"log"
 	"posam/dao/canalystii"
 	//"reflect"
 )
-import "C"
 
 func main() {}
 
@@ -13,24 +14,53 @@ var dao *canalystii.Dao
 
 //export NewDao
 func NewDao(
-	devType string,
-	devIndex string,
-	devID string,
-	canIndex string,
-	accCode string,
-	accMask string,
-	filter string,
-	timing0 string,
-	timing1 string,
-	mode string,
+	devTypeChar *C.char,
+	devIndexChar *C.char,
+	devIDChar *C.char,
+	canIndexChar *C.char,
+	accCodeChar *C.char,
+	accMaskChar *C.char,
+	filterChar *C.char,
+	timing0Char *C.char,
+	timing1Char *C.char,
+	modeChar *C.char,
 ) int {
+	devType,
+		devIndex,
+		devID,
+		canIndex,
+		accCode,
+		accMask,
+		filter,
+		timing0,
+		timing1,
+		mode := C.GoString(devTypeChar),
+		C.GoString(devIndexChar),
+		C.GoString(devIDChar),
+		C.GoString(canIndexChar),
+		C.GoString(accCodeChar),
+		C.GoString(accMaskChar),
+		C.GoString(filterChar),
+		C.GoString(timing0Char),
+		C.GoString(timing1Char),
+		C.GoString(modeChar)
 	var err error
+	//fmt.Println(devType)
+	//fmt.Println(devID)
 	dao, err = canalystii.NewDao(
-		devType, devIndex, devID, canIndex, accCode,
-		accMask, filter, timing0, timing1, mode,
+		devType,
+		devIndex,
+		devID,
+		canIndex,
+		accCode,
+		accMask,
+		filter,
+		timing0,
+		timing1,
+		mode,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
 	return 1
@@ -45,10 +75,10 @@ func MoveAbsolute(
 		motorCode, position,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("MoveAbosute:", resp)
+	log.Println("MoveAbosute:", resp)
 	return 1
 }
 
@@ -63,10 +93,10 @@ func MoveRelative(
 		motorCode, direction, speed, position,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("MoveRelative:", resp)
+	log.Println("MoveRelative:", resp)
 	return 1
 }
 
@@ -74,10 +104,10 @@ func MoveRelative(
 func ControlSwitcher(data int) int {
 	resp, err := dao.ControlSwitcher(data)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("ControSwitcher:", resp)
+	log.Println("ControSwitcher:", resp)
 	return 1
 }
 
@@ -91,10 +121,10 @@ func ControlSwitcherAdvanced(
 		data, speed, count,
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("ControSwitcher:", resp)
+	log.Println("ControSwitcher:", resp)
 	return 1
 }
 
@@ -102,66 +132,96 @@ func ControlSwitcherAdvanced(
 func ReadHumiture(temp *float64, humi *float64) int {
 	resp, err := dao.ReadHumiture()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
 	output, ok := resp.([]float64)
 	if !ok {
-		fmt.Println("Error: invaild humiture data type")
+		log.Println("Error: invaild humiture data type")
 		return 1
 	}
 	if len(output) != 2 {
-		fmt.Println("Error: invaild humiture data")
+		log.Println("Error: invaild humiture data")
 		return 1
 	}
-	fmt.Println("ReadHumiture:", output[0], output[1])
+	log.Println("ReadHumiture:", output[0], output[1])
 	*temp = output[0]
 	*humi = output[1]
 	return 1
 }
 
+//func Test(inputChar *C.char, output *string) int {
+////fmt.Println(C.GoString(Input))
+///[>Output = C.CString(fmt.Sprintf("From DLL: Hello, %s!\n", C.GoString(Input)))
+////fmt.Println("Message: ", C.GoString(*Output))
+////return 1
+
+//input := C.GoString(inputChar)
+//fmt.Println("GO1", input)
+//*output = "中文" + input
+//fmt.Println("GO2", *output)
+//return 1
+//}
+
+//not export Test
+func Test(inputChar *C.char, output **C.char) int {
+	//fmt.Println(C.GoString(Input))
+	//*Output = C.CString(fmt.Sprintf("From DLL: Hello, %s!\n", C.GoString(Input)))
+	//fmt.Println("Message: ", C.GoString(*Output))
+	//return 1
+
+	input := C.GoString(inputChar)
+	log.Println("GO1", input)
+	rst := C.CString("中文" + input)
+	*output = rst
+	log.Println("GO2", C.GoString(*output))
+	//C.free(unsafe.Pointer(rst))
+	return int(len(C.GoString(*output)))
+}
+
 //export ReadOxygenConc
-func ReadOxygenConc() float64 {
+func ReadOxygenConc(output *float64) int {
 	resp, err := dao.ReadOxygenConc()
 	if err != nil {
-		fmt.Println(err)
-		return float64(0)
+		log.Println(err)
+		return 0
 	}
-	fmt.Println("ReadOxygenConc:", resp)
-	output := resp.(float64)
-	return output
+	log.Println("ReadOxygenConc:", resp)
+	*output = resp.(float64)
+	return 1
 }
 
 //export ReadPressure
-func ReadPressure(device int) int64 {
+func ReadPressure(device int, output *int64) int {
 	resp, err := dao.ReadPressure(device)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("ReadPressure:", resp)
-	output := resp.(int64)
-	return output
+	log.Println("ReadPressure:", resp)
+	*output = resp.(int64)
+	return 1
 }
 
 //export WriteSystemRom
 func WriteSystemRom(address int, value int) int {
 	resp, err := dao.WriteSystemRom(address, value)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("WriteSystemRom:", resp)
+	log.Println("WriteSystemRom:", resp)
 	return 1
 }
 
 //export ReadSystemRom
-func ReadSystemRom(address int) int {
+func ReadSystemRom(address int, output *int64) int {
 	resp, err := dao.ReadSystemRom(address)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 0
 	}
-	fmt.Println("WriteSystemRom:", resp)
+	log.Println("WriteSystemRom:", resp)
+	*output = resp.(int64)
 	return 1
 }
