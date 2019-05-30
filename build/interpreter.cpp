@@ -6,6 +6,7 @@ struct instruction {
     int ignoreError;
     char* output;
     char* err;
+    char* custom;
 };
 typedef int (__stdcall *f_handler)(instruction*);
 typedef int (__stdcall *f_register)(f_handler);
@@ -21,6 +22,7 @@ int handler(instruction* i){
     std::cout << "instruction '" << i->name << "' is completed" << std::endl;
     std::cout << "output: " << i->output << std::endl;
     std::cout << "error: " << i->err << std::endl;
+    std::cout << "id: " << i->custom << std::endl;
     return 22;
 }
 
@@ -51,6 +53,7 @@ int main(){
         .name = name,
         .args = args,
         .ignoreError = 0,
+        .custom = pchar("id-1"),
     };
     execute(&i);
 }
