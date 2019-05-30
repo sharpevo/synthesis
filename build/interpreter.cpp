@@ -1,14 +1,14 @@
 #include <windows.h>
 #include <iostream>
 struct instruction {
-    char* Name;
-    char** Arguments;
-    int IgnoreError;
-    char* Output;
-    char* Error;
+    char* name;
+    char** args;
+    int ignoreError;
+    char* output;
+    char* err;
 };
-typedef int (__stdcall *f_callback)(instruction*);
-typedef int (__stdcall *f_register)(f_callback);
+typedef int (__stdcall *f_handler)(instruction*);
+typedef int (__stdcall *f_register)(f_handler);
 typedef int (__stdcall *f_execute)(instruction*);
 
 
@@ -16,10 +16,11 @@ char* pchar(std::string input){
     return const_cast<char*>(input.c_str());
 }
 
-int callback(instruction* i){
-    std::cout << "callback of " << i->Name << std::endl;
-    std::cout << "output: " << i->Output << std::endl;
-    std::cout << "error: " << i->Error << std::endl;
+int handler(instruction* i){
+    std::cout << "==== handler in C++ ====" << std::endl;
+    std::cout << "instruction '" << i->name << "' is completed" << std::endl;
+    std::cout << "output: " << i->output << std::endl;
+    std::cout << "error: " << i->err << std::endl;
     return 22;
 }
 
@@ -39,20 +40,17 @@ int main(){
         std::cout << "failed to load register" << std::endl;
         return 1;
     }
-    registerHandler(callback);
+    registerHandler(handler);
 
-    char* name = pchar("ins from C++");
+    char* name = pchar("Instruction-CPP");
     char** args = new char* [2];
-    args[0] = pchar("motor");
-    args[1] = pchar("10");
+    args[0] = pchar("MoveAbsolute");
+    args[1] = pchar("10mm");
 
     instruction i = {
-        .Name = name,
-        .Arguments = args,
-        .IgnoreError = 0,
+        .name = name,
+        .args = args,
+        .ignoreError = 0,
     };
-    //std::cout << "--testing--" << std::endl;
-    //callback(&i);
-    //std::cout << "--executing--" << std::endl;
     execute(&i);
 }

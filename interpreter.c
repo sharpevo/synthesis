@@ -1,7 +1,7 @@
 #include "_cgo_export.h"
 
-int bridgeCallback(callbackFunc f, struct Instruction* i){
-	return f(i);
+int bridgeCallback(f_handlerInstruction h, struct instruction* i){
+	return h(i);
 }
 
 
