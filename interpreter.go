@@ -5,6 +5,7 @@ package main
 struct instruction{
 	char* name;
 	char** arguments;
+	int argumentCount;
 	int ignoreError;
 	char* output;
 	char* err;
@@ -16,8 +17,8 @@ import "C"
 
 import (
 	"log"
-	"unsafe"
 	//"posam/interpreter"
+	"unsafe"
 )
 
 func main() {}
@@ -30,6 +31,19 @@ func NewInstruction(instruction *C.struct_instruction) int {
 //export Execute
 func Execute(instruction *C.struct_instruction) {
 	log.Println("executing", C.GoString(instruction.name))
+
+	count := int(instruction.argumentCount)
+	log.Println("count", count)
+	argsC := (*[1 << 30]*C.char)(unsafe.Pointer(instruction.arguments))[:count:count]
+	log.Println("argsC", argsC)
+	args := make([]string, count)
+	for i, s := range argsC {
+		log.Println("argC", s)
+		args[i] = C.GoString(s)
+		log.Println("arg", args[i])
+	}
+	log.Printf("args: %#v\n", args)
+
 	resp := C.CString("moved to 10mm")
 	err := C.CString("no error")
 	defer C.free(unsafe.Pointer(resp))

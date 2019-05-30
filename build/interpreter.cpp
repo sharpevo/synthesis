@@ -3,6 +3,7 @@
 struct instruction {
     char* name;
     char** args;
+    int argCount;
     int ignoreError;
     char* output;
     char* err;
@@ -45,13 +46,15 @@ int main(){
     registerHandler(handler);
 
     char* name = pchar("Instruction-CPP");
-    char** args = new char* [2];
+    int argCount = 2;
+    char** args = new char* [argCount];
     args[0] = pchar("MoveAbsolute");
     args[1] = pchar("10mm");
 
     instruction i = {
         .name = name,
         .args = args,
+        .argCount = argCount,
         .ignoreError = 0,
         .custom = pchar("id-1"),
     };
