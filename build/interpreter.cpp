@@ -24,6 +24,7 @@ int handler(instruction* i){
     std::cout << "output: " << i->output << std::endl;
     std::cout << "error: " << i->err << std::endl;
     std::cout << "id: " << i->custom << std::endl;
+    std::cout << "========================" << std::endl;
     return 22;
 }
 
@@ -45,11 +46,12 @@ int main(){
     }
     registerHandler(handler);
 
-    char* name = pchar("Instruction-CPP");
-    int argCount = 2;
+    char* name = pchar("SWITCH");
+    int argCount = 3;
     char** args = new char* [argCount];
-    args[0] = pchar("MoveAbsolute");
-    args[1] = pchar("10mm");
+    args[0] = pchar("FRAME_ID");
+    args[1] = pchar("val");
+    args[2] = pchar("12");
 
     instruction i = {
         .name = name,
@@ -57,6 +59,22 @@ int main(){
         .argCount = argCount,
         .ignoreError = 0,
         .custom = pchar("id-1"),
+    };
+    execute(&i);
+
+    name = pchar("HUMITURE");
+    argCount = 3;
+    args = new char* [argCount];
+    args[0] = pchar("FRAME_ID");
+    args[1] = pchar("humi");
+    args[2] = pchar("temp");
+
+    i = {
+        .name = name,
+        .args = args,
+        .argCount = argCount,
+        .ignoreError = 0,
+        .custom = pchar("id-2"),
     };
     execute(&i);
 }

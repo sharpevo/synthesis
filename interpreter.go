@@ -10,14 +10,27 @@ struct instruction{
 	char* output;
 	char* err;
 };
+// struct instruction_set{
+// 	int type;
+// 	int instructionCount;
+// 	instruction* instructions;
+// };
 typedef int(*f_handlerInstruction)(struct instruction*);
 extern int bridgeCallback(f_handlerInstruction f, struct instruction* i);
 */
 import "C"
 
 import (
+	"fmt"
 	"log"
-	//"posam/interpreter"
+	"posam/dao"
+	"posam/dao/canalystii"
+	"posam/instruction"
+	"posam/interpreter"
+	"posam/interpreter/vrb"
+	//"posam/util"
+	//"posam/util/blockingqueue"
+	"reflect"
 	"unsafe"
 )
 
@@ -29,7 +42,118 @@ func NewInstruction(instruction *C.struct_instruction) int {
 }
 
 //export Execute
-func Execute(instruction *C.struct_instruction) {
+func Execute(i *C.struct_instruction) {
+	//func Execute(group *C.struct_instruction_set) {
+
+	stack := instruction.NewStack()
+	// TODO: register device tree
+
+	// CAN
+	devtype := "4"
+	devindex := "0"
+	frameid := "0x00000001"
+	canindex := "0"
+	acccode := "0x00000000"
+	accmask := "0xFFFFFFFF"
+	filter := "0"
+	timing0 := "0x00"
+	timing1 := "0x1C"
+	mode := "0"
+
+	devtypev, _ := vrb.NewVariable(canalystii.DEVICE_TYPE, "4")
+	devindexv, _ := vrb.NewVariable(canalystii.DEVICE_INDEX, "0")
+	frameidv, _ := vrb.NewVariable(canalystii.FRAME_ID, "0x00000001")
+	canindexv, _ := vrb.NewVariable(canalystii.CAN_INDEX, "0")
+	acccodev, _ := vrb.NewVariable(canalystii.ACC_CODE, "0x00000000")
+	accmaskv, _ := vrb.NewVariable(canalystii.ACC_MASK, "0xFFFFFFFF")
+	filterv, _ := vrb.NewVariable(canalystii.FILTER, "0")
+	timing0v, _ := vrb.NewVariable(canalystii.TIMING0, "0x00")
+	timing1v, _ := vrb.NewVariable(canalystii.TIMING1, "0x1C")
+	modev, _ := vrb.NewVariable(canalystii.MODE, "0")
+
+	stack.Set(devtypev)
+	stack.Set(devindexv)
+	stack.Set(frameidv)
+	stack.Set(canindexv)
+	stack.Set(acccodev)
+	stack.Set(accmaskv)
+	stack.Set(filterv)
+	stack.Set(timing0v)
+	stack.Set(timing1v)
+	stack.Set(modev)
+
+	if instance, _ := canalystii.Instance("1"); instance != nil {
+		log.Printf(">>>> Device %q has been initialized\n", "1")
+	} else {
+		log.Printf(">>>> use previous")
+		if _, err := canalystii.NewDao(
+			devtype,
+			devindex,
+			frameid,
+			canindex,
+			acccode,
+			accmask,
+			filter,
+			timing0,
+			timing1,
+			mode,
+		); err != nil {
+			log.Fatal(">>>>", err)
+		}
+	}
+
+	terminatecc := make(chan chan interface{}, 1)
+	defer close(terminatecc)
+
+	instructionMap := dao.NewInstructionMap()
+	for item := range canalystii.InstructionMap.Iter() {
+		instructionMap.Set(item.Key, item.Value.(reflect.Type))
+	}
+	for item := range dao.InstructionMap.Iter() {
+		instructionMap.Set(item.Key, item.Value.(reflect.Type))
+	}
+	interpreter.InitParser(instructionMap)
+	//interpreter.RootScript = &interpreter.Script{}
+	//interpreter.RootScript.Line = instruction
+
+	count := int(i.argumentCount)
+	log.Println("count", count)
+	argsC := (*[1 << 30]*C.char)(unsafe.Pointer(i.arguments))[:count:count]
+	log.Println("argsC", argsC)
+	args := make([]string, count)
+	for i, s := range argsC {
+		log.Println("argC", s)
+		args[i] = C.GoString(s)
+		log.Println("arg", args[i])
+	}
+
+	ignoreErrorI := int(i.ignoreError)
+	ignoreError := ignoreErrorI == 0
+	statement := interpreter.Statement{
+		Stack:           stack,
+		InstructionName: C.GoString(i.name),
+		Arguments:       args,
+		IgnoreError:     ignoreError,
+	}
+
+	//util.Go(func() {
+	terminatec := make(chan interface{})
+	completec := make(chan interface{})
+	//util.Go(func() {
+	//<-completec
+	//})
+	resp := <-statement.Execute(terminatec, completec)
+	output := C.CString(fmt.Sprintf("%v", resp.Output))
+	err := C.CString(fmt.Sprintf("%v", resp.Error))
+	defer C.free(unsafe.Pointer(output))
+	defer C.free(unsafe.Pointer(err))
+	i.output = output
+	i.err = err
+	rst := int(C.bridgeCallback(handlerForInstruction, i))
+	log.Println("MSG: ", resp.Output, resp.Error, rst)
+}
+
+func ExecuteInstruction(instruction *C.struct_instruction) {
 	log.Println("executing", C.GoString(instruction.name))
 
 	count := int(instruction.argumentCount)
