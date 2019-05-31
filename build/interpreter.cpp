@@ -1,18 +1,14 @@
 #include <windows.h>
 #include <iostream>
-struct instruction {
-    char* name;
-    char** args;
-    int argCount;
-    int ignoreError;
-    char* output;
-    char* err;
-    char* custom;
-};
+extern "C"{
+#include "interpreter.h"
+}
 typedef int (__stdcall *f_handler)(instruction*);
 typedef int (__stdcall *f_register)(f_handler);
 typedef int (__stdcall *f_execute)(instruction*);
 
+const int SERIAL = 0;
+const int CONCURRENCY = 1;
 
 char* pchar(std::string input){
     return const_cast<char*>(input.c_str());
@@ -23,7 +19,7 @@ int handler(instruction* i){
     std::cout << "instruction '" << i->name << "' is completed" << std::endl;
     std::cout << "output: " << i->output << std::endl;
     std::cout << "error: " << i->err << std::endl;
-    std::cout << "id: " << i->custom << std::endl;
+    //std::cout << "id: " << i->custom << std::endl;
     std::cout << "========================" << std::endl;
     return 22;
 }
@@ -46,6 +42,12 @@ int main(){
     }
     registerHandler(handler);
 
+    instruction s = {
+        .executionType = SERIAL,
+        .instructionCount = 2,
+        .instructions = new struct instruction* [2],
+    };
+
     char* name = pchar("SWITCH");
     int argCount = 3;
     char** args = new char* [argCount];
@@ -53,14 +55,15 @@ int main(){
     args[1] = pchar("val");
     args[2] = pchar("12");
 
-    instruction i = {
+    instruction i0 = {
         .name = name,
-        .args = args,
-        .argCount = argCount,
+        .arguments = args,
+        .argumentCount = argCount,
         .ignoreError = 0,
-        .custom = pchar("id-1"),
     };
-    execute(&i);
+    s.instructions[0] = &i0;
+        //.custom = pchar("id-1"),
+    //execute(&i);
 
     name = pchar("HUMITURE");
     argCount = 3;
@@ -69,12 +72,14 @@ int main(){
     args[1] = pchar("humi");
     args[2] = pchar("temp");
 
-    i = {
+    instruction i1 = {
         .name = name,
-        .args = args,
-        .argCount = argCount,
+        .arguments = args,
+        .argumentCount = argCount,
         .ignoreError = 0,
-        .custom = pchar("id-2"),
     };
-    execute(&i);
+    s.instructions[1] = &i1;
+        //.custom = pchar("id-2"),
+    //execute(&i);
+    execute(&s);
 }

@@ -9,12 +9,11 @@ struct instruction{
 	int ignoreError;
 	char* output;
 	char* err;
+
+	int executionType;
+	int instructionCount;
+	struct instruction** instructions;
 };
-// struct instruction_set{
-// 	int type;
-// 	int instructionCount;
-// 	instruction* instructions;
-// };
 typedef int(*f_handlerInstruction)(struct instruction*);
 extern int bridgeCallback(f_handlerInstruction f, struct instruction* i);
 */
@@ -28,10 +27,15 @@ import (
 	"posam/instruction"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
-	//"posam/util"
+	"posam/util"
 	//"posam/util/blockingqueue"
 	"reflect"
 	"unsafe"
+)
+
+const (
+	SERIAL      = 0
+	CONCURRENCY = 1
 )
 
 func main() {}
@@ -113,44 +117,62 @@ func Execute(i *C.struct_instruction) {
 		instructionMap.Set(item.Key, item.Value.(reflect.Type))
 	}
 	interpreter.InitParser(instructionMap)
-	//interpreter.RootScript = &interpreter.Script{}
-	//interpreter.RootScript.Line = instruction
 
-	count := int(i.argumentCount)
-	log.Println("count", count)
-	argsC := (*[1 << 30]*C.char)(unsafe.Pointer(i.arguments))[:count:count]
-	log.Println("argsC", argsC)
-	args := make([]string, count)
-	for i, s := range argsC {
-		log.Println("argC", s)
-		args[i] = C.GoString(s)
-		log.Println("arg", args[i])
+	// parse
+
+	fmt.Println(">> count", int(i.instructionCount))
+	if int(i.instructionCount) > 0 {
+		fmt.Println(">> group")
+		count := int(i.instructionCount)
+		itemsC := (*[1 << 30]*C.struct_instruction)(unsafe.Pointer(i.instructions))[:count:count]
+		switch int(i.executionType) {
+		case SERIAL:
+			for _, item := range itemsC {
+				Execute(item)
+			}
+		case CONCURRENCY:
+			for _, item := range itemsC {
+				util.Go(func() { Execute(item) })
+			}
+		}
+	} else {
+		fmt.Println(">> single", C.GoString(i.name))
+		count := int(i.argumentCount)
+		log.Println("count", count)
+		argsC := (*[1 << 30]*C.char)(unsafe.Pointer(i.arguments))[:count:count]
+		log.Println("argsC", argsC)
+		args := make([]string, count)
+		for i, s := range argsC {
+			log.Println("argC", s)
+			args[i] = C.GoString(s)
+			log.Println("arg", args[i])
+		}
+
+		ignoreErrorI := int(i.ignoreError)
+		ignoreError := ignoreErrorI == 0
+		statement := interpreter.Statement{
+			Stack:           stack,
+			InstructionName: C.GoString(i.name),
+			Arguments:       args,
+			IgnoreError:     ignoreError,
+		}
+
+		//util.Go(func() {
+		terminatec := make(chan interface{})
+		completec := make(chan interface{})
+		//util.Go(func() {
+		//<-completec
+		//})
+		resp := <-statement.Execute(terminatec, completec)
+		output := C.CString(fmt.Sprintf("%v", resp.Output))
+		err := C.CString(fmt.Sprintf("%v", resp.Error))
+		defer C.free(unsafe.Pointer(output))
+		defer C.free(unsafe.Pointer(err))
+		i.output = output
+		i.err = err
+		rst := int(C.bridgeCallback(handlerForInstruction, i))
+		log.Println("MSG: ", resp.Output, resp.Error, rst)
 	}
-
-	ignoreErrorI := int(i.ignoreError)
-	ignoreError := ignoreErrorI == 0
-	statement := interpreter.Statement{
-		Stack:           stack,
-		InstructionName: C.GoString(i.name),
-		Arguments:       args,
-		IgnoreError:     ignoreError,
-	}
-
-	//util.Go(func() {
-	terminatec := make(chan interface{})
-	completec := make(chan interface{})
-	//util.Go(func() {
-	//<-completec
-	//})
-	resp := <-statement.Execute(terminatec, completec)
-	output := C.CString(fmt.Sprintf("%v", resp.Output))
-	err := C.CString(fmt.Sprintf("%v", resp.Error))
-	defer C.free(unsafe.Pointer(output))
-	defer C.free(unsafe.Pointer(err))
-	i.output = output
-	i.err = err
-	rst := int(C.bridgeCallback(handlerForInstruction, i))
-	log.Println("MSG: ", resp.Output, resp.Error, rst)
 }
 
 func ExecuteInstruction(instruction *C.struct_instruction) {
