@@ -9,6 +9,7 @@ struct instruction{
 	int ignoreError;
 	char* output;
 	char* err;
+	char* remark;
 
 	int executionType;
 	int instructionCount;
@@ -27,7 +28,8 @@ import (
 	"posam/instruction"
 	"posam/interpreter"
 	"posam/interpreter/vrb"
-	"posam/util"
+	//"posam/util"
+	"sync"
 	//"posam/util/blockingqueue"
 	"reflect"
 	"unsafe"
@@ -37,6 +39,8 @@ const (
 	SERIAL      = 0
 	CONCURRENCY = 1
 )
+
+var stack = instruction.NewStack()
 
 func main() {}
 
@@ -49,47 +53,56 @@ func NewInstruction(instruction *C.struct_instruction) int {
 func Execute(i *C.struct_instruction) {
 	//func Execute(group *C.struct_instruction_set) {
 
-	stack := instruction.NewStack()
-	// TODO: register device tree
-
-	// CAN
-	devtype := "4"
-	devindex := "0"
-	frameid := "0x00000001"
-	canindex := "0"
-	acccode := "0x00000000"
-	accmask := "0xFFFFFFFF"
-	filter := "0"
-	timing0 := "0x00"
-	timing1 := "0x1C"
-	mode := "0"
-
-	devtypev, _ := vrb.NewVariable(canalystii.DEVICE_TYPE, "4")
-	devindexv, _ := vrb.NewVariable(canalystii.DEVICE_INDEX, "0")
-	frameidv, _ := vrb.NewVariable(canalystii.FRAME_ID, "0x00000001")
-	canindexv, _ := vrb.NewVariable(canalystii.CAN_INDEX, "0")
-	acccodev, _ := vrb.NewVariable(canalystii.ACC_CODE, "0x00000000")
-	accmaskv, _ := vrb.NewVariable(canalystii.ACC_MASK, "0xFFFFFFFF")
-	filterv, _ := vrb.NewVariable(canalystii.FILTER, "0")
-	timing0v, _ := vrb.NewVariable(canalystii.TIMING0, "0x00")
-	timing1v, _ := vrb.NewVariable(canalystii.TIMING1, "0x1C")
-	modev, _ := vrb.NewVariable(canalystii.MODE, "0")
-
-	stack.Set(devtypev)
-	stack.Set(devindexv)
-	stack.Set(frameidv)
-	stack.Set(canindexv)
-	stack.Set(acccodev)
-	stack.Set(accmaskv)
-	stack.Set(filterv)
-	stack.Set(timing0v)
-	stack.Set(timing1v)
-	stack.Set(modev)
-
 	if instance, _ := canalystii.Instance("1"); instance != nil {
-		log.Printf(">>>> Device %q has been initialized\n", "1")
+		//log.Printf(">>>> Device %q has been initialized\n", "1")
+		// TODO: register device tree
 	} else {
-		log.Printf(">>>> use previous")
+		//log.Printf(">>>> use previous")
+		// CAN
+		devtype := "4"
+		devindex := "0"
+		frameid := "0x00000001"
+		canindex := "0"
+		acccode := "0x00000000"
+		accmask := "0xFFFFFFFF"
+		filter := "0"
+		timing0 := "0x00"
+		timing1 := "0x1C"
+		mode := "0"
+
+		devtypev, _ := vrb.NewVariable(canalystii.DEVICE_TYPE, "4")
+		devindexv, _ := vrb.NewVariable(canalystii.DEVICE_INDEX, "0")
+		frameidv, _ := vrb.NewVariable(canalystii.FRAME_ID, "0x00000001")
+		canindexv, _ := vrb.NewVariable(canalystii.CAN_INDEX, "0")
+		acccodev, _ := vrb.NewVariable(canalystii.ACC_CODE, "0x00000000")
+		accmaskv, _ := vrb.NewVariable(canalystii.ACC_MASK, "0xFFFFFFFF")
+		filterv, _ := vrb.NewVariable(canalystii.FILTER, "0")
+		timing0v, _ := vrb.NewVariable(canalystii.TIMING0, "0x00")
+		timing1v, _ := vrb.NewVariable(canalystii.TIMING1, "0x1C")
+		modev, _ := vrb.NewVariable(canalystii.MODE, "0")
+
+		stack.Set(devtypev)
+		stack.Set(devindexv)
+		stack.Set(frameidv)
+		stack.Set(canindexv)
+		stack.Set(acccodev)
+		stack.Set(accmaskv)
+		stack.Set(filterv)
+		stack.Set(timing0v)
+		stack.Set(timing1v)
+		stack.Set(modev)
+
+		terminatecc := make(chan chan interface{}, 1)
+		defer close(terminatecc)
+
+		instructionMap := dao.NewInstructionMap()
+		for item := range canalystii.InstructionMap.Iter() {
+			instructionMap.Set(item.Key, item.Value.(reflect.Type))
+		}
+		for item := range dao.InstructionMap.Iter() {
+			instructionMap.Set(item.Key, item.Value.(reflect.Type))
+		}
+		interpreter.InitParser(instructionMap)
 		if _, err := canalystii.NewDao(
 			devtype,
 			devindex,
@@ -106,23 +119,11 @@ func Execute(i *C.struct_instruction) {
 		}
 	}
 
-	terminatecc := make(chan chan interface{}, 1)
-	defer close(terminatecc)
-
-	instructionMap := dao.NewInstructionMap()
-	for item := range canalystii.InstructionMap.Iter() {
-		instructionMap.Set(item.Key, item.Value.(reflect.Type))
-	}
-	for item := range dao.InstructionMap.Iter() {
-		instructionMap.Set(item.Key, item.Value.(reflect.Type))
-	}
-	interpreter.InitParser(instructionMap)
-
 	// parse
 
-	fmt.Println(">> count", int(i.instructionCount))
+	//fmt.Println(">> count", int(i.instructionCount))
 	if int(i.instructionCount) > 0 {
-		fmt.Println(">> group")
+		//fmt.Println(">> group")
 		count := int(i.instructionCount)
 		itemsC := (*[1 << 30]*C.struct_instruction)(unsafe.Pointer(i.instructions))[:count:count]
 		switch int(i.executionType) {
@@ -131,21 +132,27 @@ func Execute(i *C.struct_instruction) {
 				Execute(item)
 			}
 		case CONCURRENCY:
+			var wg sync.WaitGroup
 			for _, item := range itemsC {
-				util.Go(func() { Execute(item) })
+				wg.Add(1)
+				go func(w *sync.WaitGroup, itm *C.struct_instruction) {
+					Execute(itm)
+					w.Done()
+				}(&wg, item)
 			}
+			wg.Wait()
 		}
 	} else {
-		fmt.Println(">> single", C.GoString(i.name))
+		//fmt.Println(">> single", C.GoString(i.name))
 		count := int(i.argumentCount)
-		log.Println("count", count)
+		//log.Println("count", count)
 		argsC := (*[1 << 30]*C.char)(unsafe.Pointer(i.arguments))[:count:count]
-		log.Println("argsC", argsC)
+		//log.Println("argsC", argsC)
 		args := make([]string, count)
 		for i, s := range argsC {
-			log.Println("argC", s)
+			//log.Println("argC", s)
 			args[i] = C.GoString(s)
-			log.Println("arg", args[i])
+			//log.Println("arg", args[i])
 		}
 
 		ignoreErrorI := int(i.ignoreError)

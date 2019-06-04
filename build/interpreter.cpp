@@ -19,9 +19,9 @@ int handler(instruction* i){
     std::cout << "instruction '" << i->name << "' is completed" << std::endl;
     std::cout << "output: " << i->output << std::endl;
     std::cout << "error: " << i->err << std::endl;
-    //std::cout << "id: " << i->custom << std::endl;
+    std::cout << "remark: " << i->remark << std::endl;
     std::cout << "========================" << std::endl;
-    return 22;
+    return 0;
 }
 
 int main(){
@@ -43,9 +43,9 @@ int main(){
     registerHandler(handler);
 
     instruction s = {
-        .executionType = SERIAL,
-        .instructionCount = 2,
-        .instructions = new struct instruction* [2],
+        .executionType = CONCURRENCY,
+        .instructionCount = 3,
+        .instructions = new struct instruction* [3],
     };
 
     char* name = pchar("SWITCH");
@@ -60,10 +60,23 @@ int main(){
         .arguments = args,
         .argumentCount = argCount,
         .ignoreError = 0,
+        .remark = pchar("instruction-0"),
     };
     s.instructions[0] = &i0;
-        //.custom = pchar("id-1"),
-    //execute(&i);
+
+    name = pchar("SLEEP");
+    argCount = 1;
+    args = new char* [argCount];
+    args[0] = pchar("3");
+
+    instruction i1 = {
+        .name = name,
+        .arguments = args,
+        .argumentCount = argCount,
+        .ignoreError = 0,
+        .remark = pchar("instruction-1"),
+    };
+    s.instructions[1] = &i1;
 
     name = pchar("HUMITURE");
     argCount = 3;
@@ -72,14 +85,13 @@ int main(){
     args[1] = pchar("humi");
     args[2] = pchar("temp");
 
-    instruction i1 = {
+    instruction i2 = {
         .name = name,
         .arguments = args,
         .argumentCount = argCount,
         .ignoreError = 0,
+        .remark = pchar("instruction-2"),
     };
-    s.instructions[1] = &i1;
-        //.custom = pchar("id-2"),
-    //execute(&i);
+    s.instructions[2] = &i2;
     execute(&s);
 }
