@@ -94,7 +94,7 @@ func (s *Statement) Run(completec chan<- interface{}) Response {
 	resp.Error = err
 	resp.Completec = completec
 	resp.IgnoreError = s.IgnoreError
-	log.Printf("'%s: %s' produces %q\n", s.InstructionName, s.Arguments, output)
+	log.Printf("'%s: %s' produces '%v'\n", s.InstructionName, s.Arguments, output)
 	message := ""
 	if resp.Error != nil {
 		message = resp.Error.Error()
