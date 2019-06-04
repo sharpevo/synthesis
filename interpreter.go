@@ -42,6 +42,8 @@ const (
 
 var stack = instruction.NewStack()
 var lock = sync.Mutex{}
+var instructionMap = dao.NewInstructionMap()
+var launched = false
 
 func main() {}
 
@@ -50,80 +52,112 @@ func NewInstruction(instruction *C.struct_instruction) int {
 	return 0
 }
 
-//export Execute
-func Execute(i *C.struct_instruction) {
-	//func Execute(group *C.struct_instruction_set) {
-
+func LaunchInterpreter() {
 	lock.Lock()
-	if instance, _ := canalystii.Instance("1"); instance != nil {
-		//log.Printf(">>>> Device %q has been initialized\n", "1")
-		// TODO: register device tree
-	} else {
-		//log.Printf(">>>> use previous")
-		// CAN
-		devtype := "4"
-		devindex := "0"
-		frameid := "0x00000001"
-		canindex := "0"
-		acccode := "0x00000000"
-		accmask := "0xFFFFFFFF"
-		filter := "0"
-		timing0 := "0x00"
-		timing1 := "0x1C"
-		mode := "0"
-
-		devtypev, _ := vrb.NewVariable(canalystii.DEVICE_TYPE, "4")
-		devindexv, _ := vrb.NewVariable(canalystii.DEVICE_INDEX, "0")
-		frameidv, _ := vrb.NewVariable(canalystii.FRAME_ID, "0x00000001")
-		canindexv, _ := vrb.NewVariable(canalystii.CAN_INDEX, "0")
-		acccodev, _ := vrb.NewVariable(canalystii.ACC_CODE, "0x00000000")
-		accmaskv, _ := vrb.NewVariable(canalystii.ACC_MASK, "0xFFFFFFFF")
-		filterv, _ := vrb.NewVariable(canalystii.FILTER, "0")
-		timing0v, _ := vrb.NewVariable(canalystii.TIMING0, "0x00")
-		timing1v, _ := vrb.NewVariable(canalystii.TIMING1, "0x1C")
-		modev, _ := vrb.NewVariable(canalystii.MODE, "0")
-
-		stack.Set(devtypev)
-		stack.Set(devindexv)
-		stack.Set(frameidv)
-		stack.Set(canindexv)
-		stack.Set(acccodev)
-		stack.Set(accmaskv)
-		stack.Set(filterv)
-		stack.Set(timing0v)
-		stack.Set(timing1v)
-		stack.Set(modev)
-
-		terminatecc := make(chan chan interface{}, 1)
-		defer close(terminatecc)
-
-		instructionMap := dao.NewInstructionMap()
-		for item := range canalystii.InstructionMap.Iter() {
-			instructionMap.Set(item.Key, item.Value.(reflect.Type))
-		}
+	defer lock.Unlock()
+	if !launched {
 		for item := range dao.InstructionMap.Iter() {
 			instructionMap.Set(item.Key, item.Value.(reflect.Type))
 		}
 		interpreter.InitParser(instructionMap)
-		if _, err := canalystii.NewDao(
-			devtype,
-			devindex,
-			frameid,
-			canindex,
-			acccode,
-			accmask,
-			filter,
-			timing0,
-			timing1,
-			mode,
-		); err != nil {
-			log.Fatal(">>>>", err)
-		}
+		launched = true
 	}
-	lock.Unlock()
+}
 
-	// parse
+//export UpsertVariable
+func UpsertVariable(name *C.char, value *C.char) int {
+	return upsertVariable(C.GoString(name), C.GoString(value))
+}
 
+func upsertVariable(name string, value string) int {
+	v, err := vrb.NewVariable(name, value)
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+	stack.Set(v)
+	return 1
+}
+
+//export InitCanalyst
+func InitCanalyst(
+	devTypeChar *C.char,
+	devIndexChar *C.char,
+	devIDChar *C.char,
+	canIndexChar *C.char,
+	accCodeChar *C.char,
+	accMaskChar *C.char,
+	filterChar *C.char,
+	timing0Char *C.char,
+	timing1Char *C.char,
+	modeChar *C.char,
+) int {
+	devType,
+		devIndex,
+		devID,
+		canIndex,
+		accCode,
+		accMask,
+		filter,
+		timing0,
+		timing1,
+		mode := C.GoString(devTypeChar),
+		C.GoString(devIndexChar),
+		C.GoString(devIDChar),
+		C.GoString(canIndexChar),
+		C.GoString(accCodeChar),
+		C.GoString(accMaskChar),
+		C.GoString(filterChar),
+		C.GoString(timing0Char),
+		C.GoString(timing1Char),
+		C.GoString(modeChar)
+	devtypev, _ := vrb.NewVariable(canalystii.DEVICE_TYPE, devType)
+	devindexv, _ := vrb.NewVariable(canalystii.DEVICE_INDEX, devIndex)
+	frameidv, _ := vrb.NewVariable(canalystii.FRAME_ID, devID)
+	canindexv, _ := vrb.NewVariable(canalystii.CAN_INDEX, canIndex)
+	acccodev, _ := vrb.NewVariable(canalystii.ACC_CODE, accCode)
+	accmaskv, _ := vrb.NewVariable(canalystii.ACC_MASK, accMask)
+	filterv, _ := vrb.NewVariable(canalystii.FILTER, filter)
+	timing0v, _ := vrb.NewVariable(canalystii.TIMING0, timing0)
+	timing1v, _ := vrb.NewVariable(canalystii.TIMING1, timing1)
+	modev, _ := vrb.NewVariable(canalystii.MODE, mode)
+
+	stack.Set(devtypev)
+	stack.Set(devindexv)
+	stack.Set(frameidv)
+	stack.Set(canindexv)
+	stack.Set(acccodev)
+	stack.Set(accmaskv)
+	stack.Set(filterv)
+	stack.Set(timing0v)
+	stack.Set(timing1v)
+	stack.Set(modev)
+
+	for item := range canalystii.InstructionMap.Iter() {
+		instructionMap.Set(item.Key, item.Value.(reflect.Type))
+	}
+
+	if _, err := canalystii.NewDao(
+		devType,
+		devIndex,
+		devID,
+		canIndex,
+		accCode,
+		accMask,
+		filter,
+		timing0,
+		timing1,
+		mode,
+	); err != nil {
+		log.Fatal(">>>>", err)
+		return 0
+	}
+	return 1
+}
+
+//export Execute
+func Execute(i *C.struct_instruction) {
+	LaunchInterpreter()
 	//fmt.Println(">> count", int(i.instructionCount))
 	if int(i.instructionCount) > 0 {
 		//fmt.Println(">> group")
