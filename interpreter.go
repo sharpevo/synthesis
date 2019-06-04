@@ -41,6 +41,7 @@ const (
 )
 
 var stack = instruction.NewStack()
+var lock = sync.Mutex{}
 
 func main() {}
 
@@ -53,6 +54,7 @@ func NewInstruction(instruction *C.struct_instruction) int {
 func Execute(i *C.struct_instruction) {
 	//func Execute(group *C.struct_instruction_set) {
 
+	lock.Lock()
 	if instance, _ := canalystii.Instance("1"); instance != nil {
 		//log.Printf(">>>> Device %q has been initialized\n", "1")
 		// TODO: register device tree
@@ -118,6 +120,7 @@ func Execute(i *C.struct_instruction) {
 			log.Fatal(">>>>", err)
 		}
 	}
+	lock.Unlock()
 
 	// parse
 
