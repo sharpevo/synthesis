@@ -40,18 +40,21 @@ int main(){
         cout << "failed to load execute" << endl;
         return 1;
     }
-    f_register registerHandler = (f_register)GetProcAddress(interpreterlib, "RegisterHandlerForInstruction");
+    f_register registerHandler = (f_register)GetProcAddress(
+            interpreterlib, "RegisterHandlerForInstruction");
     if (!registerHandler) {
         cout << "failed to load register" << endl;
         return 1;
     }
     registerHandler(handler);
-    f_init_canalyst initCanalyst = (f_init_canalyst)GetProcAddress(interpreterlib, "InitCanalyst");
+    f_init_canalyst initCanalyst = (f_init_canalyst)GetProcAddress(
+            interpreterlib, "InitCanalyst");
     if (!initCanalyst) {
         cout << "failed to load initCanalyst" << endl;
         return 1;
     }
-    f_upsert_variable upsertVariable = (f_upsert_variable)GetProcAddress(interpreterlib, "UpsertVariable");
+    f_upsert_variable upsertVariable = (f_upsert_variable)GetProcAddress(
+            interpreterlib, "UpsertVariable");
     if (!upsertVariable) {
         cout << "failed to load upsertVariable" << endl;
         return 1;
@@ -62,7 +65,8 @@ int main(){
         cout << "failed to init can device" << endl;
         return 1;
     }
-    char* switch_args[3] = {pchar("FRAME_ID"), pchar("val"), pchar("12")};
+    upsertVariable(pchar("WB_NPV"), pchar("4097")); // 打开负压，同时打开吹嘴
+    char* switch_args[3] = {pchar("FRAME_ID"), pchar("val"), pchar("WB_NPV")};
     instruction i0 = {
         .name = pchar("SWITCH"),
         .arguments = switch_args,
