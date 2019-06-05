@@ -58,8 +58,7 @@ int main(){
     f_init_canalyst initCanalyst = (f_init_canalyst)GetProcAddress(
             interpreterlib, "InitCanalyst");
     if (!initCanalyst) {
-        getLastErrorMessage(&msg[0], 30);
-        cout << "failed to load initCanalyst: " << msg << endl;
+        cout << "failed to load initCanalyst" << endl;
         return 1;
     }
     f_upsert_variable upsertVariable = (f_upsert_variable)GetProcAddress(
@@ -72,7 +71,7 @@ int main(){
         pchar("0"), pchar("0x00000000"), pchar("0xFFFFFFFF"), pchar("0"),
         pchar("0x00"), pchar("0x1c"), pchar("0"))){
         getLastErrorMessage(&msg[0], 30);
-        cout << "Error:" << msg << endl;
+        cout << "C++: get error from DLL when init canalyst: " << msg << endl;
         return 1;
     }
     upsertVariable(pchar("WB_NPV"), pchar("4097")); // 打开负压，同时打开吹嘴
@@ -105,7 +104,7 @@ int main(){
     thread t2(execute, &i2);
     char* unknown_args[2] = {pchar("ARG1"), pchar("ARG2")};
     instruction i3 = {
-        .name = pchar("FOOBAR"),
+        .name = pchar("FOO"),
         .arguments = unknown_args,
         .argumentCount = 2,
         .ignoreError = 0,
@@ -115,13 +114,13 @@ int main(){
     thread t3{[&i3, &return3, execute]{
         return3 = execute(&i3);
     }};
+    t3.join(); // or the following message always nil
     if (!return3){
         char msg3[30];
         getLastErrorMessage(&msg3[0], 30);
-        cout << "Error Message:" << msg3 << endl;
+        cout << "C++: get error from DLL when execute instruction-3: " << msg3 << endl;
     }
     t0.join();
     t1.join();
     t2.join();
-    t3.join();
 }
