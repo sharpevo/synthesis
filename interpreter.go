@@ -22,6 +22,7 @@ import "C"
 
 import (
 	"fmt"
+	//"io/ioutil"
 	"log"
 	"posam/dao"
 	"posam/dao/canalystii"
@@ -47,6 +48,9 @@ var lock = sync.Mutex{}
 var instructionMap = dao.NewInstructionMap()
 var launched = false
 
+func init() {
+	//log.SetOutput(ioutil.Discard)
+}
 func main() {}
 
 //export NewInstruction
@@ -160,7 +164,7 @@ func InitCanalyst(
 }
 
 //export Execute
-func Execute(i *C.struct_instruction) {
+func Execute(i *C.struct_instruction) int {
 	LaunchInterpreter()
 	//fmt.Println(">> count", int(i.instructionCount))
 	if int(i.instructionCount) > 0 {
@@ -226,7 +230,14 @@ func Execute(i *C.struct_instruction) {
 			// TODO: error occurs at handlerForInstruction
 		}
 		//log.Println("MSG: ", resp.Output, resp.Error, rst)
+
+		// only for testing
+		if C.GoString(i.name) == "FOO" {
+			errmsg = "BAR"
+			return 0
+		}
 	}
+	return 1
 }
 
 func ExecuteInstruction(instruction *C.struct_instruction) {
