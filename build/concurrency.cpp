@@ -11,6 +11,7 @@ typedef int (__stdcall *f_execute)(instruction*);
 typedef int (__stdcall *f_init_canalyst)(char*, char*, char*, char*, char*, char*,
     char*, char*, char*, char*);
 typedef int (__stdcall *f_upsert_variable)(char*, char*);
+typedef int (__stdcall *f_get_error)(char*, int);
 
 const int SERIAL = 0;
 const int CONCURRENCY = 1;
@@ -30,9 +31,16 @@ int handler(instruction* i){
 }
 
 int main(){
+    char msg[30];
     HINSTANCE interpreterlib = LoadLibrary("interpreter.dll");
     if (!interpreterlib) {
         cout << "failed to load dll" << endl;
+        return 1;
+    }
+    f_get_error getLastErrorMessage = (f_get_error)GetProcAddress(
+            interpreterlib, "GetLastErrorMessage");
+    if (!getLastErrorMessage) {
+        cout << "failed to load getLastErrorMessage" << endl;
         return 1;
     }
     f_execute execute = (f_execute)GetProcAddress(interpreterlib, "Execute");
@@ -50,7 +58,8 @@ int main(){
     f_init_canalyst initCanalyst = (f_init_canalyst)GetProcAddress(
             interpreterlib, "InitCanalyst");
     if (!initCanalyst) {
-        cout << "failed to load initCanalyst" << endl;
+        getLastErrorMessage(&msg[0], 30);
+        cout << "failed to load initCanalyst: " << msg << endl;
         return 1;
     }
     f_upsert_variable upsertVariable = (f_upsert_variable)GetProcAddress(
@@ -62,7 +71,8 @@ int main(){
     if (!initCanalyst(pchar("4"),pchar("0"),pchar("0x00000001"),
         pchar("0"), pchar("0x00000000"), pchar("0xFFFFFFFF"), pchar("0"),
         pchar("0x00"), pchar("0x1c"), pchar("0"))){
-        cout << "failed to init can device" << endl;
+        getLastErrorMessage(&msg[0], 30);
+        cout << "Error:" << msg << endl;
         return 1;
     }
     upsertVariable(pchar("WB_NPV"), pchar("4097")); // 打开负压，同时打开吹嘴
@@ -93,7 +103,25 @@ int main(){
         .remark = pchar("instruction-2"),
     };
     thread t2(execute, &i2);
+    char* unknown_args[2] = {pchar("ARG1"), pchar("ARG2")};
+    instruction i3 = {
+        .name = pchar("FOOBAR"),
+        .arguments = unknown_args,
+        .argumentCount = 2,
+        .ignoreError = 0,
+        .remark = pchar("instruction-3"),
+    };
+    int return3;
+    thread t3{[&i3, &return3, execute]{
+        return3 = execute(&i3);
+    }};
+    if (!return3){
+        char msg3[30];
+        getLastErrorMessage(&msg3[0], 30);
+        cout << "Error Message:" << msg3 << endl;
+    }
     t0.join();
     t1.join();
     t2.join();
+    t3.join();
 }
