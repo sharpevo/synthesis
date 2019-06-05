@@ -40,6 +40,8 @@ const (
 	CONCURRENCY = 1
 )
 
+var errmsg string
+
 var stack = instruction.NewStack()
 var lock = sync.Mutex{}
 var instructionMap = dao.NewInstructionMap()
@@ -72,6 +74,7 @@ func UpsertVariable(name *C.char, value *C.char) int {
 func upsertVariable(name string, value string) int {
 	v, err := vrb.NewVariable(name, value)
 	if err != nil {
+		errmsg = err.Error()
 		log.Println(err)
 		return 0
 	}
@@ -149,7 +152,8 @@ func InitCanalyst(
 		timing1,
 		mode,
 	); err != nil {
-		log.Fatal(">>>>", err)
+		errmsg = err.Error()
+		log.Println(err)
 		return 0
 	}
 	return 1
@@ -214,8 +218,14 @@ func Execute(i *C.struct_instruction) {
 		defer C.free(unsafe.Pointer(err))
 		i.output = output
 		i.err = err
+		//if resp.Error != nil {
+		//errmsg = resp.Error.Error()
+		//}
 		rst := int(C.bridgeCallback(handlerForInstruction, i))
-		log.Println("MSG: ", resp.Output, resp.Error, rst)
+		if rst == 0 {
+			// TODO: error occurs at handlerForInstruction
+		}
+		//log.Println("MSG: ", resp.Output, resp.Error, rst)
 	}
 }
 
@@ -249,4 +259,19 @@ var handlerForInstruction C.f_handlerInstruction
 //export RegisterHandlerForInstruction
 func RegisterHandlerForInstruction(h C.f_handlerInstruction) {
 	handlerForInstruction = h
+}
+
+//export GetLastErrorMessage
+func GetLastErrorMessage(p *C.char, n int) int {
+	if n < 0 {
+		return 0
+	}
+	length := n
+	if n > len(errmsg)-1 {
+		length = len(errmsg)
+	}
+	pp := (*[1 << 30]byte)(unsafe.Pointer(p))
+	copy(pp[:], errmsg[:length]) // not +1 for go
+	pp[length+1] = 0             // +1 for the null-terminate
+	return 1
 }
