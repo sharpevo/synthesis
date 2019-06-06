@@ -74,7 +74,7 @@ int main(){
         cout << "C++: get error from DLL when init canalyst: " << msg << endl;
         return 1;
     }
-    upsertVariable(pchar("WB_NPV"), pchar("4097")); // 打开负压，同时打开吹嘴
+    upsertVariable(pchar("WB_NPV"), pchar("4097"));
     char* switch_args[3] = {pchar("FRAME_ID"), pchar("val"), pchar("WB_NPV")};
     instruction i0 = {
         .name = pchar("SWITCH"),
@@ -114,13 +114,13 @@ int main(){
     thread t3{[&i3, &return3, execute]{
         return3 = execute(&i3);
     }};
-    t3.join(); // or the following message always nil
+    t0.join();
+    t1.join();
+    t2.join();
+    t3.join();
     if (!return3){
         char msg3[30];
         getLastErrorMessage(&msg3[0], 30);
         cout << "C++: get error from DLL when execute instruction-3: " << msg3 << endl;
     }
-    t0.join();
-    t1.join();
-    t2.join();
 }
