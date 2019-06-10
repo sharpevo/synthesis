@@ -277,12 +277,11 @@ func GetLastErrorMessage(p *C.char, n int) int {
 	if n < 0 {
 		return 0
 	}
-	length := n
 	if n > len(errmsg)-1 {
-		length = len(errmsg)
+		n = len(errmsg)
 	}
 	pp := (*[1 << 30]byte)(unsafe.Pointer(p))
-	copy(pp[:], errmsg[:length]) // not +1 for go
-	pp[length+1] = 0             // +1 for the null-terminate
+	copy(pp[:], errmsg[:n])
+	pp[n] = 0
 	return 1
 }
