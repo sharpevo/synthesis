@@ -2,7 +2,7 @@
 #include <iostream>
 #include <thread>
 extern "C"{
-#include "interpreter.h"
+#include "iGeneTech.h"
 }
 using namespace std;
 typedef int (__stdcall *f_handler)(instruction*);
@@ -12,9 +12,6 @@ typedef int (__stdcall *f_init_canalyst)(char*, char*, char*, char*, char*, char
     char*, char*, char*, char*);
 typedef int (__stdcall *f_upsert_variable)(char*, char*);
 typedef int (__stdcall *f_get_error)(char*, int);
-
-const int SERIAL = 0;
-const int CONCURRENCY = 1;
 
 char* pchar(string input){
     return const_cast<char*>(input.c_str());
@@ -32,7 +29,7 @@ int handler(instruction* i){
 
 int main(){
     char msg[30];
-    HINSTANCE interpreterlib = LoadLibrary("interpreter.dll");
+    HINSTANCE interpreterlib = LoadLibrary("iGeneTech.dll");
     if (!interpreterlib) {
         cout << "failed to load dll" << endl;
         return 1;
