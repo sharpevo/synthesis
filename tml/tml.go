@@ -101,7 +101,12 @@ func NewClient(
 	if c, found := addInstance(client); found {
 		return c, fmt.Errorf("client existed")
 	}
-	go launchClient(client)
+	errc := make(chan error)
+	go launchClient(client, errc)
+	if err := <-errc; err != nil {
+		return client, err
+	}
+
 	log.Df(
 		"client launched(AxisXID: %v, AxisYID: %v)", client.axisXID, client.axisYID)
 	return client, nil
@@ -208,9 +213,14 @@ type response struct {
 	err error
 }
 
-var launchClient = func(c *Client) {
+var launchClient = func(c *Client, errc chan<- error) {
 	log.D("motor client launched")
-	c.connect()
+	if err := c.connect(); err != nil {
+		errc <- err
+		return
+	} else {
+		errc <- nil
+	}
 
 	for {
 		reqi, err := c.requestQueue.Pop()
