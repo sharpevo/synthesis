@@ -35,8 +35,12 @@ func init() {
 		} else {
 			log.Info("Failed to log to file, using default stderr")
 		}
-		log.Formatter = &logrus.JSONFormatter{
-			PrettyPrint: true,
+		//log.Formatter = &logrus.JSONFormatter{
+		//PrettyPrint: true,
+		//}
+		log.Formatter = &logrus.TextFormatter{
+			DisableColors: true,
+			//DisableLevelTruncation: false, // only work in color mode
 		}
 		log.Level = logrus.TraceLevel
 	}
