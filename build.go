@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	BINFILE  = "test.bin"
-	IMAGABLE = true
+	BINFILE = "test.bin"
 )
 
 func (b *Bin) Build(
@@ -22,9 +21,11 @@ func (b *Bin) Build(
 	lotamountc chan int,
 	img *image.RGBA,
 	paintedc chan struct{},
+	preview bool,
 ) (countc chan int) {
-	lotamount := 1
-	stepwise := false
+	fmt.Println("preview", preview)
+	//lotamount := 1
+	//stepwise := false
 	countc = make(chan int)
 	go func() {
 		stepCount := 0
@@ -43,7 +44,7 @@ func (b *Bin) Build(
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
 				for b.PrintheadArray.Top() >= b.Substrate().Bottom() {
 					dataMap, count := b.genData(
-						cycleIndex, img, &stepCount)
+						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
 					if count > 0 {
 						log.Vs(log.M{
 							"count":    count,
@@ -64,7 +65,7 @@ func (b *Bin) Build(
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
 				for b.PrintheadArray.Bottom() <= b.Substrate().Top() {
 					dataMap, count := b.genData(
-						cycleIndex, img, &stepCount)
+						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
 					if count > 0 {
 						log.Vs(log.M{
 							"count":    count,
@@ -82,7 +83,7 @@ func (b *Bin) Build(
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
 				for b.PrintheadArray.Top() >= b.Substrate().Bottom() {
 					dataMap, count := b.genData(
-						cycleIndex, img, &stepCount)
+						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
 					if count > 0 {
 						log.Vs(log.M{
 							"count":    count,
@@ -100,7 +101,7 @@ func (b *Bin) Build(
 				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
 				for b.PrintheadArray.Bottom() <= b.Substrate().Top() {
 					dataMap, count := b.genData(
-						cycleIndex, img, &stepCount)
+						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
 					if count > 0 {
 						log.Vs(log.M{
 							"count":    count,
@@ -113,39 +114,42 @@ func (b *Bin) Build(
 					b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
 				}
 			}
-			if IMAGABLE && b.Mode == MODE_CIJ {
+			if preview && b.Mode == MODE_CIJ {
 				outputFile, _ := os.Create(
 					fmt.Sprintf("output/CIJ.%03d.png", cycleIndex))
 				png.Encode(outputFile, img)
 				outputFile.Close()
+				//if lotamount, stepwise = <-lotamountc; stepwise {
+				//if lotamount < 0 {
+				//cycleIndex += lotamount - 2
+				//if cycleIndex < -1 {
+				//cycleIndex = 0 - 1
+				//}
+				//go func() {
+				//paintedc <- struct{}{}
+				//lotamountc <- 1
+				//lot = 0
+				//}()
+				//continue
+				//} else {
+				//lot++
+				//}
+				//if lot == lotamount ||
+				//cycleIndex+1 >= b.CycleCount { // even step may not 100%
+				//countc <- cycleIndex + 1
+				//lot = 0
+				//} else {
+				//go func() {
+				//paintedc <- struct{}{}
+				//lotamountc <- lotamount
+				//}()
+				//}
+				//} else {
+				//countc <- cycleIndex + 1
+				//}
 			}
-			if lotamount, stepwise = <-lotamountc; stepwise {
-				if lotamount < 0 {
-					cycleIndex += lotamount - 2
-					if cycleIndex < -1 {
-						cycleIndex = 0 - 1
-					}
-					go func() {
-						paintedc <- struct{}{}
-						lotamountc <- 1
-						lot = 0
-					}()
-					continue
-				} else {
-					lot++
-				}
-				if lot == lotamount ||
-					cycleIndex+1 >= b.CycleCount { // even step may not 100%
-					countc <- cycleIndex + 1
-					lot = 0
-				} else {
-					go func() {
-						paintedc <- struct{}{}
-						lotamountc <- lotamount
-					}()
-				}
-			} else {
-				countc <- cycleIndex + 1
+			if b.check(lotamountc, &cycleIndex, &lot, paintedc, countc) {
+				continue
 			}
 		}
 		err := b.SaveToFile(BINFILE)
@@ -162,6 +166,12 @@ func (b *Bin) genData(
 	cycleIndex int,
 	img *image.RGBA,
 	stepCount *int,
+
+	lotamountc chan int,
+	lot *int,
+	paintedc chan struct{},
+	countc chan int,
+	preview bool,
 ) ([]string, int) {
 	count := 0
 	dataSlice := make([][]string, b.PrintheadArray.PrintheadCount)
@@ -191,8 +201,9 @@ func (b *Bin) genData(
 			count += 1
 			dataSlice[nozzle.Printhead.Index][nozzle.Index] = "1"
 
-			log.D("printing ", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
-			if IMAGABLE {
+			//log.D("printing ", nozzle.Reagent.Name, nozzle.Pos.X, nozzle.Pos.Y)
+			log.D("printing ", nozzle.Reagent.Name, nozzle.Pos.X, b.Substrate().Height-nozzle.Pos.Y)
+			if preview {
 				img.Set(nozzle.Pos.X, b.Substrate().Height-nozzle.Pos.Y, nozzle.Reagent.Color)
 			}
 		}
@@ -212,13 +223,14 @@ func (b *Bin) genData(
 			log.V("dataBinSlice", dataBinSlice[:16]).Debug()
 			log.V("linebuffer", output[deviceIndex][:8]).Debug()
 		}
-		if IMAGABLE && b.Mode == MODE_DOD {
+		if preview && b.Mode == MODE_DOD {
 			outputFile, _ := os.Create(
 				fmt.Sprintf("output/DoD.%06d.%03d.png", *stepCount, cycleIndex))
 			png.Encode(outputFile, img)
 			outputFile.Close()
 			*stepCount = *stepCount + 1
 		}
+		b.check(lotamountc, &cycleIndex, lot, paintedc, countc)
 	}
 	return output, count
 }
@@ -226,4 +238,42 @@ func (b *Bin) genData(
 func (b *Bin) RawPos() (string, string) {
 	return fmt.Sprintf("%.6f", geometry.Raw(b.PrintheadArray.SightBottom.Pos.X, b.PrintheadArray.OffsetX())),
 		fmt.Sprintf("%.6f", geometry.Raw(b.PrintheadArray.SightBottom.Pos.Y, b.PrintheadArray.OffsetY()))
+}
+
+func (b *Bin) check(
+	lotamountc chan int,
+	cycleIndex *int,
+	lot *int,
+	paintedc chan struct{},
+	countc chan int,
+) (continued bool) {
+	if lotamount, stepwise := <-lotamountc; stepwise {
+		if lotamount < 0 {
+			*cycleIndex += lotamount - 2
+			if *cycleIndex < -1 {
+				*cycleIndex = 0 - 1
+			}
+			go func() {
+				paintedc <- struct{}{}
+				lotamountc <- 1
+				*lot = 0
+			}()
+			return true
+		} else {
+			*lot++
+		}
+		if *lot == lotamount ||
+			*cycleIndex+1 >= b.CycleCount { // even step may not 100%
+			countc <- *cycleIndex + 1
+			*lot = 0
+		} else {
+			go func() {
+				paintedc <- struct{}{}
+				lotamountc <- lotamount
+			}()
+		}
+	} else {
+		countc <- *cycleIndex + 1
+	}
+	return false
 }
