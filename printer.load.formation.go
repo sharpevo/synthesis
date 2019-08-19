@@ -33,9 +33,10 @@ func (i *InstructionPrinterLoadFormation) Execute(args ...string) (resp interfac
 		return 0, fmt.Errorf(
 			"invalid cycle index %v (%v)", cycleIndex, bin.CycleCount)
 	}
+	groupCount := len(bin.Formations[cycleIndex])
 	cm.Lock()
 	variable, _ := i.GetVarLockless(cm, args[0])
-	variable.SetValue(int64(len(bin.Formations[cycleIndex])))
+	variable.SetValue(int64(groupCount))
 	cm.Unlock()
-	return len(bin.Formations[cycleIndex]), err
+	return groupCount, err
 }
