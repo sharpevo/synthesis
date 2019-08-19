@@ -7,15 +7,19 @@ type Array struct {
 	SightBottom    *Nozzle
 	SightTop       *Nozzle
 	PrintheadCount int
+
+	Printheads []*Printhead
 }
 
 func NewArray(
 	nozzles []*Nozzle,
 	printheadCount int,
+	printheads []*Printhead,
 ) *Array {
 	a := &Array{
 		Nozzles:        nozzles,
 		PrintheadCount: printheadCount,
+		Printheads:     printheads,
 	}
 	a.SightTop, a.SightBottom = a.sights()
 	return a
@@ -50,6 +54,94 @@ func (a *Array) sights() (top *Nozzle, bottom *Nozzle) {
 }
 
 func (a *Array) MoveBottomRow(rowIndex, posx int, posy int) {
+	deltax := posx - a.SightBottom.Pos.X
+	deltay := posy - a.SightBottom.Pos.Y
+	switch rowIndex {
+	case 0:
+		deltax += 1
+		deltay -= 292
+	case 1:
+		deltax += 2
+		deltay -= 13
+	case 2:
+		deltax -= -1
+		deltay -= 279
+	}
+	for _, n := range a.Nozzles {
+		n.Pos.X = n.Pos.X + deltax
+		n.Pos.Y = n.Pos.Y + deltay
+	}
+}
+
+func (a *Array) MoveTopRow(rowIndex, posx int, posy int) {
+	distance := a.SightTop.Pos.Y - a.SightBottom.Pos.Y
+	deltax := posx - a.SightBottom.Pos.X
+	deltay := posy - a.SightBottom.Pos.Y
+	switch rowIndex {
+	case 0:
+		deltax += 1
+		deltay -= distance
+	case 1:
+		deltax += 2
+		deltay -= distance - 279
+	case 2:
+		deltax += -1
+		deltay -= distance - 13
+	case 3:
+		//deltax = deltax
+		deltay -= distance - 292
+	}
+	for _, n := range a.Nozzles {
+		n.Pos.X = n.Pos.X + deltax
+		n.Pos.Y = n.Pos.Y + deltay
+	}
+}
+
+func (a *Array) MoveBottomRowMH5440(rowIndex, posx int, posy int) { // {{{
+	deltax := posx - a.SightBottom.Pos.X
+	deltay := posy - a.SightBottom.Pos.Y
+	switch rowIndex {
+	case 0:
+		deltax += 3
+		deltay -= 292
+	case 1:
+		deltax += 2
+		deltay -= 13
+	case 2:
+		deltax += 1
+		deltay -= 279
+	}
+	for _, n := range a.Nozzles {
+		n.Pos.X = n.Pos.X + deltax
+		n.Pos.Y = n.Pos.Y + deltay
+	}
+}
+
+func (a *Array) MoveTopRowMH5440(rowIndex, posx int, posy int) {
+	distance := a.SightTop.Pos.Y - a.SightBottom.Pos.Y
+	deltax := posx - a.SightBottom.Pos.X
+	deltay := posy - a.SightBottom.Pos.Y
+	switch rowIndex {
+	case 0:
+		deltax += 3
+		deltay -= distance
+	case 1:
+		deltax += 2
+		deltay -= distance - 279
+	case 2:
+		deltax += 1
+		deltay -= distance - 13
+	case 3:
+		//deltax = deltax
+		deltay -= distance - 292
+	}
+	for _, n := range a.Nozzles {
+		n.Pos.X = n.Pos.X + deltax
+		n.Pos.Y = n.Pos.Y + deltay
+	}
+} // }}}
+
+func (a *Array) MoveBottomRowDepreciated(rowIndex, posx int, posy int) { // {{{
 	var deltax, deltay int
 	switch rowIndex {
 	case 0:
@@ -70,8 +162,7 @@ func (a *Array) MoveBottomRow(rowIndex, posx int, posy int) {
 		n.Pos.Y = n.Pos.Y + deltay
 	}
 }
-
-func (a *Array) MoveTopRow(rowIndex, posx int, posy int) {
+func (a *Array) MoveTopRowDepriciated(rowIndex, posx int, posy int) {
 	var deltax, deltay int
 	switch rowIndex {
 	case 0:
@@ -91,7 +182,7 @@ func (a *Array) MoveTopRow(rowIndex, posx int, posy int) {
 		n.Pos.X = n.Pos.X + deltax
 		n.Pos.Y = n.Pos.Y + deltay
 	}
-}
+} // }}}
 
 func (a *Array) Top() int {
 	return a.SightTop.Pos.Y
@@ -99,4 +190,12 @@ func (a *Array) Top() int {
 
 func (a *Array) Bottom() int {
 	return a.SightBottom.Pos.Y
+}
+
+func (a *Array) OffsetX() float64 {
+	return a.Printheads[0].OffsetX
+}
+
+func (a *Array) OffsetY() float64 {
+	return a.Printheads[0].OffsetY
 }
