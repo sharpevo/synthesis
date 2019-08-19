@@ -1,0 +1,5 @@
+PRINT 2-1
+PRINT 2-2
+ASYNC testscripts/script3
+PRINT 2-3
+PRINT 2-4
