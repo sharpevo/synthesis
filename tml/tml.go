@@ -7,7 +7,7 @@ package tml
 import (
 	"fmt"
 	"posam/config"
-	"posam/gui/uiutil"
+	//"posam/gui/uiutil"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
 	"posam/util/log"
@@ -684,7 +684,7 @@ func (c *Client) updateMotionStatus() (err error) {
 	if c.posY, err = tml.ActualPosition(c.axisYID); err != nil {
 		return err
 	}
-	uiutil.App.UpdateMotorStatusSlot(fmt.Sprintf("Motor: (%v, %v)", c.posX, c.posY))
+	//uiutil.App.UpdateMotorStatusSlot(fmt.Sprintf("Motor: (%v, %v)", c.posX, c.posY))
 	return nil
 }
 
