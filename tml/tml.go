@@ -1,38 +1,47 @@
+// Package tml provides functions for TML_Lib, an SDK from Technosoft. Be sure
+// to read the offical document before importing this package. Actually, there
+// is a more concise and effective implementation for the TLS facility based
+// library, but requires more time for testing.
 package tml
 
 import (
 	"fmt"
-	"log"
 	"posam/config"
-	"posam/gui/uiutil"
+	//"posam/gui/uiutil"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
+	"posam/util/log"
 	"reflect"
 	"time"
 	"tml"
 )
 
-var clientMap *concurrentmap.ConcurrentMap
-
 var (
-	SET_TONPOSOK          = config.GetBool("tml.tonposok")
-	COMPENSATION          = config.GetBool("tml.compensation.basic")
-	COMPENSATION_ADVANCED = config.GetBool("tml.compensation.advanced")
+	clientMap *concurrentmap.ConcurrentMap
+	_MTIMEOUT time.Duration
+	_MDELAY   time.Duration
+
+	_CONFIG_MOTION_TIMEOUT        = "tml.motion.timeout"
+	_CONFIG_MOTION_DELAY          = "tml.motion.delay"
+	_CONFIG_TONPOSOK              = "tml.tonposok"
+	_CONFIG_COMPENSATION_BASIC    = "tml.compensation.basic"
+	_CONFIG_COMPENSATION_ADVANCED = "tml.compensation.advanced"
+
+	_SET_TONPOSOK          = config.GetBool(_CONFIG_TONPOSOK)
+	_COMPENSATION          = config.GetBool(_CONFIG_COMPENSATION_BASIC)
+	_COMPENSATION_ADVANCED = config.GetBool(_CONFIG_COMPENSATION_ADVANCED)
 )
 
 func init() {
 	clientMap = concurrentmap.NewConcurrentMap()
-}
-
-func Instance(key string) *Client {
-	if clienti, ok := clientMap.Get(key); ok {
-		return clienti.(*Client)
-	}
-	return nil
+	config.SetDefault(_CONFIG_MOTION_TIMEOUT, 100)
+	_MTIMEOUT = time.Duration(config.GetInt(_CONFIG_MOTION_TIMEOUT)) * time.Second
+	config.SetDefault(_CONFIG_MOTION_DELAY, 0)
+	_MDELAY = time.Duration(config.GetInt(_CONFIG_MOTION_DELAY)) * time.Millisecond
 }
 
 func addInstance(client *Client) (*Client, bool) {
-	key := string(client.Name)
+	key := string(client.name)
 	if c, ok := clientMap.Get(key); ok {
 		return c.(*Client), true
 	} else {
@@ -41,38 +50,37 @@ func addInstance(client *Client) (*Client, bool) {
 	}
 }
 
+// ResetInstance resets instance map. Not tested yet.
 func ResetInstance() {
 	for item := range clientMap.Iter() {
 		client := item.Value.(*Client)
-		log.Println("terminating client: ", client.Name)
-		//client.Stop()
+		log.Df("to terminate client: %v", client.name)
+		// TODO: terminate client
 	}
 	clientMap = concurrentmap.NewConcurrentMap()
 }
 
-type Clienter interface {
-	connect() error
-	MoveRelative(int, int, float64, float64, float64) error
-	MoveAbsolute(int, int, float64, float64, float64) error
-}
-
+// A client is the abstraction of TML devices connected via RS232. Note that
+// the communication channel file descriptor is named as channelDescriptor,
+// although it's not required right now for single channel apps.
 type Client struct {
-	Name           string
-	BaudRate       int
-	AxisXID        int
-	AxisXSetupFile string
-	AxisYID        int
-	AxisYSetupFile string
+	name           string
+	baudRate       int
+	axisXID        int
+	axisXSetupFile string
+	axisYID        int
+	axisYSetupFile string
 
-	ChannelDescriptor int
-	RequestQueue      *blockingqueue.BlockingQueue
+	channelDescriptor int
+	requestQueue      *blockingqueue.BlockingQueue
 
-	PosX float64
-	PosY float64
-	SpdX float64
-	SpdY float64
+	posX float64
+	posY float64
+	//TODO: speeds
 }
 
+// NewClient returns TML device connection instance which been initialized
+// and launched at the same time.
 func NewClient(
 	name string,
 	baud int,
@@ -82,47 +90,53 @@ func NewClient(
 	axisYSetupFile string,
 ) (*Client, error) {
 	client := &Client{
-		Name:           name,
-		BaudRate:       baud,
-		AxisXID:        axisXID,
-		AxisXSetupFile: axisXSetupFile,
-		AxisYID:        axisYID,
-		AxisYSetupFile: axisYSetupFile,
-		RequestQueue:   blockingqueue.NewBlockingQueue(),
+		name:           name,
+		baudRate:       baud,
+		axisXID:        axisXID,
+		axisXSetupFile: axisXSetupFile,
+		axisYID:        axisYID,
+		axisYSetupFile: axisYSetupFile,
+		requestQueue:   blockingqueue.NewBlockingQueue(),
 	}
 	if c, found := addInstance(client); found {
 		return c, fmt.Errorf("client existed")
 	}
-	go client.launch()
-	log.Println(">>> client: ", client.AxisXID, client.AxisYID)
+	errc := make(chan error)
+	go launchClient(client, errc)
+	if err := <-errc; err != nil {
+		return client, err
+	}
+
+	log.Df(
+		"client launched(AxisXID: %v, AxisYID: %v)", client.axisXID, client.axisYID)
 	return client, nil
 }
 
 func (c *Client) connect() (err error) {
-	log.Printf("Connecting the motor %q...\n", c.Name)
+	log.Df("Connecting the motor %q...", c.name)
 
 	commType := tml.CHANNEL_RS232
 	hostID := 1
 
 	descriptor, err := tml.OpenChannel(
-		c.Name,
+		c.name,
 		commType,
 		hostID,
-		c.BaudRate,
+		c.baudRate,
 	)
 	if err != nil {
 		return err
 	}
-	c.ChannelDescriptor = descriptor
+	c.channelDescriptor = descriptor
 
-	idxSetup, err := tml.LoadSetup(c.AxisXSetupFile)
+	idxSetup, err := tml.LoadSetup(c.axisXSetupFile)
 	if err != nil {
 		return err
 	}
-	if err = tml.SetupAxis(c.AxisXID, idxSetup); err != nil {
+	if err = tml.SetupAxis(c.axisXID, idxSetup); err != nil {
 		return err
 	}
-	if err = tml.SelectAxis(c.AxisXID); err != nil {
+	if err = tml.SelectAxis(c.axisXID); err != nil {
 		return err
 	}
 	if err = tml.DriveInitialisation(); err != nil {
@@ -132,14 +146,14 @@ func (c *Client) connect() (err error) {
 		return err
 	}
 
-	idxSetup, err = tml.LoadSetup(c.AxisYSetupFile)
+	idxSetup, err = tml.LoadSetup(c.axisYSetupFile)
 	if err != nil {
 		return err
 	}
-	if err = tml.SetupAxis(c.AxisYID, idxSetup); err != nil {
+	if err = tml.SetupAxis(c.axisYID, idxSetup); err != nil {
 		return err
 	}
-	if err = tml.SelectAxis(c.AxisYID); err != nil {
+	if err = tml.SelectAxis(c.axisYID); err != nil {
 		return err
 	}
 	if err = tml.DriveInitialisation(); err != nil {
@@ -149,12 +163,12 @@ func (c *Client) connect() (err error) {
 		return err
 	}
 
-	log.Println("checking status...")
+	log.D("checking status...")
 	var statusx int
 	var statusy int
 	for i := 0; i < 15; i++ {
 		if statusx == 0 {
-			err = tml.SelectAxis(c.AxisXID)
+			err = tml.SelectAxis(c.axisXID)
 			if err != nil {
 				return err
 			}
@@ -166,7 +180,7 @@ func (c *Client) connect() (err error) {
 		}
 
 		if statusy == 0 {
-			err = tml.SelectAxis(c.AxisYID)
+			err = tml.SelectAxis(c.axisYID)
 			if err != nil {
 				return err
 			}
@@ -185,73 +199,84 @@ func (c *Client) connect() (err error) {
 		return fmt.Errorf("failed to enable power on axes: x(%d) / y(%d)", statusx, statusy)
 	}
 
-	log.Printf("motor %q is ready\n", c.Name)
+	log.Df("motor %q is ready", c.name)
 	return nil
 }
 
-type Request struct {
-	//AxisID    int
-	Responsec chan Response
-	Function  string
-	Arguments []interface{}
+type request struct {
+	responsec chan response
+	function  string
+	arguments []interface{}
 }
 
-type Response struct {
-	Error error
+type response struct {
+	err error
 }
 
-func (c *Client) launch() {
-	log.Println("motor client launched")
-	c.connect()
+var launchClient = func(c *Client, errc chan<- error) {
+	log.D("motor client launched")
+	if err := c.connect(); err != nil {
+		errc <- err
+		return
+	} else {
+		errc <- nil
+	}
 
 	for {
-		reqi, err := c.RequestQueue.Pop()
+		reqi, err := c.requestQueue.Pop()
 		if err != nil {
-			log.Println("motor client terminated")
+			log.E("motor client terminated")
 			return
 		}
-		req := reqi.(*Request)
-		//err = c.checkAxisReady(req.AxisID)
-		//if err != nil {
-		//req.Responsec <- Response{Error: err}
-		//continue
-		//}
-		//c.execute(req)
-		function := reflect.ValueOf(c).MethodByName(req.Function)
+		req := reqi.(*request)
+		function := reflect.ValueOf(c).MethodByName(req.function)
 		args := []reflect.Value{}
-		for _, v := range req.Arguments {
+		for _, v := range req.arguments {
 			args = append(args, reflect.ValueOf(v))
 		}
 		result := function.Call(args)
 		erri := result[0].Interface()
 		if erri != nil {
-			req.Responsec <- Response{Error: erri.(error)}
+			req.responsec <- response{err: erri.(error)}
 			continue
 		}
-		if err := c.UpdateMotionStatus(); err != nil {
-			log.Println(err)
+		if err := c.updateMotionStatus(); err != nil {
+			log.E(err)
 		}
-		req.Responsec <- Response{Error: nil}
+		req.responsec <- response{err: nil}
 	}
 }
 
+// MoveAbsoluteByAxis moves the motor by axis with the following arguments:
+//
+// - _aid: axis id of X or Y;
+//
+// - _pos: position to reached expressed in TML position units;
+//
+// - _spd: slew speed expressed in TML speed units. If the value is zero the
+// motor will use the previously value set for speed;
+//
+// - _acc: acceleration/deceleration rate expressed in TML acceleration
+// units. If its value is zero the motor will use the previously value
+// set for acceleration;
+//
+// - _mmt: defines the moment when the motion is started;
+//
+// - _ref: specifies how the motion reference is computed: from actual values
+// of position and speed reference or from actual values of load/motor position
+// and speed
 func (c *Client) MoveAbsoluteByAxis(
-	aidi interface{},
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	mmti interface{},
-	refi interface{},
+	_aid, _pos, _spd, _acc, _mmt, _ref interface{},
 ) (err error) {
-	aid, ok := aidi.(int)
+	aid, ok := _aid.(int)
 	if !ok {
-		return fmt.Errorf("failed to convert aid %v", aidi)
+		return fmt.Errorf("failed to convert aid %v", _aid)
 	}
-	pos, spd, acc, mmt, ref, err := parseAbsArgs(posi, spdi, acci, mmti, refi)
+	pos, spd, acc, mmt, ref, err := parseAbsArgs(_pos, _spd, _acc, _mmt, _ref)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("moving axis %d to %v...", aid, pos)
+	log.If("moving axis %v to %v...", aid, pos)
 	if err = tml.SelectAxis(aid); err != nil {
 		return err
 	}
@@ -267,29 +292,43 @@ func (c *Client) MoveAbsoluteByAxis(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	fmt.Printf("done\n")
+	log.D("done")
 	c.CompensateMotion(aid, pos)
 	return nil
 }
 
+// MoveRelativeByAxis moves the motor by axis with the following arguments:
+//
+// - _aid: axis id of X or Y;
+//
+// - _pos: position increment expressed in TML position units;
+//
+// - _spd: slew speed expressed in TML speed units. If the value is zero the
+// motor will use the previously value set for speed;
+//
+// - _acc: acceleration/deceleration rate expressed in TML acceleration
+// units. If its value is zero the motor will use the previously value
+// set for acceleration;
+//
+// - _add: specifies how is computed the position to reach;
+//
+// - _mmt: defines the moment when the motion is started;
+//
+// - refa: specifies how the motion reference is computed: from actual values
+// of position and speed reference or from actual values of load/motor position
+// and speed
 func (c *Client) MoveRelativeByAxis(
-	aidi interface{},
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	addi interface{},
-	mmti interface{},
-	refi interface{},
+	_aid, _pos, _spd, _acc, _add, _mmt, _ref interface{},
 ) (err error) {
-	aid, ok := aidi.(int)
+	aid, ok := _aid.(int)
 	if !ok {
-		return fmt.Errorf("failed to convert aid %v", aidi)
+		return fmt.Errorf("failed to convert aid %v", _aid)
 	}
-	pos, spd, acc, add, mmt, ref, err := parseRelArgs(posi, spdi, acci, addi, mmti, refi)
+	pos, spd, acc, add, mmt, ref, err := parseRelArgs(_pos, _spd, _acc, _add, _mmt, _ref)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("moving axis %d by %v...", aid, pos)
+	log.If("moving axis %v by %v...", aid, pos)
 	if err = tml.SelectAxis(aid); err != nil {
 		return err
 	}
@@ -306,21 +345,22 @@ func (c *Client) MoveRelativeByAxis(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	fmt.Printf("done\n")
+	log.D("done")
+	// TODO: compensate
 	return nil
-	//c.CompensateMotion(aid, pos)
 }
 
+// MoveAbsByAxis create a MoveAbsoluteByAxis request and send it to the queue.
 func (c *Client) MoveAbsByAxis(
 	axisID int,
 	pos float64,
 	speed float64,
 	accel float64,
 ) error {
-	req := Request{
-		Responsec: make(chan Response),
-		Function:  "MoveAbsoluteByAxis",
-		Arguments: []interface{}{
+	req := request{
+		responsec: make(chan response),
+		function:  "MoveAbsoluteByAxis",
+		arguments: []interface{}{
 			axisID,
 			pos,
 			speed,
@@ -329,29 +369,30 @@ func (c *Client) MoveAbsByAxis(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for axis %d response: absolute motion to %v\n",
+	c.requestQueue.Push(&req)
+	log.Df(
+		"waiting for axis %d response: absolute motion to %v",
 		axisID,
 		pos,
 	)
-	resp := <-req.Responsec
-	if resp.Error != nil {
-		return resp.Error
+	resp := <-req.responsec
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
 
+// MoveRelByAxis create a MoveRelativeByAxis request and send it to the queue.
 func (c *Client) MoveRelByAxis(
 	axisID int,
 	pos float64,
 	speed float64,
 	accel float64,
 ) error {
-	req := Request{
-		Responsec: make(chan Response),
-		Function:  "MoveRelativeByAxis",
-		Arguments: []interface{}{
+	req := request{
+		responsec: make(chan response),
+		function:  "MoveRelativeByAxis",
+		arguments: []interface{}{
 			axisID,
 			pos,
 			speed,
@@ -361,44 +402,40 @@ func (c *Client) MoveRelByAxis(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for axis %d response: relative motion to %v\n",
+	c.requestQueue.Push(&req)
+	log.Df(
+		"waiting for axis %d response: relative motion to %v",
 		axisID,
 		pos,
 	)
-	resp := <-req.Responsec
-	if resp.Error != nil {
-		return resp.Error
+	resp := <-req.responsec
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
 
+// MoveRelative moves motor with the position increments of x-axis and y-axis
+// at the same time.
 func (c *Client) MoveRelative(
-	posxi interface{},
-	posyi interface{},
-	spdi interface{},
-	acci interface{},
-	addi interface{},
-	mmti interface{},
-	refi interface{},
+	_posx, _posy, _spd, _acc, _add, _mmt, _ref interface{},
 ) (err error) {
-	posx, spd, acc, add, mmt, ref, err := parseRelArgs(posxi, spdi, acci, addi, mmti, refi)
+	posx, spd, acc, add, mmt, ref, err := parseRelArgs(_posx, _spd, _acc, _add, _mmt, _ref)
 	if err != nil {
 		return err
 	}
-	posy, ok := posyi.(float64)
+	posy, ok := _posy.(float64)
 	if !ok {
-		return fmt.Errorf("failed to convert posy %v", posyi)
+		return fmt.Errorf("failed to convert posy %v", _posy)
 	}
-	fmt.Printf("moving by (%v,%v)...", posx, posy)
-	if err = tml.SelectAxis(c.AxisXID); err != nil {
+	log.If("moving by (%v,%v)...", posx, posy)
+	if err = tml.SelectAxis(c.axisXID); err != nil {
 		return err
 	}
 	if err = tml.MoveRelative(
-		tml.CalcPosition(c.AxisXID, posx),
-		tml.CalcSpeed(c.AxisXID, spd),
-		tml.CalcAccel(c.AxisXID, acc),
+		tml.CalcPosition(c.axisXID, posx),
+		tml.CalcSpeed(c.axisXID, spd),
+		tml.CalcAccel(c.axisXID, acc),
 		add,
 		mmt,
 		ref,
@@ -408,14 +445,13 @@ func (c *Client) MoveRelative(
 	if err = tml.SetEventOnMotionComplete(false, false); err != nil {
 		return err
 	}
-	xcompleted := false
-	if err = tml.SelectAxis(c.AxisYID); err != nil {
+	if err = tml.SelectAxis(c.axisYID); err != nil {
 		return err
 	}
 	if err = tml.MoveRelative(
-		tml.CalcPosition(c.AxisYID, posy),
-		tml.CalcSpeed(c.AxisYID, spd),
-		tml.CalcAccel(c.AxisYID, acc),
+		tml.CalcPosition(c.axisYID, posy),
+		tml.CalcSpeed(c.axisYID, spd),
+		tml.CalcAccel(c.axisYID, acc),
 		add,
 		mmt,
 		ref,
@@ -425,30 +461,33 @@ func (c *Client) MoveRelative(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	for {
-		<-time.After(200 * time.Millisecond)
-		if err = tml.SelectAxis(c.AxisXID); err != nil {
-			log.Println(err)
+	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
+		if _MDELAY != 0 {
+			<-time.After(_MDELAY)
 		}
-		tml.CheckEvent(&xcompleted)
-		if xcompleted {
-			break
+		select {
+		case <-tc:
+			xc = true
+			return fmt.Errorf("Aoztech timeout")
+		default:
+			if err = tml.SelectAxis(c.axisXID); err != nil {
+				log.E(err)
+			}
+			tml.CheckEvent(&xc)
 		}
 	}
-	fmt.Println("done")
+	log.D("done")
 	return nil
 }
 
+// MoveRel creates a MoveRelative request and send it to the queue.
 func (c *Client) MoveRel(
-	posx float64,
-	posy float64,
-	speed float64,
-	accel float64,
+	posx, posy, speed, accel float64,
 ) error {
-	req := Request{
-		Responsec: make(chan Response),
-		Function:  "MoveRelative",
-		Arguments: []interface{}{
+	req := request{
+		responsec: make(chan response),
+		function:  "MoveRelative",
+		arguments: []interface{}{
 			posx,
 			posy,
 			speed,
@@ -458,46 +497,43 @@ func (c *Client) MoveRel(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for response: relative motion to (%v, %v)\n",
+	c.requestQueue.Push(&req)
+	log.Df(
+		"waiting for response: relative motion to (%v, %v)",
 		posx,
 		posy,
 	)
-	resp := <-req.Responsec
-	if resp.Error != nil {
-		return resp.Error
+	resp := <-req.responsec
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
 
+// MoveAbosolute moves motor to the given x-axis position and y-axis position
+// at the same time.
 func (c *Client) MoveAbsolute(
-	posxi interface{},
-	posyi interface{},
-	spdi interface{},
-	acci interface{},
-	mmti interface{},
-	refi interface{},
+	_posx, _posy, _spd, _acc, _mmt, _ref interface{},
 ) (err error) {
-	posx, spd, acc, mmt, ref, err := parseAbsArgs(posxi, spdi, acci, mmti, refi)
+	posx, spd, acc, mmt, ref, err := parseAbsArgs(_posx, _spd, _acc, _mmt, _ref)
 	if err != nil {
 		return err
 	}
-	posy, ok := posyi.(float64)
+	posy, ok := _posy.(float64)
 	if !ok {
-		return fmt.Errorf("failed to convert posy %v", posyi)
+		return fmt.Errorf("failed to convert posy %v", _posy)
 	}
-	fmt.Printf("moving to (%v,%v)...", posx, posy)
-	if err = tml.SelectAxis(c.AxisXID); err != nil {
+	log.If("moving to (%v,%v)...", posx, posy)
+	if err = tml.SelectAxis(c.axisXID); err != nil {
 		return err
 	}
-	if SET_TONPOSOK {
-		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
+	if _SET_TONPOSOK {
+		log.Df("set TONPOSOK %v", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
-		tml.CalcPosition(c.AxisXID, posx),
-		tml.CalcSpeed(c.AxisXID, spd),
-		tml.CalcAccel(c.AxisXID, acc),
+		tml.CalcPosition(c.axisXID, posx),
+		tml.CalcSpeed(c.axisXID, spd),
+		tml.CalcAccel(c.axisXID, acc),
 		mmt,
 		ref,
 	); err != nil {
@@ -506,17 +542,16 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SetEventOnMotionComplete(false, false); err != nil {
 		return err
 	}
-	xcompleted := false
-	if err = tml.SelectAxis(c.AxisYID); err != nil {
+	if err = tml.SelectAxis(c.axisYID); err != nil {
 		return err
 	}
-	if SET_TONPOSOK {
-		fmt.Println("set TONPOSOK", tml.SetIntVariable("TONPOSOK", 100))
+	if _SET_TONPOSOK {
+		log.Df("set TONPOSOK %v", tml.SetIntVariable("TONPOSOK", 100))
 	}
 	if err = tml.MoveAbsolute(
-		tml.CalcPosition(c.AxisYID, posy),
-		tml.CalcSpeed(c.AxisYID, spd),
-		tml.CalcAccel(c.AxisYID, acc),
+		tml.CalcPosition(c.axisYID, posy),
+		tml.CalcSpeed(c.axisYID, spd),
+		tml.CalcAccel(c.axisYID, acc),
 		mmt,
 		ref,
 	); err != nil {
@@ -525,35 +560,38 @@ func (c *Client) MoveAbsolute(
 	if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 		return err
 	}
-	c.CompensateMotion(c.AxisYID, posy)
-	if COMPENSATION && COMPENSATION_ADVANCED {
-		fmt.Println("2nd compensation")
-		c.CompensateMotion(c.AxisYID, posy)
+	c.CompensateMotion(c.axisYID, posy)
+	if _COMPENSATION && _COMPENSATION_ADVANCED {
+		log.I("2nd compensation")
+		c.CompensateMotion(c.axisYID, posy)
 	}
-	for {
-		<-time.After(200 * time.Millisecond)
-		if err = tml.SelectAxis(c.AxisXID); err != nil {
-			log.Println(err)
+	for xc, tc := false, time.After(_MTIMEOUT); !xc; {
+		if _MDELAY != 0 {
+			<-time.After(_MDELAY)
 		}
-		tml.CheckEvent(&xcompleted)
-		if xcompleted {
-			break
+		select {
+		case <-tc:
+			xc = true
+			return fmt.Errorf("Aoztech timeout")
+		default:
+			if err = tml.SelectAxis(c.axisXID); err != nil {
+				log.E(err)
+			}
+			tml.CheckEvent(&xc)
 		}
 	}
-	fmt.Println("done")
+	log.D("done")
 	return nil
 }
 
+// MoveAbs creates a MoveAbsolute request and send it to the queue.
 func (c *Client) MoveAbs(
-	posx float64,
-	posy float64,
-	speed float64,
-	accel float64,
+	posx, posy, speed, accel float64,
 ) error {
-	req := Request{
-		Responsec: make(chan Response),
-		Function:  "MoveAbsolute",
-		Arguments: []interface{}{
+	req := request{
+		responsec: make(chan response),
+		function:  "MoveAbsolute",
+		arguments: []interface{}{
 			posx,
 			posy,
 			speed,
@@ -562,25 +600,21 @@ func (c *Client) MoveAbs(
 			1,
 		},
 	}
-	c.RequestQueue.Push(&req)
-	log.Printf(
-		"waiting for response: absolute motion to (%v, %v)\n",
+	c.requestQueue.Push(&req)
+	log.Ef(
+		"waiting for response: absolute motion to (%v, %v)",
 		posx,
 		posy,
 	)
-	resp := <-req.Responsec
-	if resp.Error != nil {
-		return resp.Error
+	resp := <-req.responsec
+	if resp.err != nil {
+		return resp.err
 	}
 	return nil
 }
 
 func parseAbsArgs(
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	mmti interface{},
-	refi interface{},
+	_pos, _spd, _acc, _mmt, _ref interface{},
 ) (
 	pos float64,
 	spd float64,
@@ -590,41 +624,36 @@ func parseAbsArgs(
 	err error,
 ) {
 	var ok bool
-	pos, ok = posi.(float64)
+	pos, ok = _pos.(float64)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert pos %v", posi)
+			fmt.Errorf("failed to convert pos %v", _pos)
 	}
-	spd, ok = spdi.(float64)
+	spd, ok = _spd.(float64)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert spd %v", spdi)
+			fmt.Errorf("failed to convert spd %v", _spd)
 	}
-	acc, ok = acci.(float64)
+	acc, ok = _acc.(float64)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert acc %v", acci)
+			fmt.Errorf("failed to convert acc %v", _acc)
 	}
-	mmt, ok = mmti.(int)
+	mmt, ok = _mmt.(int)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert mmt %v", mmti)
+			fmt.Errorf("failed to convert mmt %v", _mmt)
 	}
-	ref, ok = refi.(int)
+	ref, ok = _ref.(int)
 	if !ok {
 		return pos, spd, acc, mmt, ref,
-			fmt.Errorf("failed to convert ref %v", refi)
+			fmt.Errorf("failed to convert ref %v", _ref)
 	}
 	return pos, spd, acc, mmt, ref, nil
 }
 
 func parseRelArgs(
-	posi interface{},
-	spdi interface{},
-	acci interface{},
-	addi interface{},
-	mmti interface{},
-	refi interface{},
+	_pos, _spd, _acc, _add, _mmt, _ref interface{},
 ) (
 	pos float64,
 	spd float64,
@@ -634,47 +663,71 @@ func parseRelArgs(
 	ref int,
 	err error,
 ) {
-	pos, spd, acc, mmt, ref, err = parseAbsArgs(posi, spdi, acci, mmti, refi)
+	pos, spd, acc, mmt, ref, err = parseAbsArgs(_pos, _spd, _acc, _mmt, _ref)
 	if err != nil {
 		return pos, spd, acc, add, mmt, ref, err
 	}
 	var ok bool
-	add, ok = addi.(bool)
+	add, ok = _add.(bool)
 	if !ok {
 		return pos, spd, acc, add, mmt, ref,
-			fmt.Errorf("failed to convert add %v", addi)
+			fmt.Errorf("failed to convert add %v", _add)
 	}
 	return pos, spd, acc, add, mmt, ref, nil
 }
 
-func (c *Client) UpdateMotionStatus() (err error) {
-	if c.PosX, err = tml.ActualPosition(c.AxisXID); err != nil {
+// UpadteMotionStatus updates the position of x-axis and y-axis.
+func (c *Client) updateMotionStatus() (err error) {
+	if c.posX, err = tml.ActualPosition(c.axisXID); err != nil {
 		return err
 	}
-	if c.PosY, err = tml.ActualPosition(c.AxisYID); err != nil {
+	if c.posY, err = tml.ActualPosition(c.axisYID); err != nil {
 		return err
 	}
-	uiutil.App.UpdateMotorStatusSlot(fmt.Sprintf("Motor: (%v, %v)", c.PosX, c.PosY))
+	//uiutil.App.UpdateMotorStatusSlot(fmt.Sprintf("Motor: (%v, %v)", c.posX, c.posY))
 	return nil
 }
 
+// PosX returns the x-axis position of motor
+func (c *Client) PosX() float64 {
+	return c.posX
+}
+
+// PosY returns the y-axis position of motor
+func (c *Client) PosY() float64 {
+	return c.posY
+}
+
+// AxisXID returns the id of x-axis
+func (c *Client) AxisXID() int {
+	return c.axisXID
+}
+
+// AxisYID returns the id of y-axis
+func (c *Client) AxisYID() int {
+	return c.axisYID
+}
+
+// CompensateMotion moves the motor forward or backward according to the actual
+// position and the expectation once or twice if _COMPENSATION is specified.
 func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
-	if !COMPENSATION {
+	// TODO: relative compensation
+	if !_COMPENSATION {
 		return nil
 	}
 	switch axisID {
-	case c.AxisYID:
-		pos, err := tml.ActualPosition(c.AxisYID)
+	case c.axisYID:
+		pos, err := tml.ActualPosition(c.axisYID)
 		diffPos := target - pos
-		offset := tml.CalcPosition(c.AxisYID, diffPos)
-		fmt.Printf("compensating axis %d by %v (diff apos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
-		if err = tml.SelectAxis(c.AxisYID); err != nil {
+		offset := tml.CalcPosition(c.axisYID, diffPos)
+		log.Df("compensating axis %d by %v (diff apos %v, actual pos %v)...", c.axisYID, diffPos, offset, pos)
+		if err = tml.SelectAxis(c.axisYID); err != nil {
 			return err
 		}
 		if err = tml.MoveRelative(
-			tml.CalcPosition(c.AxisYID, diffPos),
-			tml.CalcSpeed(c.AxisYID, 5),
-			tml.CalcAccel(c.AxisYID, 50),
+			tml.CalcPosition(c.axisYID, diffPos),
+			tml.CalcSpeed(c.axisYID, 5),
+			tml.CalcAccel(c.axisYID, 50),
 			true,
 			1,
 			1,
@@ -684,34 +737,35 @@ func (c *Client) CompensateMotion(axisID int, target float64) (err error) {
 		if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 			return err
 		}
-		fmt.Printf("done\n")
+		log.D("done")
 		return nil
 	default:
 		return nil
 	}
 }
 
+// CompensateMotionTPOS compensates the motion by TPOS.
 func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
-	if !COMPENSATION {
+	if !_COMPENSATION {
 		return nil
 	}
 	switch axisID {
-	case c.AxisYID:
-		pos, err := tml.TargetPosition(c.AxisYID)
+	case c.axisYID:
+		pos, err := tml.TargetPosition(c.axisYID)
 		diffPos := target - pos
-		offset := tml.CalcPosition(c.AxisYID, diffPos)
+		offset := tml.CalcPosition(c.axisYID, diffPos)
 		if diffPos == 0 {
-			fmt.Printf("not compensate axis %d by %v (diff tpos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
+			log.Df("not compensate axis %d by %v (diff tpos %v, actual pos %v)...", c.axisYID, diffPos, offset, pos)
 			return nil
 		}
-		fmt.Printf("compensating axis %d by %v (diff tpos %v, actual pos %v)...\n", c.AxisYID, diffPos, offset, pos)
-		if err = tml.SelectAxis(c.AxisYID); err != nil {
+		log.Df("compensating axis %d by %v (diff tpos %v, actual pos %v)...", c.axisYID, diffPos, offset, pos)
+		if err = tml.SelectAxis(c.axisYID); err != nil {
 			return err
 		}
 		if err = tml.MoveRelative(
-			tml.CalcPosition(c.AxisYID, diffPos),
-			tml.CalcSpeed(c.AxisYID, 5),
-			tml.CalcAccel(c.AxisYID, 50),
+			tml.CalcPosition(c.axisYID, diffPos),
+			tml.CalcSpeed(c.axisYID, 5),
+			tml.CalcAccel(c.axisYID, 50),
 			true,
 			1,
 			1,
@@ -721,7 +775,7 @@ func (c *Client) CompensateMotionTPOS(axisID int, target float64) (err error) {
 		if err = tml.SetEventOnMotionComplete(true, false); err != nil {
 			return err
 		}
-		fmt.Printf("done\n")
+		log.D("done")
 		return nil
 	default:
 		return nil

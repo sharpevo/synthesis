@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"posam/config"
-	"posam/gui/uiutil"
+	//"posam/gui/uiutil"
 	"posam/util"
 	"posam/util/blockingqueue"
 	"posam/util/concurrentmap"
@@ -401,7 +401,8 @@ var parseCanObjects = func(c *Channel, pReceive []controlcan.CanObj) {
 					req.FrameId,
 					req.Message,
 				)
-				uiutil.App.ShowMessageSlot(msg)
+				fmt.Println(msg)
+				//uiutil.App.ShowMessageSlot(msg)
 			}
 		}
 		resp.Message = data
@@ -568,7 +569,7 @@ func (c *Channel) resend(now time.Time, req *Request) {
 		go func() {
 			req.Responsec <- resp
 			if _NOTIFY_RESEND_FAILURE {
-				uiutil.App.ShowMessageSlot(errmsg.Error())
+				//uiutil.App.ShowMessageSlot(errmsg.Error())
 			}
 		}()
 		return
