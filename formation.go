@@ -4,7 +4,14 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"posam/util/printhead"
+	"posam/util/substrate"
 	//"sync"
+)
+
+const (
+	MODE_DOD = 0
+	MODE_CIJ = 1
 )
 
 type MotorConf struct {
@@ -77,18 +84,34 @@ type Bin struct {
 	PrintheadConf PrintheadConf
 	Formations    map[int][]Formation
 	CycleMap      map[int]Cycle
+
+	Mode           byte
+	substrate      *substrate.Substrate
+	PrintheadArray *printhead.Array
 }
 
 func NewBin(
 	cycleCount int,
 	motorConf MotorConf,
 	printheadConf PrintheadConf,
+
+	mode byte,
+	substrate *substrate.Substrate,
+	printheadarray *printhead.Array,
 ) *Bin {
 	return &Bin{
 		CycleCount:    cycleCount,
 		MotorConf:     motorConf,
 		PrintheadConf: printheadConf,
+
+		Mode:           mode,
+		substrate:      substrate,
+		PrintheadArray: printheadarray,
 	}
+}
+
+func (b *Bin) Substrate() *substrate.Substrate {
+	return b.substrate
 }
 
 func (b *Bin) AddFormation(
