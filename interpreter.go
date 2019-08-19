@@ -8,7 +8,7 @@ import (
 	"os"
 	"posam/config"
 	"posam/dao"
-	"posam/gui/uiutil"
+	//"posam/gui/uiutil"
 	"posam/instruction"
 	"posam/interpreter/vrb"
 	"posam/util"
@@ -198,7 +198,8 @@ func (g *StatementGroup) ExecuteAsync(terminatec <-chan interface{}, pcompletec 
 				script, _ := itemi.(*Script)
 				itemInterface, err := script.ParseUnit(g.Stack)
 				if err != nil {
-					uiutil.App.ShowMessageSlot(err.Error())
+					//uiutil.App.ShowMessageSlot(err.Error())
+					log.Println(err)
 				}
 				g.ItemList.Unlock()
 				switch t := itemInterface.(type) {
@@ -246,7 +247,8 @@ func (g *StatementGroup) ExecuteSync(terminatec <-chan interface{}, pcompletec c
 			script, _ := itemi.(*Script)
 			itemInterface, err := script.ParseUnit(g.Stack)
 			if err != nil {
-				uiutil.App.ShowMessageSlot(err.Error())
+				//uiutil.App.ShowMessageSlot(err.Error())
+				log.Println(err)
 			}
 			g.ItemList.Unlock()
 			switch t := itemInterface.(type) {
@@ -301,7 +303,7 @@ func (g *StatementGroup) Execute(terminatec <-chan interface{}, completec chan<-
 	default:
 		msg := fmt.Sprintf("!!!!!! Execution type is not matched\n%#v\nSYNC:%v\nASYNC:%v\n", g, SYNC, ASYNC)
 		fmt.Println(msg)
-		uiutil.App.ShowMessageSlot(msg)
+		//uiutil.App.ShowMessageSlot(msg)
 		resultc := make(chan Response)
 		go func() {
 			defer close(resultc)
