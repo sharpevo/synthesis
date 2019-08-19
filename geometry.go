@@ -52,10 +52,18 @@ func Unit(input float64) int {
 
 func RoundedUnit(input float64) int {
 	result := Unit(input)
-	if rem := result % 4; rem != 0 {
-		result -= rem
+	//if rem := result % 4; rem != 0 {
+	//result -= rem
+	//}
+	//return result
+	return Round(result)
+}
+
+func Round(input int) int {
+	if rem := input % 4; rem != 0 {
+		input -= rem
 	}
-	return result
+	return input
 }
 
 func Mm2(input int) string {
@@ -68,4 +76,8 @@ func Mm(input int) float64 {
 	output := float64(input) * 25.4 / 600
 	//fmt.Println("convert", input, output)
 	return output
+}
+
+func Raw(value int, offset float64) float64 {
+	return offset - Mm(value)
 }
