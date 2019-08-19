@@ -12,6 +12,7 @@ import (
 	"strconv"
 )
 
+// Constants manage strings as the captions in the GUI. Note that the value of IDNAME is different according to the type of devices.
 const (
 	NAME         = "CANALYSTII"
 	DEVICE_TYPE  = "DEVICE_TYPE"
@@ -29,6 +30,8 @@ const (
 	IDNAME = FRAME_ID
 )
 
+// CONN_ATTRIBUTES is a collection that manage attributes listed in the Deivce
+// tree
 var CONN_ATTRIBUTES = []string{
 	DEVICE_TYPE,
 	DEVICE_INDEX,
@@ -42,6 +45,7 @@ var CONN_ATTRIBUTES = []string{
 	MODE,
 }
 
+// InstructionMap holds instructions registered in the instruction package.
 var InstructionMap *dao.InstructionMapt
 var deviceMap *concurrentmap.ConcurrentMap
 
@@ -51,11 +55,13 @@ func init() {
 }
 
 type Dao struct {
-	id string
-	//UsbcanClient usbcan.Clienter
-	UsbcanClient *usbcan.Client
+	_id          string
+	usbcanClient *usbcan.Client
 }
 
+// NewDao is the constructor of canalystii.Dao, initializes Dao instance in
+// singleton as well as UsbClient. Frame ID is exposed as DevID in the argument
+// list.
 func NewDao(
 	devType string,
 	devIndex string,
@@ -124,17 +130,16 @@ func NewDao(
 		return dao, err
 	}
 	dao = &Dao{
-		UsbcanClient: usbcanClient,
+		usbcanClient: usbcanClient,
 	}
-	if err = dao.SetID(fmt.Sprintf("%v", devIDInt)); err != nil {
+	if err = dao.setID(fmt.Sprintf("%v", devIDInt)); err != nil {
 		return dao, err
 	}
-	AddInstance(dao)
 	return dao, nil
 }
 
-func AddInstance(dao *Dao) {
-	deviceMap.Set(dao.ID(), dao)
+func addInstance(dao *Dao) {
+	deviceMap.Set(dao.id(), dao)
 }
 
 func ResetInstance() {
@@ -142,6 +147,8 @@ func ResetInstance() {
 	usbcan.ResetInstance()
 }
 
+// Instance returns an instance of canalyst DAO by id, even id is an empty
+// string.
 func Instance(id string) (dao *Dao, err error) {
 	if id == "" {
 		for device := range deviceMap.Iter() {
@@ -155,18 +162,20 @@ func Instance(id string) (dao *Dao, err error) {
 	return dao, fmt.Errorf("invalid device id %q", id)
 }
 
-func (d *Dao) ID() string {
-	return d.id
+func (d *Dao) id() string {
+	return d._id
 }
 
-func (d *Dao) SetID(id string) error {
+func (d *Dao) setID(id string) error {
 	if _, ok := deviceMap.Get(id); ok {
 		return fmt.Errorf("ID %q is duplicated", id)
 	}
-	d.id = id
+	d._id = id
+	addInstance(d)
 	return nil
 }
 
+// MoveRelative sends data of relative motion to the motor.
 func (d *Dao) MoveRelative(
 	motorCode int,
 	direction int,
@@ -190,13 +199,14 @@ func (d *Dao) MoveRelative(
 		return resp, err
 	}
 	req := MotorMoveRelativeUnit.Request()
-	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
-	message = append(message, directionBytes...)
-	message = append(message, speedBytes...)
-	message = append(message, posBytes...)
-	output, err := d.SendAck2(
-		message,
+	output, err := sendAck2(d,
+		composeBytes(
+			req.Bytes(),
+			motorCodeBytes,
+			directionBytes,
+			speedBytes,
+			posBytes,
+		),
 		MotorMoveRelativeUnit.RecResp(),
 		MotorMoveRelativeUnit.ComResp(),
 	)
@@ -208,6 +218,7 @@ func (d *Dao) MoveRelative(
 	return resp, nil
 }
 
+// MoveAbsolute sends data of absolute motion to the motor.
 func (d *Dao) MoveAbsolute(
 	motorCode int,
 	position int,
@@ -221,12 +232,13 @@ func (d *Dao) MoveAbsolute(
 		return resp, err
 	}
 	req := MotorMoveAbsoluteUnit.Request()
-	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
-	message = append(message, posBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00}...)
-	output, err := d.SendAck2(
-		message,
+	output, err := sendAck2(d,
+		composeBytes(
+			req.Bytes(),
+			motorCodeBytes,
+			posBytes,
+			make([]byte, 3),
+		),
 		MotorMoveAbsoluteUnit.RecResp(),
 		MotorMoveAbsoluteUnit.ComResp(),
 	)
@@ -238,6 +250,7 @@ func (d *Dao) MoveAbsolute(
 	return resp, nil
 }
 
+// ResetMotor sends data to reset the motor
 func (d *Dao) ResetMotor(
 	motorCode int,
 	direction int,
@@ -251,12 +264,13 @@ func (d *Dao) ResetMotor(
 		return resp, err
 	}
 	req := MotorResetUnit.Request()
-	message := req.Bytes()
-	message = append(message, motorCodeBytes...)
-	message = append(message, directionBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.SendAck2(
-		message,
+	output, err := sendAck2(d,
+		composeBytes(
+			req.Bytes(),
+			motorCodeBytes,
+			directionBytes,
+			make([]byte, 4),
+		),
 		MotorResetUnit.RecResp(),
 		MotorResetUnit.ComResp(),
 	)
@@ -268,6 +282,7 @@ func (d *Dao) ResetMotor(
 	return resp, nil
 }
 
+// ControlSwitcher sends data to the switcher.
 func (d *Dao) ControlSwitcher(
 	data int,
 ) (resp interface{}, err error) {
@@ -276,12 +291,12 @@ func (d *Dao) ControlSwitcher(
 		return resp, err
 	}
 	req := SwitcherControlUnit.Request()
-	message := req.Bytes()
-	message = append(message, dataBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.Send(
-		message,
-	)
+	output, err := send(d,
+		composeBytes(
+			req.Bytes(),
+			dataBytes,
+			make([]byte, 4),
+		))
 	if err != nil {
 		log.Println(err)
 		return resp, err
@@ -290,6 +305,7 @@ func (d *Dao) ControlSwitcher(
 	return resp, nil
 }
 
+// ControlSwitcherAdvanced sends data to multiple switchers.
 func (d *Dao) ControlSwitcherAdvanced(
 	data int,
 	speed int,
@@ -308,15 +324,16 @@ func (d *Dao) ControlSwitcherAdvanced(
 		return resp, err
 	}
 	req := SwitcherControlAdvancedUnit.Request()
-	message := req.Bytes()
-	message = append(message, dataBytes...)
-	message = append(message, speedBytes...)
-	message = append(message, countBytes...)
-	message = append(message, 0x00)
-	output, err := d.SendAck6(
-		message,
-		SwitcherControlUnit.RecResp(),
-		SwitcherControlUnit.ComResp(),
+	output, err := sendAck6(d,
+		composeBytes(
+			req.Bytes(),
+			dataBytes,
+			speedBytes,
+			countBytes,
+			make([]byte, 1),
+		),
+		SwitcherControlAdvancedUnit.RecResp(),
+		SwitcherControlAdvancedUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
@@ -326,43 +343,48 @@ func (d *Dao) ControlSwitcherAdvanced(
 	return resp, nil
 }
 
+// ReadHumiture sends data to require humiture from sensors. The first value in
+// the slice it returned is humidity, and the other one is temperature.
 func (d *Dao) ReadHumiture() (resp interface{}, err error) {
 	req := SensorHumitureUnit.Request()
-	output, err := d.Send(req.Bytes())
+	output, err := send(d, req.Bytes())
 	if err != nil {
 		log.Println(err)
 		return resp, err
 	}
-	temperature := binary.BigEndian.Uint16(output[1:3])
-	humidity := binary.BigEndian.Uint16(output[3:6])
-	resp = []float64{divideTen(temperature), divideTen(humidity)}
+	humidity := binary.BigEndian.Uint16(output[1:3])
+	temperature := binary.BigEndian.Uint16(output[3:6])
+	resp = []float64{dividedByTen(humidity), dividedByTen(temperature)}
 	return resp, nil
 }
 
+// ReadOxygenConc sends data to require concentration of oxygen from sensors.
 func (d *Dao) ReadOxygenConc() (resp interface{}, err error) {
 	req := SensorOxygenConcUnit.Request()
-	output, err := d.Send(req.Bytes())
+	output, err := send(d, req.Bytes())
 	if err != nil {
 		log.Println(err)
 		return resp, err
 	}
 	conc := binary.BigEndian.Uint16(output[3:5])
-	//conc := binary.BigEndian.Uint16(output[2:4]) // canalystii
-	//conc := binary.BigEndian.Uint16(output[1:3]) // usbcan-2c
-	resp = divideTen(conc)
+	resp = dividedByTen(conc)
 	return resp, nil
 }
 
+// ReadPressure sends data to require pressure from sensors. It returs the
+// decimal value without convertion to the relative value based on the voltage.
 func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
 	deviceBytes, err := uint8Bytes(device)
 	if err != nil {
 		return resp, err
 	}
 	req := SensorPressureUnit.Request()
-	message := req.Bytes()
-	message = append(message, deviceBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.Send(message)
+	output, err := send(d,
+		composeBytes(
+			req.Bytes(),
+			deviceBytes,
+			make([]byte, 5),
+		))
 	if err != nil {
 		log.Println(err)
 		return resp, err
@@ -375,6 +397,7 @@ func (d *Dao) ReadPressure(device int) (resp interface{}, err error) {
 	return resp, nil
 }
 
+// WriteSystemRom sends data to setup the system parameter.
 func (d *Dao) WriteSystemRom(
 	address int,
 	value int,
@@ -388,22 +411,25 @@ func (d *Dao) WriteSystemRom(
 		return resp, err
 	}
 	req := SystemRomWriteUnit.Request()
-	message := req.Bytes()
-	message = append(message, addressBytes...)
-	message = append(message, valueBytes...)
-	message = append(message, []byte{0x00, 0x00}...)
-	output, err := d.Send1(
-		message,
+	output, err := send1(d,
+		composeBytes(
+			req.Bytes(),
+			addressBytes,
+			valueBytes,
+			make([]byte, 2),
+		),
 		SystemRomWriteUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
 		return resp, err
 	}
-	resp = output[2:4]
+	val := binary.BigEndian.Uint16(output[2:4])
+	resp = int64(val)
 	return resp, nil
 }
 
+// ReadSystemRom sends data to require system parameter.
 func (d *Dao) ReadSystemRom(
 	address int,
 ) (resp interface{}, err error) {
@@ -412,25 +438,28 @@ func (d *Dao) ReadSystemRom(
 		return resp, err
 	}
 	req := SystemRomWriteUnit.Request()
-	message := req.Bytes()
-	message = append(message, addressBytes...)
-	message = append(message, []byte{0x00, 0x00, 0x00, 0x00}...)
-	output, err := d.Send1(
-		message,
+	output, err := send1(d,
+		composeBytes(
+			req.Bytes(),
+			addressBytes,
+			make([]byte, 4),
+		),
 		SystemRomReadUnit.ComResp(),
 	)
 	if err != nil {
 		log.Println(err)
 		return resp, err
 	}
-	resp = output[2:4]
+	val := binary.BigEndian.Uint16(output[2:4])
+	resp = int64(val)
 	return resp, nil
 }
 
-func (d *Dao) Send(
+var send = func(
+	d *Dao,
 	message []byte,
 ) ([]byte, error) {
-	return d.UsbcanClient.Send(
+	return d.usbcanClient.Send(
 		message,
 		responseNil(),
 		0,
@@ -439,11 +468,12 @@ func (d *Dao) Send(
 	)
 }
 
-func (d *Dao) Send1(
+var send1 = func(
+	d *Dao,
 	message []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	return d.UsbcanClient.Send(
+	return d.usbcanClient.Send(
 		message,
 		responseNil(),
 		0,
@@ -452,12 +482,13 @@ func (d *Dao) Send1(
 	)
 }
 
-func (d *Dao) SendAck1(
+var sendAck1 = func(
+	d *Dao,
 	message []byte,
 	recResp []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	return d.UsbcanClient.Send(
+	return d.usbcanClient.Send(
 		message,
 		recResp,
 		1,
@@ -466,12 +497,13 @@ func (d *Dao) SendAck1(
 	)
 }
 
-func (d *Dao) SendAck2(
+var sendAck2 = func(
+	d *Dao,
 	message []byte,
 	recResp []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	return d.UsbcanClient.Send(
+	return d.usbcanClient.Send(
 		message,
 		recResp,
 		2,
@@ -480,12 +512,13 @@ func (d *Dao) SendAck2(
 	)
 }
 
-func (d *Dao) SendAck6(
+var sendAck6 = func(
+	d *Dao,
 	message []byte,
 	recResp []byte,
 	comResp []byte,
 ) ([]byte, error) {
-	return d.UsbcanClient.Send(
+	return d.usbcanClient.Send(
 		message,
 		recResp,
 		6,
@@ -495,10 +528,6 @@ func (d *Dao) SendAck6(
 }
 
 func uint16Bytes(input int) (output []byte, err error) {
-	//if input < 0 {
-	//input = -input
-	//isNegtive = true
-	//}
 	if input > math.MaxUint16 {
 		return output, fmt.Errorf("%v overflows uint16", input)
 	}
@@ -532,6 +561,13 @@ func uint8Bytes(input int) (output []byte, err error) {
 	return output, err
 }
 
-func divideTen(input uint16) float64 {
+func dividedByTen(input uint16) float64 {
 	return float64(input) / 10.0
+}
+
+func composeBytes(target []byte, slices ...[]byte) []byte {
+	for _, slice := range slices {
+		target = append(target, slice...)
+	}
+	return target
 }

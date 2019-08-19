@@ -121,7 +121,7 @@ func (d *Dao) SetID(id string) error {
 func (d *Dao) Position() (float64, float64) {
 	d.Lock()
 	defer d.Unlock()
-	return d.TMLClient.PosX, d.TMLClient.PosY
+	return d.TMLClient.PosX(), d.TMLClient.PosY()
 }
 
 func (d *Dao) MoveRelByAxis(
