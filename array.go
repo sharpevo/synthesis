@@ -1,6 +1,8 @@
 package slide
 
-import ()
+import (
+	"fmt"
+)
 
 type SpotSlice []*Spot
 type SpotSliceMap map[string]SpotSlice
@@ -84,6 +86,7 @@ func (a *Array) AddSpot(spot *Spot) bool {
 				a.ReagentMap[index][reagent.Reagent.Name],
 				spot,
 			)
+			fmt.Println("## add spot", index, reagent.Reagent.Name, spot.Pos.X, spot.Pos.Y)
 		}
 		return true
 	}
@@ -147,6 +150,14 @@ func (a *Array) SpotsIn(top int, right int, bottom int, left int) []*Spot {
 	spots := []*Spot{}
 	for _, slide := range a.Slides {
 		spots = append(spots, slide.SpotsIn(top, right, bottom, left)...)
+	}
+	return spots
+}
+
+func (a *Array) SpotsByRow(row int) []*Spot {
+	spots := []*Spot{}
+	for _, slide := range a.Slides {
+		spots = append(spots, slide.Spots[row]...)
 	}
 	return spots
 }
