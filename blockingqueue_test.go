@@ -5,6 +5,7 @@ import (
 	"posam/util/blockingqueue"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -36,8 +37,9 @@ func TestBlocking(t *testing.T) {
 		if test.c {
 			go func() {
 				time.Sleep(2 * time.Second)
-				fmt.Println("pushed again")
+				fmt.Println("pushing again")
 				q.Push(test.v)
+				fmt.Println("pushed")
 			}()
 		} else {
 			q.Push(test.v)
@@ -51,6 +53,7 @@ func TestBlocking(t *testing.T) {
 	go func() {
 		time.Sleep(4 * time.Second)
 		q.Reset()
+		fmt.Println("reset")
 	}()
 
 	for i := range [10]int{} {
@@ -72,4 +75,68 @@ func TestBlocking(t *testing.T) {
 			)
 		}
 	}
+}
+
+func TestNext(t *testing.T) {
+	q := blockingqueue.NewBlockingQueue()
+	for i := range [10]int{} {
+		v := i
+		go func(value int) {
+			q.Push(value)
+		}(v)
+	}
+	fmt.Printf("%#v\n", q)
+	var wg sync.WaitGroup
+	wg.Add(100)
+	for i := range [100]int{} {
+		count := i
+		go func(j int) {
+			q.Lock() // cursor may corruption by other goroutines.
+			defer q.Unlock()
+			go func() {
+				q.Cursor <- 0
+			}()
+			index := 0
+			for itemi := range q.NextLockless() {
+				fmt.Println(">>>", j, index, itemi)
+				index++
+				//go func() {
+				q.Cursor <- index
+				//}()
+			}
+			wg.Done()
+		}(count)
+	}
+	wg.Wait()
+}
+
+func xTestNext(t *testing.T) {
+	q := blockingqueue.NewBlockingQueue()
+	for i := range [10]int{} {
+		v := i
+		go func(value int) {
+			q.Push(value)
+		}(v)
+	}
+	fmt.Printf("%#v\n", q)
+	var wg sync.WaitGroup
+	wg.Add(100)
+	for i := range [100]int{} {
+		count := i
+		go func(j int) {
+			go func() {
+				q.Cursor <- 0
+			}()
+			index := 0
+			for itemi := range q.Next() {
+				fmt.Println(">>>", j, index, itemi)
+				index++
+				//go func() {
+				q.Cursor <- index
+				//}()
+			}
+			wg.Done()
+		}(count)
+	}
+	wg.Wait()
 }
