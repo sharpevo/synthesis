@@ -13,6 +13,7 @@ import (
 	"posam/dao/ricoh_g5"
 	"posam/gui/sequence"
 	"posam/util"
+	//Log "posam/util/log"
 	"reflect"
 	"runtime"
 	"runtime/debug"
@@ -179,7 +180,64 @@ func init() {
 	buildInstructionMap()
 }
 
+func capture() {
+	r := recover()
+	if r != nil {
+		log.Println("Fatal Error:", r, debug.Stack())
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		uiutil.MessageBoxError(
+			fmt.Sprintf(
+				"Fatal error: %s\n\n %s", r, debug.Stack()))
+
+	} else {
+		fmt.Println("exited")
+	}
+}
+
 func main() {
+
+	// test logging
+	//Log.WithFields(Log.Fields{
+	//"animal": "walrus",
+	//}).Info("A walrus appears")
+	//Log.WithFields(Log.Fields{
+	//"animal": "walrus",
+	//}).Info("A walrus appears")
+	//Log.Trace("Something very low level.")
+	//Log.Debug("Useful debugging information.")
+	//Log.Info("Something noteworthy happened!")
+	//Log.Warn("You should probably take a look at this.")
+	//Log.Error("Something failed but I'm not quitting.")
+	//// Calls os.Exit(1) after logging
+	//Log.Fatal("Bye.")
+	//// Calls panic() after logging
+	//Log.Panic("I'm bailing.")
+
+	//defer capture()
+
+	//logf, err := os.OpenFile("posam.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0664)
+	//if err != nil {
+	//uiutil.MessageBoxError(err.Error())
+	//return
+	//}
+	//writer := io.MultiWriter(os.Stdout, logf)
+	//rd, wr, err := os.Pipe()
+	//if err != nil {
+	//uiutil.MessageBoxError(err.Error())
+	//return
+	//}
+
+	//// overwrite os.Stdout
+	//os.Stdout = wr
+	//os.Stderr = wr
+
+	//go func() {
+	//scanner := bufio.NewScanner(rd)
+	//for scanner.Scan() {
+	//stdoutLine := scanner.Text()
+	//writer.Write([]byte(stdoutLine + "\n"))
+	//}
+	//}()
 
 	app := uiutil.NewApp(os.Args)
 
