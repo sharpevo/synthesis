@@ -7,15 +7,19 @@ type Array struct {
 	SightBottom    *Nozzle
 	SightTop       *Nozzle
 	PrintheadCount int
+
+	Printheads []*Printhead
 }
 
 func NewArray(
 	nozzles []*Nozzle,
 	printheadCount int,
+	printheads []*Printhead,
 ) *Array {
 	a := &Array{
 		Nozzles:        nozzles,
 		PrintheadCount: printheadCount,
+		Printheads:     printheads,
 	}
 	a.SightTop, a.SightBottom = a.sights()
 	return a
@@ -186,4 +190,12 @@ func (a *Array) Top() int {
 
 func (a *Array) Bottom() int {
 	return a.SightBottom.Pos.Y
+}
+
+func (a *Array) OffsetX() float64 {
+	return a.Printheads[0].OffsetX
+}
+
+func (a *Array) OffsetY() float64 {
+	return a.Printheads[0].OffsetY
 }

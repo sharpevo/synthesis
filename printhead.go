@@ -8,15 +8,29 @@ import (
 type Printhead struct {
 	Index    int
 	Reagents []*reagent.Reagent
+
+	Path    string
+	Reverse bool
+
+	OffsetX float64
+	OffsetY float64
 }
 
 func NewPrinthead(
 	index int,
 	reagents []*reagent.Reagent,
+	path string,
+	reverse bool,
+	offsetx float64,
+	offsety float64,
 ) *Printhead {
 	p := &Printhead{
 		Index:    index,
 		Reagents: reagents,
+		Path:     path,
+		Reverse:  reverse,
+		OffsetX:  offsetx,
+		OffsetY:  offsety,
 	}
 	return p
 }
