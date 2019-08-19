@@ -2,19 +2,27 @@ package instruction
 
 import (
 	"fmt"
-	"strconv"
+	"posam/dao"
 	"time"
 )
+
+func init() {
+	dao.InstructionMap.Set("SLEEP", InstructionSleep{})
+}
 
 type InstructionSleep struct {
 	Instruction
 }
 
 func (i *InstructionSleep) Execute(args ...string) (interface{}, error) {
-	seconds, err := strconv.Atoi(args[0])
-	if err != nil {
-		return nil, err
+	if len(args) < 1 {
+		return nil, fmt.Errorf("not enough arguments")
 	}
-	time.Sleep(time.Duration(seconds) * time.Second)
-	return fmt.Sprintf("sleep %d seconds", seconds), nil
+	seconds, err := i.ParseFloat(args[0])
+	if err != nil {
+		return seconds, err
+	}
+	duration := time.Duration(seconds*1000) * time.Millisecond
+	<-time.After(duration)
+	return fmt.Sprintf("sleep in %v", duration), nil
 }
