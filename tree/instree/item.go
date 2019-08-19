@@ -194,10 +194,15 @@ func (d *InstructionDetail) saveInstruction() {
 		d.instInput.CurrentText(),
 		d.argsInput.Text(),
 	)
+	fmt.Println(">>>>>>", tree.DataRole(), variantMap)
+	v := core.NewQVariant25(variantMap)
+	fmt.Println(v)
+	fmt.Println(core.PointerFromQVariant(v))
 	d.treeItem.SetData(
 		0,
 		tree.DataRole(),
-		core.NewQVariant25(variantMap),
+		v,
+		//core.NewQVariant25(variantMap),
 	)
 }
 

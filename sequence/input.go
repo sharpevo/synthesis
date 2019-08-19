@@ -40,9 +40,9 @@ var (
 // const{{{
 
 const (
-	SEQUENCE_EXAMPLE = `GGT
-CAT
-ATC
+	SEQUENCE_EXAMPLE = `GGTCATC
+CATTGAT
+ATCCCGG
 `
 	//SEQUENCE_EXAMPLE = `GGGTCGGATGATCGGACACT
 	//CATCATCTGGGTACAGCGGG
@@ -322,9 +322,17 @@ func NewInputGroup() (
 		DPI_150,
 	})
 
+	slideCountLabel := widgets.NewQLabel2("Slide count", nil, 0)
+	slideCountHoriInput := widgets.NewQLineEdit(nil)
+	slideCountHoriInput.SetText("3")
+	slideCountVertInput := widgets.NewQLineEdit(nil)
+	slideCountVertInput.SetText("1")
+
 	slideAreaSpaceLabel := widgets.NewQLabel2("Slide space (mm)", nil, 0)
-	slideAreaSpaceInput := widgets.NewQLineEdit(nil)
-	slideAreaSpaceInput.SetText("5")
+	slideAreaSpaceHoriInput := widgets.NewQLineEdit(nil)
+	slideAreaSpaceHoriInput.SetText("5")
+	slideAreaSpaceVertInput := widgets.NewQLineEdit(nil)
+	slideAreaSpaceVertInput.SetText("25")
 
 	printhead1OffsetLabel := widgets.NewQLabel2("offset #1 (mm)", nil, 0)
 	printhead1OffsetXInput := widgets.NewQLineEdit(nil)
@@ -345,53 +353,45 @@ func NewInputGroup() (
 	slideGeometryHeightInput.SetText("29")
 
 	activatorInput := widgets.NewQCheckBox2("Activator", nil)
+	previewInput := widgets.NewQCheckBox2("Preview", nil)
+
+	printModeLabel := widgets.NewQLabel2("Print mode", nil, 0)
+	printModeInput := widgets.NewQComboBox(nil)
+	printModeInput.AddItems([]string{
+		"Drop on Demand",
+		"Continuous Inkjet",
+	})
 
 	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
 	miscLayout.AddWidget(dpiLabel, 1, 0, 0)
 	miscLayout.AddWidget3(dpiInput, 1, 1, 1, 2, 0)
-	miscLayout.AddWidget(slideAreaSpaceLabel, 2, 0, 0)
-	miscLayout.AddWidget3(slideAreaSpaceInput, 2, 1, 1, 2, 0)
-	miscLayout.AddWidget(slideGeometryLabel, 3, 0, 0)
-	miscLayout.AddWidget(slideGeometryWidthInput, 3, 1, 0)
-	miscLayout.AddWidget(slideGeometryHeightInput, 3, 2, 0)
-	miscLayout.AddWidget(printhead1OffsetLabel, 4, 0, 0)
-	miscLayout.AddWidget(printhead1OffsetXInput, 4, 1, 0)
-	miscLayout.AddWidget(printhead1OffsetYInput, 4, 2, 0)
-	miscLayout.AddWidget(printhead0OffsetLabel, 5, 0, 0)
-	miscLayout.AddWidget(printhead0OffsetXInput, 5, 1, 0)
-	miscLayout.AddWidget(printhead0OffsetYInput, 5, 2, 0)
-	miscLayout.AddWidget(activatorInput, 6, 0, 0)
+	miscLayout.AddWidget(slideCountLabel, 2, 0, 0)
+	miscLayout.AddWidget(slideCountHoriInput, 2, 1, 0)
+	miscLayout.AddWidget(slideCountVertInput, 2, 2, 0)
+	miscLayout.AddWidget(slideAreaSpaceLabel, 3, 0, 0)
+	miscLayout.AddWidget(slideAreaSpaceHoriInput, 3, 1, 0)
+	miscLayout.AddWidget(slideAreaSpaceVertInput, 3, 2, 0)
+	miscLayout.AddWidget(slideGeometryLabel, 4, 0, 0)
+	miscLayout.AddWidget(slideGeometryWidthInput, 4, 1, 0)
+	miscLayout.AddWidget(slideGeometryHeightInput, 4, 2, 0)
+	miscLayout.AddWidget(printhead1OffsetLabel, 5, 0, 0)
+	miscLayout.AddWidget(printhead1OffsetXInput, 5, 1, 0)
+	miscLayout.AddWidget(printhead1OffsetYInput, 5, 2, 0)
+	miscLayout.AddWidget(printhead0OffsetLabel, 6, 0, 0)
+	miscLayout.AddWidget(printhead0OffsetXInput, 6, 1, 0)
+	miscLayout.AddWidget(printhead0OffsetYInput, 6, 2, 0)
+	miscLayout.AddWidget(printModeLabel, 7, 0, 0)
+	miscLayout.AddWidget3(printModeInput, 7, 1, 1, 2, 0)
+	miscLayout.AddWidget(activatorInput, 8, 0, 0)
+	miscLayout.AddWidget(previewInput, 8, 1, 0)
 
 	// }}}
 
-	// previews
-
-	previewGroup = widgets.NewQWidget(nil, 0)
-	previewLayout := widgets.NewQGridLayout2()
-	previewLayout.SetContentsMargins(0, 0, 0, 0)
-	previewGroup.SetLayout(previewLayout)
-
-	stepInput := widgets.NewQLineEdit(nil)
-	stepInput.SetFixedWidth(50)
-	stepInput.SetText("1")
-	stepInput.SetAlignment(core.Qt__AlignCenter)
-
-	nextButton := widgets.NewQPushButton2("NEXT", nil)
-	nextButton.ConnectClicked(func(bool) {
-		step := getStep(stepInput)
-		fmt.Println("next", step)
-	})
-	prevButton := widgets.NewQPushButton2("PREV", nil)
-	prevButton.ConnectClicked(func(bool) {
-		step := getStep(stepInput)
-		fmt.Println("prev", step)
-	})
-
-	previewLayout.AddWidget(prevButton, 0, 1, 0)
-	previewLayout.AddWidget(stepInput, 0, 2, 0)
-	previewLayout.AddWidget(nextButton, 0, 3, 0)
 	// build button
+
+	var lotc chan int
+	var stepwise = false
 
 	buildButton := widgets.NewQPushButton2("BUILD", nil)
 	layout.AddWidget(buildButton, 6, 0, 0)
@@ -413,6 +413,13 @@ func NewInputGroup() (
 		}
 	})
 
+	// previews
+
+	previewGroup = widgets.NewQWidget(nil, 0)
+	previewLayout := widgets.NewQGridLayout2()
+	previewLayout.SetContentsMargins(0, 0, 0, 0)
+	previewGroup.SetLayout(previewLayout)
+
 	buildButton.ConnectClicked(func(bool) {
 		printhead0PositionX,
 			printhead0PositionY,
@@ -427,7 +434,10 @@ func NewInputGroup() (
 			spacex,
 			spacey,
 			tolerance,
-			slideAreaSpace,
+			//slideCountHori,
+			//slideCountVert,
+			slideAreaSpaceHori,
+			slideAreaSpaceVert,
 			printhead0OffsetX,
 			printhead0OffsetY,
 			printhead1OffsetX,
@@ -446,7 +456,10 @@ func NewInputGroup() (
 			spacexInput.Text(),
 			spaceyInput.Text(),
 			toleranceInput.Text(),
-			slideAreaSpaceInput.Text(),
+			//slideCountHoriInput.Text(),
+			//slideCountVertInput.Text(),
+			slideAreaSpaceHoriInput.Text(),
+			slideAreaSpaceVertInput.Text(),
 			printhead0OffsetXInput.Text(),
 			printhead0OffsetYInput.Text(),
 			printhead1OffsetXInput.Text(),
@@ -473,7 +486,10 @@ func NewInputGroup() (
 			slide2PositionY,
 			spacex,
 			spacey,
-			slideAreaSpace,
+			//slideCountHori,
+			//slideCountVert,
+			slideAreaSpaceHori,
+			slideAreaSpaceVert,
 		)
 
 		seqText := sequenceInput.ToPlainText()
@@ -552,6 +568,10 @@ func NewInputGroup() (
 				reagent.NewReagent(printhead0Line2Input.Text()),
 				reagent.NewReagent(printhead0Line3Input.Text()),
 			},
+			printhead0PathInput.Text(),
+			false,
+			printhead0OffsetXFloat,
+			printhead0OffsetYFloat,
 		)
 		p0x := geometry.Unit(printhead0OffsetXFloat)
 		p0y := geometry.Unit(printhead0OffsetYFloat)
@@ -566,10 +586,15 @@ func NewInputGroup() (
 				reagent.NewReagent(printhead1Line2Input.Text()),
 				reagent.NewReagent(printhead1Line3Input.Text()),
 			},
+			// TODO: printhead #1 path input
+			printhead0PathInput.Text(),
+			false,
+			printhead1OffsetXFloat,
+			printhead1OffsetYFloat,
 		)
 
 		// automatically adujstment for different row alignment
-		p1x := geometry.Unit(printhead1OffsetXFloat)
+		//p1x := geometry.Unit(printhead1OffsetXFloat)
 		deltay := geometry.Unit(printhead1OffsetYFloat - printhead0OffsetYFloat)
 		yrem := deltay % step
 		if yrem > step/2 {
@@ -577,12 +602,20 @@ func NewInputGroup() (
 		} else {
 			deltay -= yrem
 		}
-		fmt.Println("printhead 1", p1x, p0y+deltay)
-		nozzles1 := p1.MakeNozzles(p1x, p0y+deltay)
+		deltax := geometry.Unit(printhead1OffsetXFloat - printhead0OffsetXFloat)
+		xrem := deltax % step
+		if xrem > step/2 {
+			deltax += step - xrem
+		} else {
+			deltax -= xrem
+		}
+		fmt.Println("printhead 1", p0x-deltax, p0y+deltay)
+		nozzles1 := p1.MakeNozzles(p0x-deltax, p0y+deltay)
 
 		printheadArray := printhead.NewArray(
 			append(nozzles0, nozzles1...),
 			2,
+			[]*printhead.Printhead{p0, p1},
 		)
 		fmt.Println(
 			"sights",
@@ -609,7 +642,22 @@ func NewInputGroup() (
 		// }}}
 
 		// create substrate{{{
-		slideAreaSpaceFloat, err := ToFloat(slideAreaSpaceInput.Text())
+		slideCountHoriInt, err := strconv.Atoi(slideCountHoriInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		slideCountVertInt, err := strconv.Atoi(slideCountVertInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		slideAreaSpaceHoriFloat, err := ToFloat(slideAreaSpaceHoriInput.Text())
+		if err != nil {
+			uiutil.MessageBoxError(err.Error())
+			return
+		}
+		slideAreaSpaceVertFloat, err := ToFloat(slideAreaSpaceVertInput.Text())
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
 			return
@@ -645,14 +693,15 @@ func NewInputGroup() (
 			activatorInput.CheckState() == core.Qt__Checked,
 		)
 		subs, err := substrate.NewSubstrate(
-			space,
-			3,
+			slideCountHoriInt,
+			slideCountVertInt,
 			slideGeometryWidthFloat,
 			slideGeometryHeightFloat,
-			//20.0, // width // 20
-			//50.0, // height // 25
-			slideAreaSpaceFloat,
+			slideAreaSpaceHoriFloat,
+			slideAreaSpaceVertFloat,
 			spots,
+			space,
+			deltax,
 		)
 		if err != nil {
 			uiutil.MessageBoxError(err.Error())
@@ -668,10 +717,24 @@ func NewInputGroup() (
 			}
 		}
 
+		//return // for testing
 		// }}}
 
 		buildButton.SetVisible(false)
 		buildProgressbar.SetVisible(true)
+
+		mode := formation.MODE_DOD
+		if printModeInput.CurrentText() == "Continuous Inkjet" {
+			mode = formation.MODE_CIJ
+		}
+
+		fmt.Println("initialize lotc")
+		lotc = make(chan int)
+		if !stepwise {
+			fmt.Println("close lotc")
+			close(lotc)
+		}
+		fmt.Println("going to build")
 
 		build(
 			step,
@@ -684,8 +747,52 @@ func NewInputGroup() (
 			motorAccelInput.Text(),
 			printhead0PathInput.Text(),
 			buildProgressbar,
+			byte(mode),
+			lotc,
+			&stepwise,
+			previewInput.CheckState() == core.Qt__Checked,
 		)
 
+	})
+
+	// preview group 2
+
+	stepInput := widgets.NewQLineEdit(nil)
+	stepInput.SetFixedWidth(50)
+	stepInput.SetText("1")
+	stepInput.SetAlignment(core.Qt__AlignCenter)
+
+	nextButton := widgets.NewQPushButton2("NEXT", nil)
+	prevButton := widgets.NewQPushButton2("PREV", nil)
+	previewLayout.AddWidget(prevButton, 0, 1, 0)
+	previewLayout.AddWidget(stepInput, 0, 2, 0)
+	previewLayout.AddWidget(nextButton, 0, 3, 0)
+
+	nextButton.ConnectClicked(func(bool) {
+		previewGroup.SetEnabled(false)
+		step := getStep(stepInput)
+		fmt.Println("next", step, stepwise)
+		if !stepwise {
+			stepwise = true
+			buildButton.Clicked(false)
+		}
+		go func() {
+			lotc <- step
+			previewGroup.SetEnabled(true)
+		}()
+	})
+	prevButton.ConnectClicked(func(bool) {
+		previewGroup.SetEnabled(false)
+		step := getStep(stepInput)
+		fmt.Println("prev", step)
+		if !stepwise {
+			stepwise = true
+			buildButton.Clicked(false)
+		}
+		go func() {
+			lotc <- -step
+			previewGroup.SetEnabled(true)
+		}()
 	})
 
 	return group, previewGroup
@@ -720,7 +827,10 @@ func ParseParameters( // {{{
 	spacexString string,
 	spaceyString string,
 	toleranceString string,
-	slideAreaSpaceString string,
+	//slideCountHoriString string,
+	//slideCountVertString string,
+	slideAreaSpaceHoriString string,
+	slideAreaSpaceVertString string,
 	printhead0OffsetXString string,
 	printhead0OffsetYString string,
 	printhead1OffsetXString string,
@@ -739,7 +849,8 @@ func ParseParameters( // {{{
 	spacexInt int,
 	spaceyInt int,
 	toleranceInt int,
-	slideAreaSpaceInt int,
+	slideAreaSpaceHoriInt int,
+	slideAreaSpaceVertInt int,
 	printhead0OffsetXInt int,
 	printhead0OffsetYInt int,
 	printhead1OffsetXInt int,
@@ -759,7 +870,8 @@ func ParseParameters( // {{{
 		spacexFloat,
 		spaceyFloat,
 		toleranceFloat,
-		slideAreaSpaceFloat,
+		slideAreaSpaceHoriFloat,
+		slideAreaSpaceVertFloat,
 		printhead0OffsetXFloat,
 		printhead0OffsetYFloat,
 		printhead1OffsetXFloat,
@@ -843,11 +955,17 @@ func ParseParameters( // {{{
 	}
 	toleranceInt = int(toleranceFloat * geometry.UM)
 
-	slideAreaSpaceFloat, err = ToFloat(slideAreaSpaceString)
+	slideAreaSpaceHoriFloat, err = ToFloat(slideAreaSpaceHoriString)
 	if err != nil {
 		return
 	}
-	slideAreaSpaceInt = int(slideAreaSpaceFloat * geometry.MM)
+	slideAreaSpaceHoriInt = int(slideAreaSpaceHoriFloat * geometry.MM)
+
+	slideAreaSpaceVertFloat, err = ToFloat(slideAreaSpaceVertString)
+	if err != nil {
+		return
+	}
+	slideAreaSpaceVertInt = int(slideAreaSpaceVertFloat * geometry.MM)
 
 	printhead0OffsetXFloat, err = ToFloat(printhead0OffsetXString)
 	if err != nil {
@@ -889,6 +1007,10 @@ func build(
 	motorAccel string,
 	printhead0Path string,
 	buildProgressbar *widgets.QProgressBar,
+	mode byte,
+	lotc chan int,
+	stepwise *bool,
+	preview bool,
 ) {
 	//filePath, err := uiutil.FilePath()
 	//if err != nil {
@@ -915,8 +1037,37 @@ func build(
 			"2560",
 			"320",
 		),
+		mode,
+		subs,
+		printheadArray,
 	)
 	fmt.Println("create bin", bin)
+	img := image.NewRGBA(image.Rect(0, 0, subs.Width, subs.Height+1))
+	scene.image = img
+	countc := bin.Build(step, lotc, img, paintedc, preview)
+	go func() {
+		for count := range countc {
+			buildProgressbar.SetValue(count * buildProgressbar.Maximum() / cycleCount)
+			//buildProgressbar.SetValue(count * buildProgressbar.Maximum())
+			//if stepwise {
+			if preview {
+				scene.UpdatePixmap()
+			} else {
+				go func() {
+					paintedc <- struct{}{}
+					fmt.Println(">>> printedc")
+				}()
+			}
+			//}
+		}
+		//close(lotc)
+		//lotc = make(chan int)
+		*stepwise = false
+		fmt.Println("reinitialize paintedc")
+		//close(paintedc)
+		//paintedc = make(chan struct{})
+	}()
+	return
 
 	// reagent first mode{{{
 

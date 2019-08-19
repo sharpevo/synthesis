@@ -1,0 +1,15 @@
+#!/bin/bash
+#QT_DEBUG_CONSOLE=true qtdeploy -docker build windows_64_shared
+QT_PKG_CONFIG=true qtmoc desktop `pwd` && qtdeploy -docker build windows_64_shared
+cp config.yml ins.multi.devices.bin devices.bin deploy/windows
+cp ~/go/src/tml/lib/*.dll deploy/windows/
+cp AXIS\ X.t.zip deploy/windows/x.t.zip
+cp AXIS\ Y.t.zip deploy/windows/y.t.zip
+cp ~/go/src/controlcan/lib/*.dll deploy/windows/
+cd deploy
+timestamp=`date +%Y%m%d_%H%M`
+tarfile="windows.${timestamp}.tar.gz"
+tar -czf $tarfile windows
+#cp $tarfile ~/week/tmp
+cp $tarfile /mnt/posam
+echo $tarfile
