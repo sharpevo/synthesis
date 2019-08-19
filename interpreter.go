@@ -25,6 +25,7 @@ import (
 	//"io/ioutil"
 	"log"
 	"posam/dao"
+	"posam/dao/aoztech"
 	"posam/dao/canalystii"
 	"posam/instruction"
 	"posam/interpreter"
@@ -118,28 +119,6 @@ func InitCanalyst(
 		C.GoString(timing0Char),
 		C.GoString(timing1Char),
 		C.GoString(modeChar)
-	devtypev, _ := vrb.NewVariable(canalystii.DEVICE_TYPE, devType)
-	devindexv, _ := vrb.NewVariable(canalystii.DEVICE_INDEX, devIndex)
-	frameidv, _ := vrb.NewVariable(canalystii.FRAME_ID, devID)
-	canindexv, _ := vrb.NewVariable(canalystii.CAN_INDEX, canIndex)
-	acccodev, _ := vrb.NewVariable(canalystii.ACC_CODE, accCode)
-	accmaskv, _ := vrb.NewVariable(canalystii.ACC_MASK, accMask)
-	filterv, _ := vrb.NewVariable(canalystii.FILTER, filter)
-	timing0v, _ := vrb.NewVariable(canalystii.TIMING0, timing0)
-	timing1v, _ := vrb.NewVariable(canalystii.TIMING1, timing1)
-	modev, _ := vrb.NewVariable(canalystii.MODE, mode)
-
-	stack.Set(devtypev)
-	stack.Set(devindexv)
-	stack.Set(frameidv)
-	stack.Set(canindexv)
-	stack.Set(acccodev)
-	stack.Set(accmaskv)
-	stack.Set(filterv)
-	stack.Set(timing0v)
-	stack.Set(timing1v)
-	stack.Set(modev)
-
 	for item := range canalystii.InstructionMap.Iter() {
 		instructionMap.Set(item.Key, item.Value.(reflect.Type))
 	}
@@ -155,6 +134,44 @@ func InitCanalyst(
 		timing0,
 		timing1,
 		mode,
+	); err != nil {
+		errmsg = err.Error()
+		log.Println(err)
+		return 0
+	}
+	return 1
+}
+
+//export InitAoztech
+func InitAoztech(
+	nameChar *C.char,
+	baudChar *C.char,
+	axisXIDChar *C.char,
+	axisXSetupFileChar *C.char,
+	axisYIDChar *C.char,
+	axisYSetupFileChar *C.char,
+) int {
+	name,
+		baud,
+		axisXID,
+		axisXSetupFile,
+		axisYID,
+		axisYSetupFile := C.GoString(nameChar),
+		C.GoString(baudChar),
+		C.GoString(axisXIDChar),
+		C.GoString(axisXSetupFileChar),
+		C.GoString(axisYIDChar),
+		C.GoString(axisYSetupFileChar)
+	for item := range aoztech.InstructionMap.Iter() {
+		instructionMap.Set(item.Key, item.Value.(reflect.Type))
+	}
+	if _, err := aoztech.NewDao(
+		name,
+		baud,
+		axisXID,
+		axisXSetupFile,
+		axisYID,
+		axisYSetupFile,
 	); err != nil {
 		errmsg = err.Error()
 		log.Println(err)
