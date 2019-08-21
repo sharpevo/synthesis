@@ -1,9 +1,9 @@
 package interpreter_test
 
 import (
-	"posam/interpreter"
-	"posam/interpreter/vrb"
-	"posam/util/concurrentmap"
+	"synthesis/interpreter"
+	"synthesis/interpreter/vrb"
+	"synthesis/util/concurrentmap"
 	"testing"
 )
 

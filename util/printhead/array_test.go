@@ -2,9 +2,9 @@ package printhead_test
 
 import (
 	//"fmt"
-	"posam/util/geometry"
-	"posam/util/printhead"
-	"posam/util/reagent"
+	"synthesis/util/geometry"
+	"synthesis/util/printhead"
+	"synthesis/util/reagent"
 	"testing"
 )
 

@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"posam/config"
-	"posam/gui/tree"
-	"posam/gui/uiutil"
+	"synthesis/config"
+	"synthesis/gui/tree"
+	"synthesis/gui/uiutil"
 )
 
 type InstructionTree struct {

@@ -2,8 +2,8 @@ package slide_test
 
 import (
 	//"fmt"
-	"posam/util/geometry"
-	"posam/util/slide"
+	"synthesis/util/geometry"
+	"synthesis/util/slide"
 	"testing"
 )
 

@@ -3,10 +3,10 @@ package instruction_test
 import (
 	"fmt"
 	"math/big"
-	"posam/instruction"
-	"posam/interpreter"
-	"posam/interpreter/vrb"
 	"strings"
+	"synthesis/instruction"
+	"synthesis/interpreter"
+	"synthesis/interpreter/vrb"
 	"testing"
 )
 

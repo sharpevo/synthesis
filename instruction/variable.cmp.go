@@ -2,8 +2,8 @@ package instruction
 
 import (
 	"fmt"
-	"posam/dao"
-	"posam/interpreter/vrb"
+	"synthesis/dao"
+	"synthesis/interpreter/vrb"
 )
 
 func init() {

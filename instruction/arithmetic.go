@@ -3,9 +3,9 @@ package instruction
 import (
 	"fmt"
 	"math/big"
-	"posam/interpreter/vrb"
-	"posam/util/concurrentmap"
 	"strconv"
+	"synthesis/interpreter/vrb"
+	"synthesis/util/concurrentmap"
 )
 
 type InstructionArithmetic struct {

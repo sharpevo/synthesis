@@ -1,7 +1,7 @@
 package instruction
 
 import (
-	"posam/dao"
+	"synthesis/dao"
 	"strings"
 )
 

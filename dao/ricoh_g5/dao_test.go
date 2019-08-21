@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"net"
-	"posam/dao"
-	"posam/dao/ricoh_g5"
-	"posam/protocol/tcp"
 	"strings"
+	"synthesis/dao"
+	"synthesis/dao/ricoh_g5"
+	"synthesis/protocol/tcp"
 	"testing"
 )
 

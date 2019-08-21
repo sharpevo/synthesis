@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"posam/dao"
-	"posam/protocol/usbcan"
-	"posam/util/concurrentmap"
 	"strconv"
+	"synthesis/dao"
+	"synthesis/protocol/usbcan"
+	"synthesis/util/concurrentmap"
 )
 
 // Constants manage strings as the captions in the GUI. Note that the value of IDNAME is different according to the type of devices.

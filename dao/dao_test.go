@@ -3,8 +3,8 @@ package dao_test
 import (
 	"bytes"
 	"encoding/binary"
-	"posam/dao"
 	"strings"
+	"synthesis/dao"
 	"testing"
 )
 

@@ -5,9 +5,9 @@ import (
 	"image"
 	"image/png"
 	"os"
-	"posam/util/geometry"
-	"posam/util/log"
-	"posam/util/reagent"
+	"synthesis/util/geometry"
+	"synthesis/util/log"
+	"synthesis/util/reagent"
 	"strconv"
 	"strings"
 )

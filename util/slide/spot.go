@@ -1,8 +1,8 @@
 package slide
 
 import (
-	"posam/util/geometry"
-	"posam/util/reagent"
+	"synthesis/util/geometry"
+	"synthesis/util/reagent"
 )
 
 type SpotReagent struct {

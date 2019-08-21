@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"posam/dao"
-	"posam/gui/tree"
 	"sort"
 	"strings"
+	"synthesis/dao"
+	"synthesis/gui/tree"
 )
 
 const (

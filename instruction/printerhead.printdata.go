@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"posam/dao/ricoh_g5"
+	"synthesis/dao/ricoh_g5"
 )
 
 func init() {

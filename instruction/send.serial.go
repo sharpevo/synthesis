@@ -3,7 +3,7 @@ package instruction
 import (
 	"encoding/hex"
 	"fmt"
-	"posam/dao/alientek"
+	"synthesis/dao/alientek"
 )
 
 func init() {

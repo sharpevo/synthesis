@@ -4,8 +4,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
-	"posam/util/printhead"
-	"posam/util/substrate"
+	"synthesis/util/printhead"
+	"synthesis/util/substrate"
 	//"sync"
 )
 

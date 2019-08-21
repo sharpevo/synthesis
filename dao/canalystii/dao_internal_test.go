@@ -2,9 +2,9 @@ package canalystii
 
 import (
 	"fmt"
-	"posam/util/concurrentmap"
 	"reflect"
 	"strings"
+	"synthesis/util/concurrentmap"
 	"testing"
 )
 

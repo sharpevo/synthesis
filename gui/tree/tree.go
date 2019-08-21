@@ -6,7 +6,7 @@ import (
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"log"
-	"posam/gui/uiutil"
+	"synthesis/gui/uiutil"
 )
 
 type Tree struct {

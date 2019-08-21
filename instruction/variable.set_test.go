@@ -2,9 +2,9 @@ package instruction_test
 
 import (
 	"fmt"
-	"posam/instruction"
-	"posam/interpreter"
-	"posam/interpreter/vrb"
+	"synthesis/instruction"
+	"synthesis/interpreter"
+	"synthesis/interpreter/vrb"
 	"strings"
 	"testing"
 )

@@ -3,7 +3,7 @@ package substrate_test
 import (
 	"fmt"
 	"io/ioutil"
-	"posam/util/substrate"
+	"synthesis/util/substrate"
 	"reflect"
 	"testing"
 )

@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"posam/dao"
-	"posam/protocol/tcp"
-	"posam/util/concurrentmap"
+	"synthesis/dao"
+	"synthesis/protocol/tcp"
+	"synthesis/util/concurrentmap"
 )
 
 const (

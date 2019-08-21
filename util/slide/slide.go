@@ -1,7 +1,7 @@
 package slide
 
 import (
-	"posam/util/geometry"
+	"synthesis/util/geometry"
 )
 
 const (

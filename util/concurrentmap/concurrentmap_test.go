@@ -1,7 +1,7 @@
 package concurrentmap_test
 
 import (
-	"posam/util/concurrentmap"
+	"synthesis/util/concurrentmap"
 	"testing"
 	"time"
 )

@@ -2,8 +2,8 @@ package instruction
 
 import (
 	"math/big"
-	"posam/interpreter/vrb"
-	"posam/util/concurrentmap"
+	"synthesis/interpreter/vrb"
+	"synthesis/util/concurrentmap"
 )
 
 type InstructionTMLPosition struct {

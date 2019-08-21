@@ -2,7 +2,7 @@ package modbus_test
 
 import (
 	//"fmt"
-	"posam/protocol/modbus"
+	"synthesis/protocol/modbus"
 	"reflect"
 	"testing"
 )

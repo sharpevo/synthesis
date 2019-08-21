@@ -3,7 +3,7 @@ package devtree
 import (
 	"fmt"
 	"path"
-	"posam/gui/tree"
+	"synthesis/gui/tree"
 )
 
 const (

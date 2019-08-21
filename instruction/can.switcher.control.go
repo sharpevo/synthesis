@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"posam/dao/canalystii"
+	"synthesis/dao/canalystii"
 )
 
 func init() {

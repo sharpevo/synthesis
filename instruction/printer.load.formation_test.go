@@ -2,8 +2,8 @@ package instruction_test
 
 import (
 	"fmt"
-	"posam/instruction"
-	"posam/interpreter"
+	"synthesis/instruction"
+	"synthesis/interpreter"
 	"testing"
 )
 

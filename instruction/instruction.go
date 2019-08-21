@@ -3,8 +3,8 @@ package instruction
 import (
 	"fmt"
 	"log"
-	"posam/interpreter/vrb"
-	"posam/util/concurrentmap"
+	"synthesis/interpreter/vrb"
+	"synthesis/util/concurrentmap"
 	"strconv"
 )
 

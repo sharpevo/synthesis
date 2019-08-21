@@ -2,7 +2,7 @@ package serial_test
 
 import (
 	"fmt"
-	"posam/protocol/serial"
+	"synthesis/protocol/serial"
 	"reflect"
 	"testing"
 )

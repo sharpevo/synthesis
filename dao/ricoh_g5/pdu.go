@@ -1,7 +1,7 @@
 package ricoh_g5
 
 import (
-	"posam/dao"
+	"synthesis/dao"
 )
 
 var ErrorCodeUnit,

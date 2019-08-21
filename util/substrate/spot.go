@@ -1,8 +1,8 @@
 package substrate
 
 import (
-	"posam/util/geometry"
-	"posam/util/reagent"
+	"synthesis/util/geometry"
+	"synthesis/util/reagent"
 	"strings"
 )
 

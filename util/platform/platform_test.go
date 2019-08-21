@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/png"
 	"os"
-	"posam/util/platform"
+	"synthesis/util/platform"
 	"testing"
 )
 

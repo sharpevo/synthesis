@@ -2,8 +2,8 @@ package instruction
 
 import (
 	"fmt"
-	"posam/dao"
-	//"posam/interpreter"
+	"synthesis/dao"
+	//"synthesis/interpreter"
 )
 
 //var DEBUG = true

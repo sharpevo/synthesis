@@ -1,7 +1,7 @@
 package alientek
 
 import (
-	"posam/dao"
+	"synthesis/dao"
 )
 
 var LedOnUnit,

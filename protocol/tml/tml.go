@@ -6,11 +6,11 @@ package tml
 
 import (
 	"fmt"
-	"posam/config"
-	//"posam/gui/uiutil"
-	"posam/util/blockingqueue"
-	"posam/util/concurrentmap"
-	"posam/util/log"
+	"synthesis/config"
+	//"synthesis/gui/uiutil"
+	"synthesis/util/blockingqueue"
+	"synthesis/util/concurrentmap"
+	"synthesis/util/log"
 	"reflect"
 	"time"
 	"tml"

@@ -2,7 +2,7 @@ package serialport_test
 
 import (
 	"github.com/tarm/serial"
-	"posam/protocol/serialport"
+	"synthesis/protocol/serialport"
 	"time"
 
 	"testing"

@@ -1,7 +1,7 @@
 package instruction
 
 import (
-	"posam/dao/aoztech"
+	"synthesis/dao/aoztech"
 )
 
 func init() {

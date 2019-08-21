@@ -2,7 +2,7 @@ package geometry
 
 import (
 	//"fmt"
-	"posam/util/geometry"
+	"synthesis/util/geometry"
 	"testing"
 )
 

@@ -2,7 +2,7 @@ package blockingqueue_test
 
 import (
 	"fmt"
-	"posam/util/blockingqueue"
+	"synthesis/util/blockingqueue"
 	"reflect"
 	"strings"
 	"sync"

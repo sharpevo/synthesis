@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
-	"posam/protocol/modbus"
-	"posam/util/concurrentmap"
+	"synthesis/protocol/modbus"
+	"synthesis/util/concurrentmap"
 )
 
 type Porter interface {

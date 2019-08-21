@@ -2,7 +2,7 @@ package usbcan_test
 
 import (
 	"fmt"
-	"posam/protocol/usbcan"
+	"synthesis/protocol/usbcan"
 	"reflect"
 	"strings"
 	"testing"

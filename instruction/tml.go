@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"posam/dao/aoztech"
+	"synthesis/dao/aoztech"
 	"strconv"
 )
 

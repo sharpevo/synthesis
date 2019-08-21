@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"posam/gui/tree"
-	"posam/gui/tree/instree"
-	"posam/gui/uiutil"
+	"synthesis/gui/tree"
+	"synthesis/gui/tree/instree"
+	"synthesis/gui/uiutil"
 )
 
 type DeviceTree struct {

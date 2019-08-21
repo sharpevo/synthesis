@@ -2,7 +2,7 @@ package vrb_test
 
 import (
 	"fmt"
-	"posam/interpreter/vrb"
+	"synthesis/interpreter/vrb"
 	"strings"
 	"testing"
 )

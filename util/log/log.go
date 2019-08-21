@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"os"
-	"posam/config"
+	"synthesis/config"
 )
 
 var (

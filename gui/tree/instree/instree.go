@@ -4,7 +4,7 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"log"
-	"posam/gui/uiutil"
+	"synthesis/gui/uiutil"
 )
 
 func NewInsTree(

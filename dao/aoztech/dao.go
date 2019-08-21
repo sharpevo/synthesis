@@ -2,11 +2,11 @@ package aoztech
 
 import (
 	"fmt"
-	"posam/dao"
-	"posam/protocol/tml"
-	"posam/util/concurrentmap"
 	"strconv"
 	"sync"
+	"synthesis/dao"
+	"synthesis/protocol/tml"
+	"synthesis/util/concurrentmap"
 )
 
 const (

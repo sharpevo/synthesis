@@ -6,12 +6,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"posam/dao/alientek"
-	"posam/dao/aoztech"
-	"posam/dao/canalystii"
-	"posam/dao/ricoh_g5"
-	"posam/gui/tree"
 	"strings"
+	"synthesis/dao/alientek"
+	"synthesis/dao/aoztech"
+	"synthesis/dao/canalystii"
+	"synthesis/dao/ricoh_g5"
+	"synthesis/gui/tree"
 	"time"
 )
 

@@ -3,12 +3,12 @@ package devtree
 import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"posam/dao"
-	"posam/dao/alientek"
-	"posam/dao/aoztech"
-	"posam/dao/canalystii"
-	"posam/dao/ricoh_g5"
-	"posam/gui/tree"
+	"synthesis/dao"
+	"synthesis/dao/alientek"
+	"synthesis/dao/aoztech"
+	"synthesis/dao/canalystii"
+	"synthesis/dao/ricoh_g5"
+	"synthesis/gui/tree"
 )
 
 const (

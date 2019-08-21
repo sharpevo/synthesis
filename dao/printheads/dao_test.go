@@ -6,9 +6,9 @@ import (
 	"image/png"
 	"math"
 	"os"
-	"posam/dao/printheads"
-	"posam/util/platform"
 	"reflect"
+	"synthesis/dao/printheads"
+	"synthesis/util/platform"
 	"testing"
 	"time"
 )

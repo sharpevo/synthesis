@@ -4,10 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"posam/dao"
-	"posam/protocol/serial"
-	"posam/util/concurrentmap"
 	"strconv"
+	"synthesis/dao"
+	"synthesis/protocol/serial"
+	"synthesis/util/concurrentmap"
 )
 
 const (

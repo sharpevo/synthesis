@@ -3,8 +3,8 @@ package usbcan
 import (
 	"encoding/hex"
 	"fmt"
-	"posam/util/blockingqueue"
-	"posam/util/concurrentmap"
+	"synthesis/util/blockingqueue"
+	"synthesis/util/concurrentmap"
 	"reflect"
 	"testing"
 	"time"

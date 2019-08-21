@@ -6,8 +6,8 @@ import (
 	"io"
 	"log"
 	"net"
-	"posam/util/blockingqueue"
-	"posam/util/concurrentmap"
+	"synthesis/util/blockingqueue"
+	"synthesis/util/concurrentmap"
 	"time"
 )
 

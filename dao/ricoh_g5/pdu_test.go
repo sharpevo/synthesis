@@ -1,9 +1,9 @@
 package ricoh_g5_test
 
 import (
-	"posam/dao"
-	"posam/dao/ricoh_g5"
 	"reflect"
+	"synthesis/dao"
+	"synthesis/dao/ricoh_g5"
 	"testing"
 )
 

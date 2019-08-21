@@ -2,7 +2,7 @@ package substrate
 
 import (
 	"fmt"
-	"posam/util/geometry"
+	"synthesis/util/geometry"
 )
 
 type Substrate struct {

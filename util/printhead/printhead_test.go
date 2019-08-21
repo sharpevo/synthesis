@@ -2,8 +2,8 @@ package printhead_test
 
 import (
 	"fmt"
-	"posam/util/printhead"
-	"posam/util/reagent"
+	"synthesis/util/printhead"
+	"synthesis/util/reagent"
 	"testing"
 )
 

@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"posam/util/formation"
+	"synthesis/util/formation"
 )
 
 type InstructionPrinterLoad struct {

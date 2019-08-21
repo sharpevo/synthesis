@@ -3,10 +3,10 @@ package instruction_test
 import (
 	"bytes"
 	"net"
-	"posam/dao/ricoh_g5"
-	"posam/instruction"
-	"posam/interpreter"
-	"posam/interpreter/vrb"
+	"synthesis/dao/ricoh_g5"
+	"synthesis/instruction"
+	"synthesis/interpreter"
+	"synthesis/interpreter/vrb"
 	"strings"
 	"testing"
 )

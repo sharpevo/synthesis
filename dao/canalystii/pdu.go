@@ -1,8 +1,8 @@
 package canalystii
 
 import (
-	"posam/dao"
-	"posam/protocol/usbcan"
+	"synthesis/dao"
+	"synthesis/protocol/usbcan"
 )
 
 // The following variables defines basic protocol data units according to the

@@ -2,10 +2,10 @@ package alientek_test
 
 import (
 	"log"
-	"posam/dao/alientek"
-	"posam/protocol/serialport"
 	"reflect"
 	"strings"
+	"synthesis/dao/alientek"
+	"synthesis/protocol/serialport"
 	"testing"
 	"time"
 )

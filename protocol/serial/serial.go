@@ -6,9 +6,9 @@ import (
 	"github.com/tarm/serial"
 	"io"
 	"log"
-	"posam/protocol/modbus"
-	"posam/util/blockingqueue"
-	"posam/util/concurrentmap"
+	"synthesis/protocol/modbus"
+	"synthesis/util/blockingqueue"
+	"synthesis/util/concurrentmap"
 )
 
 var clientMap *concurrentmap.ConcurrentMap

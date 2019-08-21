@@ -1,9 +1,9 @@
 package alientek_test
 
 import (
-	"posam/dao"
-	"posam/dao/alientek"
 	"reflect"
+	"synthesis/dao"
+	"synthesis/dao/alientek"
 	"testing"
 )
 

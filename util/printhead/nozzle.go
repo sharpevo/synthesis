@@ -2,8 +2,8 @@ package printhead
 
 import (
 	"fmt"
-	"posam/util/geometry"
-	"posam/util/reagent"
+	"synthesis/util/geometry"
+	"synthesis/util/reagent"
 )
 
 type Nozzle struct {

@@ -2,7 +2,7 @@ package substrate_test
 
 import (
 	"fmt"
-	"posam/util/substrate"
+	"synthesis/util/substrate"
 	"testing"
 )
 

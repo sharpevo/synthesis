@@ -1,9 +1,9 @@
 package dao
 
 import (
-	"posam/util/concurrentmap"
 	"reflect"
 	"sync"
+	"synthesis/util/concurrentmap"
 )
 
 type InstructionMapt struct {

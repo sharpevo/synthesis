@@ -2,7 +2,7 @@ package devtree
 
 import (
 	"github.com/therecipe/qt/widgets"
-	"posam/gui/tree/instree"
+	"synthesis/gui/tree/instree"
 )
 
 func NewDevTree(instDetail *instree.InstructionDetail) *widgets.QGroupBox {

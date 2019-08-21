@@ -3,7 +3,7 @@ package tcp_test
 import (
 	"fmt"
 	"net"
-	"posam/protocol/tcp"
+	"synthesis/protocol/tcp"
 	"testing"
 	"time"
 )

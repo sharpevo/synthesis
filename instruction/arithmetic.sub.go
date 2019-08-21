@@ -3,8 +3,8 @@ package instruction
 import (
 	"fmt"
 	"math/big"
-	"posam/dao"
-	"posam/interpreter/vrb"
+	"synthesis/dao"
+	"synthesis/interpreter/vrb"
 )
 
 func init() {
