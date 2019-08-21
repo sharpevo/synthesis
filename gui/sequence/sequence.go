@@ -10,10 +10,10 @@ func NewSequence() *widgets.QGroupBox {
 	group.SetLayout(layout)
 
 	viewGroup := NewViewGroup()
-	layout.AddWidget(viewGroup, 0, 0, 0)
+	layout.AddWidget2(viewGroup, 0, 0, 0)
 
 	inputGroup, previewGroup := NewInputGroup()
-	layout.AddWidget(inputGroup, 0, 1, 0)
+	layout.AddWidget2(inputGroup, 0, 1, 0)
 	viewGroup.Layout().AddWidget(previewGroup)
 
 	layout.SetColumnStretch(0, 1)

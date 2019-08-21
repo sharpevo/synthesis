@@ -134,21 +134,21 @@ func NewInstructionDetail(instructionDaoMap map[string]*dao.InstructionMapt) *In
 
 	waveformLayout := widgets.NewQGridLayout2()
 
-	waveformLayout.AddWidget(waveformLineTimeLabel, 0, 1, 0)
-	waveformLayout.AddWidget(waveformLineVoltageLabel, 0, 2, 0)
+	waveformLayout.AddWidget2(waveformLineTimeLabel, 0, 1, 0)
+	waveformLayout.AddWidget2(waveformLineVoltageLabel, 0, 2, 0)
 
-	waveformLayout.AddWidget(waveformFallLabel, 1, 0, 0)
-	waveformLayout.AddWidget(waveformFallTimeInput, 1, 1, 0)
-	waveformLayout.AddWidget(waveformFallPercentageInput, 1, 2, 0)
-	waveformLayout.AddWidget(waveformHoldLabel, 2, 0, 0)
-	waveformLayout.AddWidget(waveformHoldTimeInput, 2, 1, 0)
-	waveformLayout.AddWidget(waveformHoldPercentageInput, 2, 2, 0)
-	waveformLayout.AddWidget(waveformRisingLabel, 3, 0, 0)
-	waveformLayout.AddWidget(waveformRisingTimeInput, 3, 1, 0)
-	waveformLayout.AddWidget(waveformRisingPercentageInput, 3, 2, 0)
-	waveformLayout.AddWidget(waveformWaitLabel, 4, 0, 0)
-	waveformLayout.AddWidget(waveformWaitTimeInput, 4, 1, 0)
-	waveformLayout.AddWidget(waveformWaitPercentageInput, 4, 2, 0)
+	waveformLayout.AddWidget2(waveformFallLabel, 1, 0, 0)
+	waveformLayout.AddWidget2(waveformFallTimeInput, 1, 1, 0)
+	waveformLayout.AddWidget2(waveformFallPercentageInput, 1, 2, 0)
+	waveformLayout.AddWidget2(waveformHoldLabel, 2, 0, 0)
+	waveformLayout.AddWidget2(waveformHoldTimeInput, 2, 1, 0)
+	waveformLayout.AddWidget2(waveformHoldPercentageInput, 2, 2, 0)
+	waveformLayout.AddWidget2(waveformRisingLabel, 3, 0, 0)
+	waveformLayout.AddWidget2(waveformRisingTimeInput, 3, 1, 0)
+	waveformLayout.AddWidget2(waveformRisingPercentageInput, 3, 2, 0)
+	waveformLayout.AddWidget2(waveformWaitLabel, 4, 0, 0)
+	waveformLayout.AddWidget2(waveformWaitTimeInput, 4, 1, 0)
+	waveformLayout.AddWidget2(waveformWaitPercentageInput, 4, 2, 0)
 
 	waveformLayout.AddWidget3(waveformVoltageLabel, 5, 0, 1, 1, 0)
 	waveformLayout.AddWidget3(waveformVoltageInput, 5, 1, 1, 2, 0)
@@ -165,16 +165,16 @@ func NewInstructionDetail(instructionDaoMap map[string]*dao.InstructionMapt) *In
 
 	d.GroupBox = widgets.NewQGroupBox2("Instruction", nil)
 	layout := widgets.NewQGridLayout2()
-	layout.AddWidget(titleLabel, 0, 0, 0)
-	layout.AddWidget(d.titleInput, 0, 1, 0)
-	layout.AddWidget(typeLabel, 1, 0, 0)
-	layout.AddWidget(d.typeInput, 1, 1, 0)
-	layout.AddWidget(devLabel, 2, 0, 0)
-	layout.AddWidget(d.devInput, 2, 1, 0)
-	layout.AddWidget(instLabel, 3, 0, 0)
-	layout.AddWidget(d.instInput, 3, 1, 0)
-	layout.AddWidget(argsLabel, 4, 0, 0)
-	layout.AddWidget(d.argsInput, 4, 1, 0)
+	layout.AddWidget2(titleLabel, 0, 0, 0)
+	layout.AddWidget2(d.titleInput, 0, 1, 0)
+	layout.AddWidget2(typeLabel, 1, 0, 0)
+	layout.AddWidget2(d.typeInput, 1, 1, 0)
+	layout.AddWidget2(devLabel, 2, 0, 0)
+	layout.AddWidget2(d.devInput, 2, 1, 0)
+	layout.AddWidget2(instLabel, 3, 0, 0)
+	layout.AddWidget2(d.instInput, 3, 1, 0)
+	layout.AddWidget2(argsLabel, 4, 0, 0)
+	layout.AddWidget2(d.argsInput, 4, 1, 0)
 	layout.AddWidget3(d.waveformGroup, 5, 0, 1, 2, 0)
 
 	layout.AddWidget3(d.saveButton, 6, 0, 1, 2, 0)
@@ -195,14 +195,14 @@ func (d *InstructionDetail) saveInstruction() {
 		d.argsInput.Text(),
 	)
 	fmt.Println(">>>>>>", tree.DataRole(), variantMap)
-	v := core.NewQVariant25(variantMap)
+	v := core.NewQVariant23(variantMap)
 	fmt.Println(v)
 	fmt.Println(core.PointerFromQVariant(v))
 	d.treeItem.SetData(
 		0,
 		tree.DataRole(),
 		v,
-		//core.NewQVariant25(variantMap),
+		//core.NewQVariant23(variantMap),
 	)
 }
 
@@ -285,7 +285,7 @@ func (d *InstructionDetail) InitDevInput(itemMap map[string]string) {
 	}
 	sort.Sort(sort.StringSlice(l))
 	for _, k := range l {
-		d.devInput.AddItem(k, core.NewQVariant17(itemMap[k]))
+		d.devInput.AddItem(k, core.NewQVariant15(itemMap[k]))
 	}
 }
 
@@ -322,10 +322,10 @@ func MakeVariantMap(
 	argumentText string,
 ) VariantMap {
 	variantMap := make(VariantMap)
-	variantMap["device"] = core.NewQVariant17(deviceText)
-	variantMap["deviceType"] = core.NewQVariant17(deviceType)
-	variantMap["instruction"] = core.NewQVariant17(instructionText)
-	variantMap["arguments"] = core.NewQVariant17(argumentText)
+	variantMap["device"] = core.NewQVariant15(deviceText)
+	variantMap["deviceType"] = core.NewQVariant15(deviceType)
+	variantMap["instruction"] = core.NewQVariant15(instructionText)
+	variantMap["arguments"] = core.NewQVariant15(argumentText)
 	return variantMap
 }
 

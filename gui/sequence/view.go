@@ -69,7 +69,7 @@ func NewViewGroup() *widgets.QGroupBox {
 	view.SetScene(scene)
 	view.Show()
 
-	layout.AddWidget(view, 0, 0, 0)
+	layout.AddWidget2(view, 0, 0, 0)
 
 	return group
 }

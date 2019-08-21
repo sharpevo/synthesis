@@ -63,7 +63,7 @@ func NewDeviceDetail() *DeviceDetail {
 	d.logInput.SetStyleSheet("QTextEdit { background-color: #e6e6e6}")
 	logGroup := widgets.NewQGroupBox2("Logs", nil)
 	logGroupLayout := widgets.NewQGridLayout2()
-	logGroupLayout.AddWidget(d.logInput, 0, 0, 0)
+	logGroupLayout.AddWidget2(d.logInput, 0, 0, 0)
 	logGroup.SetLayout(logGroupLayout)
 
 	d.saveButton = widgets.NewQPushButton2("SAVE", nil)
@@ -71,15 +71,15 @@ func NewDeviceDetail() *DeviceDetail {
 
 	d.GroupBox = widgets.NewQGroupBox2("Device", nil)
 	layout := widgets.NewQGridLayout2()
-	layout.AddWidget(titleLabel, 0, 0, 0)
-	layout.AddWidget(d.titleInput, 0, 1, 0)
-	layout.AddWidget(lineLabel, 1, 0, 0)
-	layout.AddWidget(d.lineInput, 1, 1, 0)
-	layout.AddWidget(typeLabel, 2, 0, 0)
-	layout.AddWidget(d.typeInput, 2, 1, 0)
-	layout.AddWidget(descriptionLabel, 3, 0, 0)
-	layout.AddWidget(d.descriptionInput, 3, 1, 0)
-	layout.AddWidget(d.enabledInput, 4, 0, 0)
+	layout.AddWidget2(titleLabel, 0, 0, 0)
+	layout.AddWidget2(d.titleInput, 0, 1, 0)
+	layout.AddWidget2(lineLabel, 1, 0, 0)
+	layout.AddWidget2(d.lineInput, 1, 1, 0)
+	layout.AddWidget2(typeLabel, 2, 0, 0)
+	layout.AddWidget2(d.typeInput, 2, 1, 0)
+	layout.AddWidget2(descriptionLabel, 3, 0, 0)
+	layout.AddWidget2(d.descriptionInput, 3, 1, 0)
+	layout.AddWidget2(d.enabledInput, 4, 0, 0)
 	layout.AddWidget3(d.saveButton, 5, 0, 1, 2, 0)
 	layout.AddWidget3(logGroup, 6, 0, 1, 2, 0)
 	d.GroupBox.SetLayout(layout)
@@ -100,7 +100,7 @@ func (d *DeviceDetail) saveDeviceDetail() {
 	d.treeItem.SetData(
 		0,
 		tree.DataRole(),
-		core.NewQVariant25(variantMap),
+		core.NewQVariant23(variantMap),
 	)
 }
 
@@ -208,10 +208,10 @@ func MakeVariantMap(
 	enabledState bool,
 ) VariantMap {
 	variantMap := make(VariantMap)
-	variantMap["data"] = core.NewQVariant17(lineText)
-	variantMap["type"] = core.NewQVariant17(typeText)
-	variantMap["description"] = core.NewQVariant17(descriptionText)
-	variantMap["enabled"] = core.NewQVariant11(enabledState)
+	variantMap["data"] = core.NewQVariant15(lineText)
+	variantMap["type"] = core.NewQVariant15(typeText)
+	variantMap["description"] = core.NewQVariant15(descriptionText)
+	variantMap["enabled"] = core.NewQVariant9(enabledState)
 	return variantMap
 }
 

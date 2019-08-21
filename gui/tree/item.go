@@ -24,7 +24,7 @@ func SetTreeItemData(item *widgets.QTreeWidgetItem, data string) {
 	item.SetData(
 		0,
 		DataRole(),
-		core.NewQVariant17(data),
+		core.NewQVariant15(data),
 	)
 }
 

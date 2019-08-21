@@ -518,17 +518,17 @@ func main() {
 
 	inputGroup := widgets.NewQGroupBox2("Instructions", nil)
 	inputLayout := widgets.NewQGridLayout2()
-	inputLayout.AddWidget(instDetail.GroupBox, 0, 0, 0)
-	inputLayout.AddWidget(input, 1, 0, 0)
-	inputLayout.AddWidget(runButton, 4, 0, 0)
+	inputLayout.AddWidget2(instDetail.GroupBox, 0, 0, 0)
+	inputLayout.AddWidget2(input, 1, 0, 0)
+	inputLayout.AddWidget2(runButton, 4, 0, 0)
 	inputGroup.SetLayout(inputLayout)
 
 	outputGroup := widgets.NewQGroupBox2("Results", nil)
 	outputLayout := widgets.NewQGridLayout2()
 	outputLayout.AddWidget3(result, 0, 0, 1, 2, 0)
 	outputLayout.AddWidget3(termButton, 2, 0, 1, 2, 0)
-	outputLayout.AddWidget(suspButton, 1, 0, 0)
-	outputLayout.AddWidget(resuButton, 1, 1, 0)
+	outputLayout.AddWidget2(suspButton, 1, 0, 0)
+	outputLayout.AddWidget2(resuButton, 1, 1, 0)
 	outputGroup.SetLayout(outputLayout)
 
 	insTab := widgets.NewQWidget(nil, 0)
@@ -545,14 +545,14 @@ func main() {
 
 	devTab := widgets.NewQWidget(nil, 0)
 	devTabLayout := widgets.NewQGridLayout2()
-	devTabLayout.AddWidget(devtree.NewDevTree(instDetail), 0, 0, 0)
+	devTabLayout.AddWidget2(devtree.NewDevTree(instDetail), 0, 0, 0)
 	devTab.SetLayout(devTabLayout)
 
 	tabWidget.AddTab(devTab, "Devices")
 
 	seqTab := widgets.NewQWidget(nil, 0)
 	seqTabLayout := widgets.NewQGridLayout2()
-	seqTabLayout.AddWidget(sequence.NewSequence(), 0, 0, 0)
+	seqTabLayout.AddWidget2(sequence.NewSequence(), 0, 0, 0)
 	seqTab.SetLayout(seqTabLayout)
 	tabWidget.AddTab(seqTab, "Sequences")
 

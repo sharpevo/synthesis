@@ -139,7 +139,7 @@ func NewInstructionItem(title string, line string) *widgets.QTreeWidgetItem {
 	treeItem.SetData(
 		0,
 		tree.DataRole(),
-		core.NewQVariant17(line),
+		core.NewQVariant15(line),
 	)
 	return treeItem
 }
@@ -349,7 +349,7 @@ func (t *InstructionTree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 	item.SetData(
 		0,
 		tree.DataRole(),
-		core.NewQVariant25(variantMap),
+		core.NewQVariant23(variantMap),
 	)
 	for i := 0; i < len(node.Children); i++ {
 		item.AddChild(t.ImportNode(node.Children[i]))

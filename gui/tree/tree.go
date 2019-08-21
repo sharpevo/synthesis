@@ -110,7 +110,7 @@ func (t *Tree) ImportNode(node Node) *widgets.QTreeWidgetItem {
 	item.SetData(
 		0,
 		DataRole(),
-		core.NewQVariant17(node.Data),
+		core.NewQVariant15(node.Data),
 	)
 	for i := 0; i < len(node.Children); i++ {
 		item.AddChild(t.ImportNode(node.Children[i]))

@@ -27,7 +27,7 @@ func NewInsTree(
 		}
 		treeWidget.Export(filePath)
 	})
-	layout.AddWidget(treeExportButton, 1, 0, 0)
+	layout.AddWidget2(treeExportButton, 1, 0, 0)
 
 	treeImportButton := widgets.NewQPushButton2("IMPORT", nil)
 	treeImportButton.ConnectClicked(func(bool) {
@@ -45,7 +45,7 @@ func NewInsTree(
 		}
 		uiutil.MessageBoxInfo("Imported")
 	})
-	layout.AddWidget(treeImportButton, 1, 1, 0)
+	layout.AddWidget2(treeImportButton, 1, 1, 0)
 
 	treeGenerateButton := widgets.NewQPushButton2("RUN", nil)
 	treeGenerateButton.ConnectClicked(func(bool) {

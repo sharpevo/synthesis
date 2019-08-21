@@ -122,18 +122,18 @@ func NewInputGroup() (
 		}
 		fileInput.SetText(filePath)
 	})
-	layout.AddWidget(fileInput, 0, 0, 0)
+	layout.AddWidget2(fileInput, 0, 0, 0)
 
 	sequenceInput := widgets.NewQTextEdit(nil)
 	sequenceInput.SetText(SEQUENCE_EXAMPLE)
-	layout.AddWidget(sequenceInput, 1, 0, 0)
+	layout.AddWidget2(sequenceInput, 1, 0, 0)
 
 	// device group{{{
 
 	deviceGroup := widgets.NewQGroupBox2("Device", nil)
 	deviceLayout := widgets.NewQGridLayout2()
 	deviceGroup.SetLayout(deviceLayout)
-	layout.AddWidget(deviceGroup, 2, 0, 0)
+	layout.AddWidget2(deviceGroup, 2, 0, 0)
 
 	motorPathLabel := widgets.NewQLabel2("Motor path", nil, 0)
 	motorPathInput := widgets.NewQLineEdit(nil)
@@ -151,16 +151,16 @@ func NewInputGroup() (
 	//printhead1PathInput := widgets.NewQLineEdit(nil)
 	//printhead1PathInput.SetText("/Ricoh-G5/Printer#1")
 
-	deviceLayout.AddWidget(motorPathLabel, 0, 0, 0)
-	deviceLayout.AddWidget(motorPathInput, 0, 1, 0)
-	deviceLayout.AddWidget(motorSpeedLabel, 1, 0, 0)
-	deviceLayout.AddWidget(motorSpeedInput, 1, 1, 0)
-	deviceLayout.AddWidget(motorAccelLabel, 2, 0, 0)
-	deviceLayout.AddWidget(motorAccelInput, 2, 1, 0)
-	deviceLayout.AddWidget(printhead0PathLabel, 3, 0, 0)
-	deviceLayout.AddWidget(printhead0PathInput, 3, 1, 0)
-	//deviceLayout.AddWidget(printhead1PathLabel, 4, 0, 0)
-	//deviceLayout.AddWidget(printhead1PathInput, 4, 1, 0)
+	deviceLayout.AddWidget2(motorPathLabel, 0, 0, 0)
+	deviceLayout.AddWidget2(motorPathInput, 0, 1, 0)
+	deviceLayout.AddWidget2(motorSpeedLabel, 1, 0, 0)
+	deviceLayout.AddWidget2(motorSpeedInput, 1, 1, 0)
+	deviceLayout.AddWidget2(motorAccelLabel, 2, 0, 0)
+	deviceLayout.AddWidget2(motorAccelInput, 2, 1, 0)
+	deviceLayout.AddWidget2(printhead0PathLabel, 3, 0, 0)
+	deviceLayout.AddWidget2(printhead0PathInput, 3, 1, 0)
+	//deviceLayout.AddWidget2(printhead1PathLabel, 4, 0, 0)
+	//deviceLayout.AddWidget2(printhead1PathInput, 4, 1, 0)
 
 	// }}}
 
@@ -169,7 +169,7 @@ func NewInputGroup() (
 	positionGroup := widgets.NewQGroupBox2("Position (unit: mm)", nil)
 	positionLayout := widgets.NewQGridLayout2()
 	positionGroup.SetLayout(positionLayout)
-	//layout.AddWidget(positionGroup, 3, 0, 0)
+	//layout.AddWidget2(positionGroup, 3, 0, 0)
 
 	printhead0PositionLabel := widgets.NewQLabel2("Printhead #0", nil, 0)
 	printhead1PositionLabel := widgets.NewQLabel2("Printhead #1", nil, 0)
@@ -201,25 +201,25 @@ func NewInputGroup() (
 	slide2PositionXInput.SetText("26")
 	slide2PositionYInput.SetText("0")
 
-	positionLayout.AddWidget(printhead0PositionLabel, 0, 0, 0)
-	positionLayout.AddWidget(printhead0PositionXInput, 0, 1, 0)
-	positionLayout.AddWidget(printhead0PositionYInput, 0, 2, 0)
+	positionLayout.AddWidget2(printhead0PositionLabel, 0, 0, 0)
+	positionLayout.AddWidget2(printhead0PositionXInput, 0, 1, 0)
+	positionLayout.AddWidget2(printhead0PositionYInput, 0, 2, 0)
 
-	positionLayout.AddWidget(printhead1PositionLabel, 1, 0, 0)
-	positionLayout.AddWidget(printhead1PositionXInput, 1, 1, 0)
-	positionLayout.AddWidget(printhead1PositionYInput, 1, 2, 0)
+	positionLayout.AddWidget2(printhead1PositionLabel, 1, 0, 0)
+	positionLayout.AddWidget2(printhead1PositionXInput, 1, 1, 0)
+	positionLayout.AddWidget2(printhead1PositionYInput, 1, 2, 0)
 
-	positionLayout.AddWidget(slide0PositionLabel, 2, 0, 0)
-	positionLayout.AddWidget(slide0PositionXInput, 2, 1, 0)
-	positionLayout.AddWidget(slide0PositionYInput, 2, 2, 0)
+	positionLayout.AddWidget2(slide0PositionLabel, 2, 0, 0)
+	positionLayout.AddWidget2(slide0PositionXInput, 2, 1, 0)
+	positionLayout.AddWidget2(slide0PositionYInput, 2, 2, 0)
 
-	positionLayout.AddWidget(slide1PositionLabel, 3, 0, 0)
-	positionLayout.AddWidget(slide1PositionXInput, 3, 1, 0)
-	positionLayout.AddWidget(slide1PositionYInput, 3, 2, 0)
+	positionLayout.AddWidget2(slide1PositionLabel, 3, 0, 0)
+	positionLayout.AddWidget2(slide1PositionXInput, 3, 1, 0)
+	positionLayout.AddWidget2(slide1PositionYInput, 3, 2, 0)
 
-	positionLayout.AddWidget(slide2PositionLabel, 4, 0, 0)
-	positionLayout.AddWidget(slide2PositionXInput, 4, 1, 0)
-	positionLayout.AddWidget(slide2PositionYInput, 4, 2, 0)
+	positionLayout.AddWidget2(slide2PositionLabel, 4, 0, 0)
+	positionLayout.AddWidget2(slide2PositionXInput, 4, 1, 0)
+	positionLayout.AddWidget2(slide2PositionYInput, 4, 2, 0)
 
 	// }}}
 
@@ -228,7 +228,7 @@ func NewInputGroup() (
 	spaceGroup := widgets.NewQGroupBox2("Space (unit: um)", nil)
 	spaceLayout := widgets.NewQGridLayout2()
 	spaceGroup.SetLayout(spaceLayout)
-	layout.AddWidget(spaceGroup, 3, 0, 0)
+	layout.AddWidget2(spaceGroup, 3, 0, 0)
 
 	spaceLabel := widgets.NewQLabel2("Spot space", nil, 0)
 	spacexInput := widgets.NewQLineEdit(nil)
@@ -237,9 +237,9 @@ func NewInputGroup() (
 	spacexInput.SetText("169.3")
 	spaceyInput.SetText("550.3")
 
-	spaceLayout.AddWidget(spaceLabel, 0, 0, 0)
-	spaceLayout.AddWidget(spacexInput, 0, 1, 0)
-	spaceLayout.AddWidget(spaceyInput, 0, 2, 0)
+	spaceLayout.AddWidget2(spaceLabel, 0, 0, 0)
+	spaceLayout.AddWidget2(spacexInput, 0, 1, 0)
+	spaceLayout.AddWidget2(spaceyInput, 0, 2, 0)
 
 	// }}}
 
@@ -248,7 +248,7 @@ func NewInputGroup() (
 	reagentGroup := widgets.NewQGroupBox2("Reagent", nil)
 	reagentLayout := widgets.NewQGridLayout2()
 	reagentGroup.SetLayout(reagentLayout)
-	layout.AddWidget(reagentGroup, 4, 0, 0)
+	layout.AddWidget2(reagentGroup, 4, 0, 0)
 
 	printhead0Line0Label := widgets.NewQLabel2("Row A of Printhead #0", nil, 0)
 	printhead0Line1Label := widgets.NewQLabel2("Row B of Printhead #0", nil, 0)
@@ -279,29 +279,29 @@ func NewInputGroup() (
 	printhead1Line2Input.SetText("-")
 	printhead1Line3Input.SetText("-")
 
-	reagentLayout.AddWidget(printhead0Line0Label, 0, 0, 0)
-	reagentLayout.AddWidget(printhead0Line0Input, 0, 1, 0)
+	reagentLayout.AddWidget2(printhead0Line0Label, 0, 0, 0)
+	reagentLayout.AddWidget2(printhead0Line0Input, 0, 1, 0)
 
-	reagentLayout.AddWidget(printhead0Line1Label, 1, 0, 0)
-	reagentLayout.AddWidget(printhead0Line1Input, 1, 1, 0)
+	reagentLayout.AddWidget2(printhead0Line1Label, 1, 0, 0)
+	reagentLayout.AddWidget2(printhead0Line1Input, 1, 1, 0)
 
-	reagentLayout.AddWidget(printhead0Line2Label, 2, 0, 0)
-	reagentLayout.AddWidget(printhead0Line2Input, 2, 1, 0)
+	reagentLayout.AddWidget2(printhead0Line2Label, 2, 0, 0)
+	reagentLayout.AddWidget2(printhead0Line2Input, 2, 1, 0)
 
-	reagentLayout.AddWidget(printhead0Line3Label, 3, 0, 0)
-	reagentLayout.AddWidget(printhead0Line3Input, 3, 1, 0)
+	reagentLayout.AddWidget2(printhead0Line3Label, 3, 0, 0)
+	reagentLayout.AddWidget2(printhead0Line3Input, 3, 1, 0)
 
-	reagentLayout.AddWidget(printhead1Line0Label, 4, 0, 0)
-	reagentLayout.AddWidget(printhead1Line0Input, 4, 1, 0)
+	reagentLayout.AddWidget2(printhead1Line0Label, 4, 0, 0)
+	reagentLayout.AddWidget2(printhead1Line0Input, 4, 1, 0)
 
-	reagentLayout.AddWidget(printhead1Line1Label, 5, 0, 0)
-	reagentLayout.AddWidget(printhead1Line1Input, 5, 1, 0)
+	reagentLayout.AddWidget2(printhead1Line1Label, 5, 0, 0)
+	reagentLayout.AddWidget2(printhead1Line1Input, 5, 1, 0)
 
-	reagentLayout.AddWidget(printhead1Line2Label, 6, 0, 0)
-	reagentLayout.AddWidget(printhead1Line2Input, 6, 1, 0)
+	reagentLayout.AddWidget2(printhead1Line2Label, 6, 0, 0)
+	reagentLayout.AddWidget2(printhead1Line2Input, 6, 1, 0)
 
-	reagentLayout.AddWidget(printhead1Line3Label, 7, 0, 0)
-	reagentLayout.AddWidget(printhead1Line3Input, 7, 1, 0)
+	reagentLayout.AddWidget2(printhead1Line3Label, 7, 0, 0)
+	reagentLayout.AddWidget2(printhead1Line3Input, 7, 1, 0)
 
 	// }}}
 
@@ -310,7 +310,7 @@ func NewInputGroup() (
 	miscGroup := widgets.NewQGroupBox2("Misc", nil)
 	miscLayout := widgets.NewQGridLayout2()
 	miscGroup.SetLayout(miscLayout)
-	layout.AddWidget(miscGroup, 5, 0, 0)
+	layout.AddWidget2(miscGroup, 5, 0, 0)
 
 	toleranceLabel := widgets.NewQLabel2("Tolerance (um)", nil, 0)
 	toleranceInput := widgets.NewQLineEdit(nil)
@@ -362,29 +362,29 @@ func NewInputGroup() (
 		"Continuous Inkjet",
 	})
 
-	miscLayout.AddWidget(toleranceLabel, 0, 0, 0)
+	miscLayout.AddWidget2(toleranceLabel, 0, 0, 0)
 	miscLayout.AddWidget3(toleranceInput, 0, 1, 1, 2, 0)
-	miscLayout.AddWidget(dpiLabel, 1, 0, 0)
+	miscLayout.AddWidget2(dpiLabel, 1, 0, 0)
 	miscLayout.AddWidget3(dpiInput, 1, 1, 1, 2, 0)
-	miscLayout.AddWidget(slideCountLabel, 2, 0, 0)
-	miscLayout.AddWidget(slideCountHoriInput, 2, 1, 0)
-	miscLayout.AddWidget(slideCountVertInput, 2, 2, 0)
-	miscLayout.AddWidget(slideAreaSpaceLabel, 3, 0, 0)
-	miscLayout.AddWidget(slideAreaSpaceHoriInput, 3, 1, 0)
-	miscLayout.AddWidget(slideAreaSpaceVertInput, 3, 2, 0)
-	miscLayout.AddWidget(slideGeometryLabel, 4, 0, 0)
-	miscLayout.AddWidget(slideGeometryWidthInput, 4, 1, 0)
-	miscLayout.AddWidget(slideGeometryHeightInput, 4, 2, 0)
-	miscLayout.AddWidget(printhead1OffsetLabel, 5, 0, 0)
-	miscLayout.AddWidget(printhead1OffsetXInput, 5, 1, 0)
-	miscLayout.AddWidget(printhead1OffsetYInput, 5, 2, 0)
-	miscLayout.AddWidget(printhead0OffsetLabel, 6, 0, 0)
-	miscLayout.AddWidget(printhead0OffsetXInput, 6, 1, 0)
-	miscLayout.AddWidget(printhead0OffsetYInput, 6, 2, 0)
-	miscLayout.AddWidget(printModeLabel, 7, 0, 0)
+	miscLayout.AddWidget2(slideCountLabel, 2, 0, 0)
+	miscLayout.AddWidget2(slideCountHoriInput, 2, 1, 0)
+	miscLayout.AddWidget2(slideCountVertInput, 2, 2, 0)
+	miscLayout.AddWidget2(slideAreaSpaceLabel, 3, 0, 0)
+	miscLayout.AddWidget2(slideAreaSpaceHoriInput, 3, 1, 0)
+	miscLayout.AddWidget2(slideAreaSpaceVertInput, 3, 2, 0)
+	miscLayout.AddWidget2(slideGeometryLabel, 4, 0, 0)
+	miscLayout.AddWidget2(slideGeometryWidthInput, 4, 1, 0)
+	miscLayout.AddWidget2(slideGeometryHeightInput, 4, 2, 0)
+	miscLayout.AddWidget2(printhead1OffsetLabel, 5, 0, 0)
+	miscLayout.AddWidget2(printhead1OffsetXInput, 5, 1, 0)
+	miscLayout.AddWidget2(printhead1OffsetYInput, 5, 2, 0)
+	miscLayout.AddWidget2(printhead0OffsetLabel, 6, 0, 0)
+	miscLayout.AddWidget2(printhead0OffsetXInput, 6, 1, 0)
+	miscLayout.AddWidget2(printhead0OffsetYInput, 6, 2, 0)
+	miscLayout.AddWidget2(printModeLabel, 7, 0, 0)
 	miscLayout.AddWidget3(printModeInput, 7, 1, 1, 2, 0)
-	miscLayout.AddWidget(activatorInput, 8, 0, 0)
-	miscLayout.AddWidget(previewInput, 8, 1, 0)
+	miscLayout.AddWidget2(activatorInput, 8, 0, 0)
+	miscLayout.AddWidget2(previewInput, 8, 1, 0)
 
 	// }}}
 
@@ -394,10 +394,10 @@ func NewInputGroup() (
 	var stepwise = false
 
 	buildButton := widgets.NewQPushButton2("BUILD", nil)
-	layout.AddWidget(buildButton, 6, 0, 0)
+	layout.AddWidget2(buildButton, 6, 0, 0)
 
 	buildProgressbar := widgets.NewQProgressBar(nil)
-	layout.AddWidget(buildProgressbar, 7, 0, 0)
+	layout.AddWidget2(buildProgressbar, 7, 0, 0)
 
 	buildProgressbar.SetWindowTitle("building...")
 	buildProgressbar.SetMinimum(0)
@@ -764,9 +764,9 @@ func NewInputGroup() (
 
 	nextButton := widgets.NewQPushButton2("NEXT", nil)
 	prevButton := widgets.NewQPushButton2("PREV", nil)
-	previewLayout.AddWidget(prevButton, 0, 1, 0)
-	previewLayout.AddWidget(stepInput, 0, 2, 0)
-	previewLayout.AddWidget(nextButton, 0, 3, 0)
+	previewLayout.AddWidget2(prevButton, 0, 1, 0)
+	previewLayout.AddWidget2(stepInput, 0, 2, 0)
+	previewLayout.AddWidget2(nextButton, 0, 3, 0)
 
 	nextButton.ConnectClicked(func(bool) {
 		previewGroup.SetEnabled(false)
