@@ -1,7 +1,7 @@
 package concurrentmap_test
 
 import (
-	"synthesis/util/concurrentmap"
+	"synthesis/pkg/concurrentmap"
 	"testing"
 	"time"
 )

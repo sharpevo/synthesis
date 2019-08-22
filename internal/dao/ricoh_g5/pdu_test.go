@@ -2,8 +2,8 @@ package ricoh_g5_test
 
 import (
 	"reflect"
-	"synthesis/dao"
-	"synthesis/dao/ricoh_g5"
+	"synthesis/internal/dao"
+	"synthesis/internal/dao/ricoh_g5"
 	"testing"
 )
 

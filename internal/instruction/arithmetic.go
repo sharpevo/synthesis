@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
-	"synthesis/interpreter/vrb"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/interpreter/vrb"
+	"synthesis/pkg/concurrentmap"
 )
 
 type InstructionArithmetic struct {

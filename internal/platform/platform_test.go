@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/png"
 	"os"
-	"synthesis/util/platform"
+	"synthesis/internal/platform"
 	"testing"
 )
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"synthesis/dao"
-	"synthesis/dao/ricoh_g5"
-	"synthesis/protocol/tcp"
+	"synthesis/internal/dao"
+	"synthesis/internal/dao/ricoh_g5"
+	"synthesis/internal/protocol/tcp"
 	"testing"
 )
 

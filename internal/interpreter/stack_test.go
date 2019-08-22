@@ -1,9 +1,9 @@
 package interpreter_test
 
 import (
-	"synthesis/interpreter"
-	"synthesis/interpreter/vrb"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/interpreter"
+	"synthesis/internal/interpreter/vrb"
+	"synthesis/pkg/concurrentmap"
 	"testing"
 )
 

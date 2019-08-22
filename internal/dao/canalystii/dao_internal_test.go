@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"synthesis/util/concurrentmap"
+	"synthesis/pkg/concurrentmap"
 	"testing"
 )
 

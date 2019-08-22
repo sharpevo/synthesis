@@ -2,7 +2,7 @@ package blockingqueue_test
 
 import (
 	"fmt"
-	"synthesis/util/blockingqueue"
+	"synthesis/pkg/blockingqueue"
 	"reflect"
 	"strings"
 	"sync"

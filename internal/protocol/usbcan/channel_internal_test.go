@@ -3,8 +3,8 @@ package usbcan
 import (
 	"encoding/hex"
 	"fmt"
-	"synthesis/util/blockingqueue"
-	"synthesis/util/concurrentmap"
+	"synthesis/pkg/blockingqueue"
+	"synthesis/pkg/concurrentmap"
 	"reflect"
 	"testing"
 	"time"

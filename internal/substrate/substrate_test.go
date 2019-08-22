@@ -2,7 +2,7 @@ package substrate_test
 
 import (
 	"fmt"
-	"synthesis/util/substrate"
+	"synthesis/internal/substrate"
 	"testing"
 )
 

@@ -2,9 +2,9 @@ package printhead_test
 
 import (
 	//"fmt"
-	"synthesis/util/geometry"
-	"synthesis/util/printhead"
-	"synthesis/util/reagent"
+	"synthesis/internal/geometry"
+	"synthesis/internal/printhead"
+	"synthesis/internal/reagent"
 	"testing"
 )
 

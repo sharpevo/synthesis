@@ -2,7 +2,7 @@ package serial_test
 
 import (
 	"fmt"
-	"synthesis/protocol/serial"
+	"synthesis/internal/protocol/serial"
 	"reflect"
 	"testing"
 )

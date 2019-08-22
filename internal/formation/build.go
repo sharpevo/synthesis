@@ -5,9 +5,9 @@ import (
 	"image"
 	"image/png"
 	"os"
-	"synthesis/util/geometry"
-	"synthesis/util/log"
-	"synthesis/util/reagent"
+	"synthesis/internal/geometry"
+	"synthesis/internal/log"
+	"synthesis/internal/reagent"
 	"strconv"
 	"strings"
 )

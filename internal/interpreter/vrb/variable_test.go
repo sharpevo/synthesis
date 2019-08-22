@@ -2,7 +2,7 @@ package vrb_test
 
 import (
 	"fmt"
-	"synthesis/interpreter/vrb"
+	"synthesis/internal/interpreter/vrb"
 	"strings"
 	"testing"
 )

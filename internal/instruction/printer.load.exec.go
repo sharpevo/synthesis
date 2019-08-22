@@ -2,8 +2,8 @@ package instruction
 
 import (
 	"fmt"
-	"synthesis/dao"
-	//"synthesis/interpreter"
+	"synthesis/internal/dao"
+	//"synthesis/internal/interpreter"
 )
 
 //var DEBUG = true

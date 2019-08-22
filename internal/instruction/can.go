@@ -2,8 +2,8 @@ package instruction
 
 import (
 	"fmt"
-	"synthesis/dao/canalystii"
-	"synthesis/interpreter/vrb"
+	"synthesis/internal/dao/canalystii"
+	"synthesis/internal/interpreter/vrb"
 )
 
 type InstructionCAN struct {

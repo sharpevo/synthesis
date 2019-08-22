@@ -2,7 +2,7 @@ package substrate
 
 import (
 	"fmt"
-	"synthesis/util/geometry"
+	"synthesis/internal/geometry"
 )
 
 type Substrate struct {

@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"synthesis/dao/alientek"
+	"synthesis/internal/dao/alientek"
 )
 
 type InstructionLed struct {

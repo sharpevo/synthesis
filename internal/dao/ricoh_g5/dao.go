@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"synthesis/dao"
-	"synthesis/protocol/tcp"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/dao"
+	"synthesis/internal/protocol/tcp"
+	"synthesis/pkg/concurrentmap"
 )
 
 const (

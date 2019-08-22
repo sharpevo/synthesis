@@ -3,7 +3,7 @@ package tcp_test
 import (
 	"fmt"
 	"net"
-	"synthesis/protocol/tcp"
+	"synthesis/internal/protocol/tcp"
 	"testing"
 	"time"
 )

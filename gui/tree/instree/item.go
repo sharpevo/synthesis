@@ -6,7 +6,7 @@ import (
 	"github.com/therecipe/qt/widgets"
 	"sort"
 	"strings"
-	"synthesis/dao"
+	"synthesis/internal/dao"
 	"synthesis/gui/tree"
 )
 

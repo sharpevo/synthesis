@@ -1,8 +1,8 @@
 package instruction_test
 
 import (
-	"synthesis/instruction"
-	"synthesis/interpreter"
+	"synthesis/internal/instruction"
+	"synthesis/internal/interpreter"
 	"testing"
 )
 

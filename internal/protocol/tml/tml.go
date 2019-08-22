@@ -6,11 +6,11 @@ package tml
 
 import (
 	"fmt"
-	"synthesis/config"
+	"synthesis/pkg/config"
 	//"synthesis/gui/uiutil"
-	"synthesis/util/blockingqueue"
-	"synthesis/util/concurrentmap"
-	"synthesis/util/log"
+	"synthesis/pkg/blockingqueue"
+	"synthesis/pkg/concurrentmap"
+	"synthesis/internal/log"
 	"reflect"
 	"time"
 	"tml"

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"synthesis/dao"
-	"synthesis/protocol/serial"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/dao"
+	"synthesis/internal/protocol/serial"
+	"synthesis/pkg/concurrentmap"
 )
 
 const (

@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"synthesis/dao/aoztech"
+	"synthesis/internal/dao/aoztech"
 )
 
 type InstructionTMLMove struct {

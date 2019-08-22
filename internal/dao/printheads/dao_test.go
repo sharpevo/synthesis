@@ -7,8 +7,8 @@ import (
 	"math"
 	"os"
 	"reflect"
-	"synthesis/dao/printheads"
-	"synthesis/util/platform"
+	"synthesis/internal/dao/printheads"
+	"synthesis/internal/platform"
 	"testing"
 	"time"
 )

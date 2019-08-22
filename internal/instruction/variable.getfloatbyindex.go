@@ -3,7 +3,7 @@ package instruction
 import (
 	"fmt"
 	"math/big"
-	"synthesis/dao"
+	"synthesis/internal/dao"
 	"strings"
 )
 

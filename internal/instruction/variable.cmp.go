@@ -2,8 +2,8 @@ package instruction
 
 import (
 	"fmt"
-	"synthesis/dao"
-	"synthesis/interpreter/vrb"
+	"synthesis/internal/dao"
+	"synthesis/internal/interpreter/vrb"
 )
 
 func init() {

@@ -2,8 +2,8 @@ package alientek_test
 
 import (
 	"reflect"
-	"synthesis/dao"
-	"synthesis/dao/alientek"
+	"synthesis/internal/dao"
+	"synthesis/internal/dao/alientek"
 	"testing"
 )
 

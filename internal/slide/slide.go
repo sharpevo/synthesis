@@ -1,7 +1,7 @@
 package slide
 
 import (
-	"synthesis/util/geometry"
+	"synthesis/internal/geometry"
 )
 
 const (

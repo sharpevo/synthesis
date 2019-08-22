@@ -12,12 +12,12 @@ import (
 	"strconv"
 	"strings"
 	"synthesis/gui/uiutil"
-	"synthesis/util/formation"
-	"synthesis/util/geometry"
-	"synthesis/util/printhead"
-	"synthesis/util/reagent"
-	"synthesis/util/slide"
-	"synthesis/util/substrate"
+	"synthesis/internal/formation"
+	"synthesis/internal/geometry"
+	"synthesis/internal/printhead"
+	"synthesis/internal/reagent"
+	"synthesis/internal/slide"
+	"synthesis/internal/substrate"
 	//"time"
 )
 

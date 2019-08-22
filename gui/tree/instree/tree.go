@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"synthesis/config"
+	"synthesis/pkg/config"
 	"synthesis/gui/tree"
 	"synthesis/gui/uiutil"
 )

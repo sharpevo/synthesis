@@ -1,8 +1,8 @@
 package slide
 
 import (
-	"synthesis/util/geometry"
-	"synthesis/util/reagent"
+	"synthesis/internal/geometry"
+	"synthesis/internal/reagent"
 )
 
 type SpotReagent struct {

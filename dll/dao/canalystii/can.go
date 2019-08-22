@@ -4,7 +4,7 @@ import "C"
 
 import (
 	"log"
-	"synthesis/dao/canalystii"
+	"synthesis/internal/dao/canalystii"
 	//"reflect"
 )
 

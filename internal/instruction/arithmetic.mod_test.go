@@ -3,9 +3,9 @@ package instruction_test
 import (
 	"fmt"
 	"math/big"
-	"synthesis/instruction"
-	"synthesis/interpreter"
-	"synthesis/interpreter/vrb"
+	"synthesis/internal/instruction"
+	"synthesis/internal/interpreter"
+	"synthesis/internal/interpreter/vrb"
 	"testing"
 )
 

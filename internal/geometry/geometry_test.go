@@ -2,7 +2,7 @@ package geometry
 
 import (
 	//"fmt"
-	"synthesis/util/geometry"
+	"synthesis/internal/geometry"
 	"testing"
 )
 

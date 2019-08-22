@@ -3,8 +3,8 @@ package instruction
 import (
 	"fmt"
 	"log"
-	"synthesis/interpreter/vrb"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/interpreter/vrb"
+	"synthesis/pkg/concurrentmap"
 	"strconv"
 )
 

@@ -2,7 +2,7 @@ package usbcan_test
 
 import (
 	"fmt"
-	"synthesis/protocol/usbcan"
+	"synthesis/internal/protocol/usbcan"
 	"reflect"
 	"testing"
 )

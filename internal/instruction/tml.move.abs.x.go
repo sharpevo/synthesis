@@ -1,7 +1,7 @@
 package instruction
 
 import (
-	"synthesis/dao/aoztech"
+	"synthesis/internal/dao/aoztech"
 )
 
 func init() {

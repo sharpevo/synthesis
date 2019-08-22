@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
-	"synthesis/dao"
-	"synthesis/protocol/tml"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/dao"
+	"synthesis/internal/protocol/tml"
+	"synthesis/pkg/concurrentmap"
 )
 
 const (

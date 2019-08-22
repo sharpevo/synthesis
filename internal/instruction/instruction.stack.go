@@ -3,9 +3,9 @@ package instruction
 import (
 	"fmt"
 	"log"
-	"synthesis/interpreter/vrb"
-	"synthesis/util/blockingqueue"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/interpreter/vrb"
+	"synthesis/pkg/blockingqueue"
+	"synthesis/pkg/concurrentmap"
 	"sync"
 )
 

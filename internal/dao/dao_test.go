@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"strings"
-	"synthesis/dao"
+	"synthesis/internal/dao"
 	"testing"
 )
 

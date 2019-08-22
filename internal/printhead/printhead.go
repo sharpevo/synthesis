@@ -1,8 +1,8 @@
 package printhead
 
 import (
-	"synthesis/util/geometry"
-	"synthesis/util/reagent"
+	"synthesis/internal/geometry"
+	"synthesis/internal/reagent"
 )
 
 type Printhead struct {

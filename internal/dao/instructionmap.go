@@ -3,7 +3,7 @@ package dao
 import (
 	"reflect"
 	"sync"
-	"synthesis/util/concurrentmap"
+	"synthesis/pkg/concurrentmap"
 )
 
 type InstructionMapt struct {

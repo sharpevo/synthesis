@@ -6,8 +6,8 @@ import (
 	"io"
 	"log"
 	"net"
-	"synthesis/util/blockingqueue"
-	"synthesis/util/concurrentmap"
+	"synthesis/pkg/blockingqueue"
+	"synthesis/pkg/concurrentmap"
 	"time"
 )
 

@@ -7,9 +7,9 @@ import (
 	"log"
 	"math"
 	"strconv"
-	"synthesis/dao"
-	"synthesis/protocol/usbcan"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/dao"
+	"synthesis/internal/protocol/usbcan"
+	"synthesis/pkg/concurrentmap"
 )
 
 // Constants manage strings as the captions in the GUI. Note that the value of IDNAME is different according to the type of devices.

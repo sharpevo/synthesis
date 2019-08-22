@@ -3,10 +3,10 @@ package instruction_test
 import (
 	"bytes"
 	"net"
-	"synthesis/dao/ricoh_g5"
-	"synthesis/instruction"
-	"synthesis/interpreter"
-	"synthesis/interpreter/vrb"
+	"synthesis/internal/dao/ricoh_g5"
+	"synthesis/internal/instruction"
+	"synthesis/internal/interpreter"
+	"synthesis/internal/interpreter/vrb"
 	"strings"
 	"testing"
 )

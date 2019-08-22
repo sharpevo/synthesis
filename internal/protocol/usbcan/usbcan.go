@@ -5,13 +5,13 @@ import (
 	"controlcan"
 	"encoding/hex"
 	"fmt"
-	"synthesis/config"
+	"synthesis/pkg/config"
 	//"synthesis/gui/uiutil"
-	"synthesis/util"
-	"synthesis/util/blockingqueue"
-	"synthesis/util/concurrentmap"
-	"synthesis/util/log"
 	"sync"
+	"synthesis/internal/log"
+	"synthesis/internal/util"
+	"synthesis/pkg/blockingqueue"
+	"synthesis/pkg/concurrentmap"
 	"time"
 )
 

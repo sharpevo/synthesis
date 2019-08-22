@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"synthesis/util/formation"
+	"synthesis/internal/formation"
 )
 
 type InstructionPrinterLoad struct {

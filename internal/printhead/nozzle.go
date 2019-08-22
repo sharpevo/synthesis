@@ -2,8 +2,8 @@ package printhead
 
 import (
 	"fmt"
-	"synthesis/util/geometry"
-	"synthesis/util/reagent"
+	"synthesis/internal/geometry"
+	"synthesis/internal/reagent"
 )
 
 type Nozzle struct {

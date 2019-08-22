@@ -1,7 +1,7 @@
 package ricoh_g5
 
 import (
-	"synthesis/dao"
+	"synthesis/internal/dao"
 )
 
 var ErrorCodeUnit,

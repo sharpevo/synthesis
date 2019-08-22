@@ -1,7 +1,7 @@
 package instruction
 
 import (
-	"synthesis/dao"
+	"synthesis/internal/dao"
 	"strings"
 )
 

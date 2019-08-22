@@ -1,7 +1,7 @@
 package alientek
 
 import (
-	"synthesis/dao"
+	"synthesis/internal/dao"
 )
 
 var LedOnUnit,

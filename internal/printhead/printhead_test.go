@@ -2,8 +2,8 @@ package printhead_test
 
 import (
 	"fmt"
-	"synthesis/util/printhead"
-	"synthesis/util/reagent"
+	"synthesis/internal/printhead"
+	"synthesis/internal/reagent"
 	"testing"
 )
 

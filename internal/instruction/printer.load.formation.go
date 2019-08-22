@@ -2,7 +2,7 @@ package instruction
 
 import (
 	"fmt"
-	"synthesis/dao"
+	"synthesis/internal/dao"
 )
 
 func init() {

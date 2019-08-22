@@ -3,11 +3,11 @@ package devtree
 import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"synthesis/dao"
-	"synthesis/dao/alientek"
-	"synthesis/dao/aoztech"
-	"synthesis/dao/canalystii"
-	"synthesis/dao/ricoh_g5"
+	"synthesis/internal/dao"
+	"synthesis/internal/dao/alientek"
+	"synthesis/internal/dao/aoztech"
+	"synthesis/internal/dao/canalystii"
+	"synthesis/internal/dao/ricoh_g5"
 	"synthesis/gui/tree"
 )
 

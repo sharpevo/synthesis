@@ -2,7 +2,7 @@ package instruction_test
 
 import (
 	"fmt"
-	"synthesis/instruction"
+	"synthesis/internal/instruction"
 	"testing"
 )
 

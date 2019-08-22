@@ -6,9 +6,9 @@ import (
 	"github.com/tarm/serial"
 	"io"
 	"log"
-	"synthesis/protocol/modbus"
-	"synthesis/util/blockingqueue"
-	"synthesis/util/concurrentmap"
+	"synthesis/internal/protocol/modbus"
+	"synthesis/pkg/blockingqueue"
+	"synthesis/pkg/concurrentmap"
 )
 
 var clientMap *concurrentmap.ConcurrentMap

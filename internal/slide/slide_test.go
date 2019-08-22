@@ -2,8 +2,8 @@ package slide_test
 
 import (
 	//"fmt"
-	"synthesis/util/geometry"
-	"synthesis/util/slide"
+	"synthesis/internal/geometry"
+	"synthesis/internal/slide"
 	"testing"
 )
 

@@ -4,8 +4,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
-	"synthesis/util/printhead"
-	"synthesis/util/substrate"
+	"synthesis/internal/printhead"
+	"synthesis/internal/substrate"
 	//"sync"
 )
 

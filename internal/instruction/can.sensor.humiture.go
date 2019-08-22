@@ -3,7 +3,7 @@ package instruction
 import (
 	"fmt"
 	"math/big"
-	"synthesis/dao/canalystii"
+	"synthesis/internal/dao/canalystii"
 )
 
 func init() {

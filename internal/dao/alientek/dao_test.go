@@ -4,8 +4,8 @@ import (
 	"log"
 	"reflect"
 	"strings"
-	"synthesis/dao/alientek"
-	"synthesis/protocol/serialport"
+	"synthesis/internal/dao/alientek"
+	"synthesis/internal/protocol/serialport"
 	"testing"
 	"time"
 )
