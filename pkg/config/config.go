@@ -15,7 +15,7 @@ func load() {
 		return
 	}
 	log.Println("loading config...")
-	f, err := os.Open(CONFIG_FILE)
+	f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		log.Println(err)
 		return
