@@ -49,10 +49,8 @@ const (
 	CONF_SLIDE_HEIGHT       = "slide.height"
 	CONF_SLIDE_SPACE_H      = "slide.space.horizon"
 	CONF_SLIDE_SPACE_V      = "slide.space.vertical"
-	CONF_SLIDE_RESOLUTION_X = "slide.resolution.x"
-	CONF_SLIDE_RESOLUTION_Y = "slide.resolution.Y"
-	CONF_SPOT_SPACE         = "spot.space"
-	CONF_STEP               = "step"
+	CONF_SLIDE_RESOLUTION_X = "slide.resolution.horizon"
+	CONF_SLIDE_RESOLUTION_Y = "slide.resolution.vertical"
 )
 
 var offsetX, offsetY float64
@@ -79,7 +77,6 @@ func (c *MaskCommand) Execute() error {
 		return err
 	}
 	build(
-		config.GetInt(CONF_STEP),
 		cycleCount,
 		array,
 		substrate,
@@ -93,7 +90,6 @@ func (c *MaskCommand) Execute() error {
 }
 
 func build(
-	step int,
 	cycleCount int,
 	array *printhead.Array,
 	substrate *substrate.Substrate,
@@ -126,6 +122,7 @@ func build(
 	close(lotc)
 	paintedc := make(chan struct{})
 	//countc := bin.Build(step, lotc, img, paintedc, true)
+	step := geometry.DPI / substrate.ResolutionY
 	countc, outputc := bin.BuildWithoutMotor(step, lotc, img, paintedc, true)
 	fmt.Println("build", step)
 	//go func() {
@@ -209,8 +206,6 @@ func setDefaultConfig() {
 	config.SetDefault(CONF_SLIDE_SPACE_V, 25)
 	config.SetDefault(CONF_SLIDE_RESOLUTION_X, 600)
 	config.SetDefault(CONF_SLIDE_RESOLUTION_Y, 600)
-	config.SetDefault(CONF_SPOT_SPACE, 4)
-	config.SetDefault(CONF_STEP, 4)
 	config.SetDefault(CONF_PRINTHEAD_OFFSET_0_X, 35)
 	config.SetDefault(CONF_PRINTHEAD_OFFSET_0_Y, 20)
 	config.SetDefault(CONF_PRINTHEAD_OFFSET_1_X, 35)
@@ -283,7 +278,7 @@ func buildPrintheadArray() (*printhead.Array, error) {
 		p1x,
 		p1y,
 	)
-	step := config.GetInt(CONF_STEP)
+	step := geometry.DPI / 150
 	deltay := geometry.Millimeter2Dot(p1y - p0y)
 	yrem := deltay % step
 	if yrem > step/2 {
@@ -347,7 +342,6 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 		ssh,
 		ssv,
 		spots,
-		config.GetInt(CONF_SPOT_SPACE),
 		getDeltax(),
 		rx,
 		ry,

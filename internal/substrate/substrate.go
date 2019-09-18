@@ -26,6 +26,9 @@ type Substrate struct {
 
 	curSlide  int
 	curColumn int
+
+	ResolutionX int
+	ResolutionY int
 }
 
 func NewSubstrate(
@@ -36,20 +39,23 @@ func NewSubstrate(
 	slideSpaceh float64,
 	slideSpacev float64,
 	spots []*Spot,
-	spotSpaceu int,
 	leftmostu int,
+	resolutionX int,
+	resolutionY int,
 ) (*Substrate, error) {
 	s := &Substrate{
 		SpotCount:    len(spots),
-		SpotSpaceu:   spotSpaceu,
+		SpotSpaceu:   geometry.DPI / resolutionX,
 		SlideNumh:    slideNumh,
 		SlideNumv:    slideNumv,
 		SlideWidth:   slideWidth,
 		SlideHeight:  slideHeight,
-		SlideWidthu:  geometry.RoundedUnit(slideWidth),
-		SlideHeightu: geometry.Unit(slideHeight),
-		SlideSpacehu: geometry.RoundedUnit(slideSpaceh),
-		SlideSpacevu: geometry.RoundedUnit(slideSpacev),
+		SlideWidthu:  geometry.RoundedDot(slideWidth, resolutionX),
+		SlideHeightu: geometry.Millimeter2Dot(slideHeight),
+		SlideSpacehu: geometry.RoundedDot(slideSpaceh, resolutionX),
+		SlideSpacevu: geometry.RoundedDot(slideSpacev, resolutionY),
+		ResolutionX:  resolutionX,
+		ResolutionY:  resolutionY,
 	}
 	if err := s.isOverloaded(); err != nil {
 		return nil, err
@@ -58,7 +64,7 @@ func NewSubstrate(
 	s.MaxSpotsv = s.MaxSpotsvu(slideSpacev)
 	s.Width = s.MaxSpotsh + 1
 	s.Height = s.MaxSpotsv + 1
-	s.LeftMostu = geometry.Round(leftmostu)
+	s.LeftMostu = geometry.RoundDot(leftmostu, resolutionX)
 	if err := s.loadSpots(spots); err != nil {
 		return nil, err
 	}
@@ -66,12 +72,12 @@ func NewSubstrate(
 }
 
 func (s *Substrate) MaxSpotshu(slideSpaceh float64) int {
-	return geometry.Unit(
+	return geometry.Millimeter2Dot(
 		s.SlideWidth*float64(s.SlideNumh)+slideSpaceh*float64(s.SlideNumh-1)) + 1
 }
 
 func (s *Substrate) MaxSpotsvu(slideSpacev float64) int {
-	return geometry.Unit(
+	return geometry.Millimeter2Dot(
 		s.SlideHeight*float64(s.SlideNumv)+slideSpacev*float64(s.SlideNumv-1)) + 1
 }
 
