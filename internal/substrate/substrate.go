@@ -147,7 +147,7 @@ func (s *Substrate) Top() int {
 }
 
 func (s *Substrate) Bottom() int {
-	return s.MaxSpotsv % 4
+	return s.MaxSpotsv % (geometry.DPI / s.ResolutionY)
 }
 
 func (s *Substrate) Strip() (count int) {
@@ -176,6 +176,7 @@ func (s *Substrate) isOverloaded() error {
 }
 
 func (s *Substrate) spotsPerSlide() int {
-	return (geometry.Unit(s.SlideWidth)/4 + 1) *
-		(geometry.Unit(s.SlideHeight)/4 + 1)
+	spotsHorizon := (geometry.Millimeter2Dot(s.SlideWidth)/(geometry.DPI/s.ResolutionX) + 1)
+	spotsVertical := (geometry.Millimeter2Dot(s.SlideHeight)/(geometry.DPI/s.ResolutionY) + 1)
+	return spotsHorizon * spotsVertical
 }
