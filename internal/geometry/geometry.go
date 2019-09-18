@@ -1,7 +1,7 @@
 package geometry
 
 import (
-	"fmt"
+//"fmt"
 )
 
 const (
@@ -9,7 +9,10 @@ const (
 	UM = 1e3
 	MM = 1e6
 
-	UNIT = 25.4 * MM / 600
+	MPI = 25.4
+	DPI = 600
+
+	UNIT = MPI * MM / DPI
 )
 
 type Position struct {
@@ -39,45 +42,28 @@ func (p *Position) Sub(q *Position) *Position {
 	}
 }
 
-type Area struct {
-	Top    int
-	Right  int
-	Bottom int
-	Left   int
+func Millimeter(input float64) int {
+	return int(input/MPI*DPI + 0.5)
 }
 
-func Unit(input float64) int {
-	return int(input*600/25.4 + 0.5)
+func RoundedDot(input float64, dpi int) int {
+	dot := Millimeter(input)
+	return RoundDot(dot, dpi)
 }
 
-func RoundedUnit(input float64) int {
-	result := Unit(input)
-	//if rem := result % 4; rem != 0 {
-	//result -= rem
-	//}
-	//return result
-	return Round(result)
-}
-
-func Round(input int) int {
-	if rem := input % 4; rem != 0 {
+func RoundDot(input int, dpi int) int {
+	div := DPI / dpi
+	if rem := input % div; rem != 0 {
 		input -= rem
 	}
 	return input
 }
 
-func Mm2(input int) string {
-	output := fmt.Sprintf("%.6f", float64(input)*25.4/600)
-	//fmt.Println("convert", input, output)
-	return output
-}
-
-func Mm(input int) float64 {
-	output := float64(input) * 25.4 / 600
-	//fmt.Println("convert", input, output)
+func Dot2Millimeter(input int) float64 {
+	output := float64(input) / DPI * MPI
 	return output
 }
 
 func Raw(value int, offset float64) float64 {
-	return offset - Mm(value)
+	return offset - Dot2Millimeter(value)
 }
