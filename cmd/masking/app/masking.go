@@ -122,9 +122,7 @@ func build(
 	close(lotc)
 	paintedc := make(chan struct{})
 	//countc := bin.Build(step, lotc, img, paintedc, true)
-	step := geometry.DPI / substrate.ResolutionY
-	countc, outputc := bin.BuildWithoutMotor(step, lotc, img, paintedc, true)
-	fmt.Println("build", step)
+	countc, outputc := bin.BuildWithoutMotor(lotc, img, paintedc, true)
 	//go func() {
 	for _ = range countc {
 		//for count := range countc {

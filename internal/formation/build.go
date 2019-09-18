@@ -283,13 +283,13 @@ type Output [][]string
 var SEPARATOR = []string{strings.Repeat("-", 320), strings.Repeat("-", 320)}
 
 func (b *Bin) BuildWithoutMotor(
-	step int,
 	lotamountc chan int,
 	img *image.RGBA,
 	paintedc chan struct{},
 	preview bool,
 ) (countc chan int, outputc chan Output) {
 	output := Output{}
+	step := geometry.DPI / b.Substrate().ResolutionY
 	fmt.Println("preview", preview)
 	countc = make(chan int)
 	outputc = make(chan Output)
