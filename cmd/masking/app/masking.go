@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"image"
 	"io/ioutil"
+	"os"
 	"strconv"
+	"strings"
 	"synthesis/internal/formation"
 	"synthesis/internal/geometry"
 	"synthesis/internal/printhead"
@@ -121,23 +123,54 @@ func build(
 	lotc := make(chan int)
 	close(lotc)
 	paintedc := make(chan struct{})
-	countc := bin.Build(step, lotc, img, paintedc, true)
+	//countc := bin.Build(step, lotc, img, paintedc, true)
+	countc, outputc := bin.BuildWithoutMotor(step, lotc, img, paintedc, true)
 	fmt.Println("build", step)
 	//go func() {
-	for count := range countc {
-		fmt.Println(count)
+	for _ = range countc {
+		//for count := range countc {
+		//fmt.Println(count)
 		go func() {
 			paintedc <- struct{}{}
 		}()
 	}
 	//}()
-	for i := 0; i < len(bin.Formations); i++ {
-		fmt.Println("## cycle", i)
-		for _, f := range bin.Formations[i] {
-			fmt.Printf(">> %#v || (%v, %v)\n", f.Print.LineBuffers, dpi(f.Move.PositionX), dpi(f.Move.PositionY))
-			fmt.Println()
+	//for i := 0; i < len(bin.Formations); i++ {
+	//fmt.Println("## cycle", i)
+	//for _, f := range bin.Formations[i] {
+	//fmt.Printf(">> %#v || (%v, %v)\n", f.Print.LineBuffers, dpi(f.Move.PositionX), dpi(f.Move.PositionY))
+	//fmt.Println()
+	//}
+	//}
+	output := <-outputc
+	//fmt.Printf("%#v\n", output)
+	fmt.Println(len(output))
+
+	zero := strings.Repeat("0", 320)
+	dash := strings.Repeat("-", 320)
+	var f *os.File
+	var err error
+	count := 0
+	for i, o := range output {
+		if o[0] == dash {
+			if f != nil {
+				f.Close()
+			}
+			f, err = os.OpenFile(
+				fmt.Sprintf("output-%d-%d.txt", i, count),
+				os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
+			if err != nil {
+				fmt.Println(err)
+			}
+			count++
+		} else {
+			fmt.Fprintln(f, o[0])
+			if o[0] != zero {
+				fmt.Println(i, o[0])
+			}
 		}
 	}
+	f.Close()
 }
 
 func dpi(input string) int {
