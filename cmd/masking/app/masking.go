@@ -43,14 +43,16 @@ const (
 
 	CONF_PRINT_MODE = "print.mode"
 
-	CONF_SLIDE_COUNT_H = "slide.count.horizon"
-	CONF_SLIDE_COUNT_V = "slide.count.vertical"
-	CONF_SLIDE_WIDTH   = "slide.width"
-	CONF_SLIDE_HEIGHT  = "slide.height"
-	CONF_SLIDE_SPACE_H = "slide.space.horizon"
-	CONF_SLIDE_SPACE_V = "slide.space.vertical"
-	CONF_SPOT_SPACE    = "spot.space"
-	CONF_STEP          = "step"
+	CONF_SLIDE_COUNT_H      = "slide.count.horizon"
+	CONF_SLIDE_COUNT_V      = "slide.count.vertical"
+	CONF_SLIDE_WIDTH        = "slide.width"
+	CONF_SLIDE_HEIGHT       = "slide.height"
+	CONF_SLIDE_SPACE_H      = "slide.space.horizon"
+	CONF_SLIDE_SPACE_V      = "slide.space.vertical"
+	CONF_SLIDE_RESOLUTION_X = "slide.resolution.x"
+	CONF_SLIDE_RESOLUTION_Y = "slide.resolution.Y"
+	CONF_SPOT_SPACE         = "spot.space"
+	CONF_STEP               = "step"
 )
 
 var offsetX, offsetY float64
@@ -205,6 +207,8 @@ func setDefaultConfig() {
 	config.SetDefault(CONF_SLIDE_HEIGHT, 29)
 	config.SetDefault(CONF_SLIDE_SPACE_H, 5)
 	config.SetDefault(CONF_SLIDE_SPACE_V, 25)
+	config.SetDefault(CONF_SLIDE_RESOLUTION_X, 600)
+	config.SetDefault(CONF_SLIDE_RESOLUTION_Y, 600)
 	config.SetDefault(CONF_SPOT_SPACE, 4)
 	config.SetDefault(CONF_STEP, 4)
 	config.SetDefault(CONF_PRINTHEAD_OFFSET_0_X, 35)
@@ -262,8 +266,8 @@ func buildPrintheadArray() (*printhead.Array, error) {
 		p0x,
 		p0y,
 	)
-	p0xu := geometry.Unit(p0x)
-	p0yu := geometry.Unit(p0y)
+	p0xu := geometry.Millimeter2Dot(p0x)
+	p0yu := geometry.Millimeter2Dot(p0y)
 	n0 := p0.MakeNozzles(p0xu, p0yu)
 
 	p1 := printhead.NewPrinthead(
@@ -280,7 +284,7 @@ func buildPrintheadArray() (*printhead.Array, error) {
 		p1y,
 	)
 	step := config.GetInt(CONF_STEP)
-	deltay := geometry.Unit(p1y - p0y)
+	deltay := geometry.Millimeter2Dot(p1y - p0y)
 	yrem := deltay % step
 	if yrem > step/2 {
 		deltay += step - yrem
@@ -315,7 +319,7 @@ func validateOffsetX(offset float64, stroke float64) error {
 func getDeltax() int {
 	p0x := config.GetFloat(CONF_PRINTHEAD_OFFSET_0_X)
 	p1x := config.GetFloat(CONF_PRINTHEAD_OFFSET_1_X)
-	return geometry.Unit(p1x - p0x)
+	return geometry.Millimeter2Dot(p1x - p0x)
 }
 
 func buildSubstrate() (*substrate.Substrate, int, error) {
@@ -325,6 +329,8 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 	ssv := config.GetFloat(CONF_SLIDE_SPACE_V)
 	sw := config.GetFloat(CONF_SLIDE_WIDTH)
 	sh := config.GetFloat(CONF_SLIDE_HEIGHT)
+	rx := config.GetInt(CONF_SLIDE_RESOLUTION_X)
+	ry := config.GetInt(CONF_SLIDE_RESOLUTION_Y)
 	seqText, err := loadSeqText()
 	if err != nil {
 		return nil, 0, err
@@ -343,6 +349,8 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 		spots,
 		config.GetInt(CONF_SPOT_SPACE),
 		getDeltax(),
+		rx,
+		ry,
 	)
 	if err != nil {
 		return nil, 0, err
