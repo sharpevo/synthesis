@@ -42,12 +42,12 @@ func (p *Position) Sub(q *Position) *Position {
 	}
 }
 
-func Millimeter(input float64) int {
+func Millimeter2Dot(input float64) int {
 	return int(input/MPI*DPI + 0.5)
 }
 
 func RoundedDot(input float64, dpi int) int {
-	dot := Millimeter(input)
+	dot := Millimeter2Dot(input)
 	return RoundDot(dot, dpi)
 }
 

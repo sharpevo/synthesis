@@ -8,7 +8,7 @@ import (
 
 const tmpl = "\nEXPECT: %v\nGET: %v\n"
 
-func TestMillimeter(t *testing.T) {
+func TestMillimeter2Dot(t *testing.T) {
 	cases := []struct {
 		input  float64
 		output int
@@ -24,7 +24,7 @@ func TestMillimeter(t *testing.T) {
 	}
 	for index, c := range cases {
 		t.Run(fmt.Sprintf("%d", index), func(t *testing.T) {
-			output := geometry.Millimeter(c.input)
+			output := geometry.Millimeter2Dot(c.input)
 			if output != c.output {
 				t.Errorf(tmpl, c.output, output)
 			}
