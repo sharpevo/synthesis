@@ -149,13 +149,13 @@ func build(
 	var f *os.File
 	var err error
 	count := 0
-	for i, o := range output {
+	for _, o := range output {
 		if o[0] == dash {
 			if f != nil {
 				f.Close()
 			}
 			f, err = os.OpenFile(
-				fmt.Sprintf("output-%d-%d.txt", i, count),
+				fmt.Sprintf("output-%d.txt", count),
 				os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 			if err != nil {
 				fmt.Println(err)
@@ -164,7 +164,7 @@ func build(
 		} else {
 			fmt.Fprintln(f, o[0])
 			if o[0] != zero {
-				fmt.Println(i, o[0])
+				//fmt.Println(i, o[0])
 			}
 		}
 	}
