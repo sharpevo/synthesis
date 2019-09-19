@@ -305,98 +305,33 @@ func (b *Bin) BuildWithoutMotor(
 				log.V("strip count", stripCount).Debug()
 				posx := stripCount * 1280
 				posy := b.Substrate().Top()
+				innerStripSum := b.Substrate().ResolutionX / b.PrintheadArray.Printheads[0].RowResolution
+				for innerStrip := 0; innerStrip < innerStripSum; innerStrip++ {
+					output = append(output, SEPARATOR)
+					fmt.Println("innerStrip", innerStrip, innerStripSum)
+					posy = b.Substrate().Top()
 
-				output = append(output, SEPARATOR)
-
-				rowIndex := 3 // {{{
-				b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
-				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Top() >= b.Substrate().Bottom() {
-					dataMap, count := b.genDataWithoutMotor(
-						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
-					if count > 0 {
-						log.Vs(log.M{
-							"count":    count,
-							"data map": dataMap,
-						}).Debug("data downward #1")
-						x, y := b.RawPos()
-						b.AddFormation(cycleIndex, x, y, dataMap)
-						output = append(output, dataMap)
-					}
-					posy -= step
+					rowIndex := 3 // lack one line of A {{{
 					b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
-				} // }}}
+					log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
+					for b.PrintheadArray.Top() >= b.Substrate().Bottom() {
+						dataMap, count := b.genDataWithoutMotor(
+							cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
+						if count > 0 {
+							log.Vs(log.M{
+								"count":    count,
+								"data map": dataMap,
+							}).Debug("data downward #1")
+							x, y := b.RawPos()
+							b.AddFormation(cycleIndex, x, y, dataMap)
+							output = append(output, dataMap)
+						}
+						posy -= step
+						b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
+					} // }}}
+					posx++
 
-				if step == 1 {
-					continue
 				}
-
-				output = append(output, SEPARATOR)
-				posy = b.Substrate().Bottom()
-
-				rowIndex = 2 // {{{
-				b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
-				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Bottom() <= b.Substrate().Top() {
-					dataMap, count := b.genDataWithoutMotor(
-						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
-					if count > 0 {
-						log.Vs(log.M{
-							"count":    count,
-							"data map": dataMap,
-						}).Debug("data upward #2")
-						x, y := b.RawPos()
-						b.AddFormation(cycleIndex, x, y, dataMap)
-						output = append(output, dataMap)
-					}
-					posy += step
-					b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
-				} // }}}
-
-				output = append(output, SEPARATOR)
-				posy = b.Substrate().Top()
-
-				rowIndex = 1 // {{{
-				b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
-				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Top() >= b.Substrate().Bottom() {
-					dataMap, count := b.genDataWithoutMotor(
-						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
-					if count > 0 {
-						log.Vs(log.M{
-							"count":    count,
-							"data map": dataMap,
-						}).Debug("data downward #3")
-						x, y := b.RawPos()
-						b.AddFormation(cycleIndex, x, y, dataMap)
-						output = append(output, dataMap)
-					}
-					posy -= step
-					b.PrintheadArray.MoveBottomRow(rowIndex, posx, posy)
-				} // }}}
-
-				output = append(output, SEPARATOR)
-				posy = b.Substrate().Bottom()
-
-				rowIndex = 0 // {{{
-				b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
-				log.Df("move row %d to %d %d\n", rowIndex, posx, posy)
-				for b.PrintheadArray.Bottom() <= b.Substrate().Top() {
-					dataMap, count := b.genDataWithoutMotor(
-						cycleIndex, img, &stepCount, lotamountc, &lot, paintedc, countc, preview)
-					if count > 0 {
-						log.Vs(log.M{
-							"count":    count,
-							"data map": dataMap,
-						}).Debug("data upward #4")
-						x, y := b.RawPos()
-						b.AddFormation(cycleIndex, x, y, dataMap)
-						output = append(output, dataMap)
-					}
-					posy += step
-					b.PrintheadArray.MoveTopRow(rowIndex, posx, posy)
-				} // }}}
-
 			}
 			//if preview && b.Mode == MODE_CIJ {
 			//outputFile, _ := os.Create(
