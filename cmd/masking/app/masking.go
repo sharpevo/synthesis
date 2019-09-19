@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	CONF_DEBUG      = "debug"
 	CONF_SEQ_FILE   = "seqfile"
 	CONF_ACT_ENABLE = "activator.enabled"
 
@@ -177,6 +178,7 @@ func dpi(input string) int {
 }
 
 func setDefaultConfig() {
+	config.SetDefault(CONF_DEBUG, false)
 	config.SetDefault(CONF_SEQ_FILE, "input.txt")
 	config.SetDefault(CONF_ACT_ENABLE, false)
 	config.SetDefault(CONF_MOTOR_STROKE_X, 100.00)
@@ -351,6 +353,20 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+
+	if config.GetBool(CONF_DEBUG) {
+		for height, spots := range sub.Spots {
+			fmt.Println(height)
+			for _, spot := range spots {
+				if spot != nil && len(spot.Reagents) != 0 {
+					fmt.Printf("%s", spot.Reagents[0].Name)
+				} else {
+					fmt.Printf("%s", "-")
+				}
+			}
+		}
+	}
+
 	return sub, cycleCount, nil
 }
 
