@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	CONF_DEBUG      = "debug"
+	CONF_DEBUG      = "general.debug"
 	CONF_SEQ_FILE   = "seqfile"
 	CONF_ACT_ENABLE = "activator.enabled"
 
