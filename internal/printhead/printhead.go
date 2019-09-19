@@ -14,6 +14,8 @@ type Printhead struct {
 
 	OffsetX float64
 	OffsetY float64
+
+	RowResolution int
 }
 
 func NewPrinthead(
@@ -23,14 +25,16 @@ func NewPrinthead(
 	reverse bool,
 	offsetx float64,
 	offsety float64,
+	rowResolution int,
 ) *Printhead {
 	p := &Printhead{
-		Index:    index,
-		Reagents: reagents,
-		Path:     path,
-		Reverse:  reverse,
-		OffsetX:  offsetx,
-		OffsetY:  offsety,
+		Index:         index,
+		Reagents:      reagents,
+		Path:          path,
+		Reverse:       reverse,
+		OffsetX:       offsetx,
+		OffsetY:       offsety,
+		RowResolution: rowResolution,
 	}
 	return p
 }

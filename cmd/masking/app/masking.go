@@ -40,6 +40,7 @@ const (
 	CONF_PRINTHEAD_REAGENT_1_LINE1 = "printhead.reagent.1.1"
 	CONF_PRINTHEAD_REAGENT_1_LINE2 = "printhead.reagent.1.2"
 	CONF_PRINTHEAD_REAGENT_1_LINE3 = "printhead.reagent.1.3"
+	CONF_PRINTHEAD_ROW_RESOLUTION  = "printhead.row.resoultion"
 
 	CONF_PRINT_MODE = "print.mode"
 
@@ -194,6 +195,7 @@ func setDefaultConfig() {
 	config.SetDefault(CONF_PRINTHEAD_REAGENT_1_LINE1, "-")
 	config.SetDefault(CONF_PRINTHEAD_REAGENT_1_LINE2, "-")
 	config.SetDefault(CONF_PRINTHEAD_REAGENT_1_LINE3, "-")
+	config.SetDefault(CONF_PRINTHEAD_ROW_RESOLUTION, 150)
 
 	config.SetDefault(CONF_PRINT_MODE, formation.MODE_CIJ)
 	config.SetDefault(CONF_SLIDE_COUNT_H, 3)
@@ -258,6 +260,7 @@ func buildPrintheadArray() (*printhead.Array, error) {
 		false,
 		p0x,
 		p0y,
+		config.GetInt(CONF_PRINTHEAD_ROW_RESOLUTION),
 	)
 	p0xu := geometry.Millimeter2Dot(p0x)
 	p0yu := geometry.Millimeter2Dot(p0y)
@@ -275,8 +278,9 @@ func buildPrintheadArray() (*printhead.Array, error) {
 		false,
 		p1x,
 		p1y,
+		config.GetInt(CONF_PRINTHEAD_ROW_RESOLUTION),
 	)
-	step := geometry.DPI / 150
+	step := geometry.DPI / config.GetInt(CONF_PRINTHEAD_ROW_RESOLUTION)
 	deltay := geometry.Millimeter2Dot(p1y - p0y)
 	yrem := deltay % step
 	if yrem > step/2 {
