@@ -16,9 +16,11 @@ import (
 )
 
 const (
-	CONF_DEBUG      = "general.debug"
-	CONF_SEQ_FILE   = "seqfile"
-	CONF_ACT_ENABLE = "activator.enabled"
+	CONF_DEBUG        = "general.debug"
+	CONF_RESOLUTION_X = "general.resolution.horizon"
+	CONF_RESOLUTION_Y = "general.resolution.vertical"
+	CONF_SEQ_FILE     = "seqfile"
+	CONF_ACT_ENABLE   = "activator.enabled"
 
 	CONF_MOTOR_STROKE_X = "motor.stroke.x"
 	CONF_MOTOR_STROKE_Y = "motor.stroke.y"
@@ -45,14 +47,12 @@ const (
 
 	CONF_PRINT_MODE = "print.mode"
 
-	CONF_SLIDE_COUNT_H      = "slide.count.horizon"
-	CONF_SLIDE_COUNT_V      = "slide.count.vertical"
-	CONF_SLIDE_WIDTH        = "slide.width"
-	CONF_SLIDE_HEIGHT       = "slide.height"
-	CONF_SLIDE_SPACE_H      = "slide.space.horizon"
-	CONF_SLIDE_SPACE_V      = "slide.space.vertical"
-	CONF_SLIDE_RESOLUTION_X = "slide.resolution.horizon"
-	CONF_SLIDE_RESOLUTION_Y = "slide.resolution.vertical"
+	CONF_SLIDE_COUNT_H = "slide.count.horizon"
+	CONF_SLIDE_COUNT_V = "slide.count.vertical"
+	CONF_SLIDE_WIDTH   = "slide.width"
+	CONF_SLIDE_HEIGHT  = "slide.height"
+	CONF_SLIDE_SPACE_H = "slide.space.horizon"
+	CONF_SLIDE_SPACE_V = "slide.space.vertical"
 )
 
 var offsetX, offsetY float64
@@ -206,8 +206,8 @@ func setDefaultConfig() {
 	config.SetDefault(CONF_SLIDE_HEIGHT, 29)
 	config.SetDefault(CONF_SLIDE_SPACE_H, 5)
 	config.SetDefault(CONF_SLIDE_SPACE_V, 25)
-	config.SetDefault(CONF_SLIDE_RESOLUTION_X, 600)
-	config.SetDefault(CONF_SLIDE_RESOLUTION_Y, 600)
+	config.SetDefault(CONF_RESOLUTION_X, 600)
+	config.SetDefault(CONF_RESOLUTION_Y, 600)
 	config.SetDefault(CONF_PRINTHEAD_OFFSET_0_X, 35)
 	config.SetDefault(CONF_PRINTHEAD_OFFSET_0_Y, 20)
 	config.SetDefault(CONF_PRINTHEAD_OFFSET_1_X, 35)
@@ -328,8 +328,8 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 	ssv := config.GetFloat(CONF_SLIDE_SPACE_V)
 	sw := config.GetFloat(CONF_SLIDE_WIDTH)
 	sh := config.GetFloat(CONF_SLIDE_HEIGHT)
-	rx := config.GetInt(CONF_SLIDE_RESOLUTION_X)
-	ry := config.GetInt(CONF_SLIDE_RESOLUTION_Y)
+	rx := config.GetInt(CONF_RESOLUTION_X)
+	ry := config.GetInt(CONF_RESOLUTION_Y)
 	seqText, err := loadSeqText()
 	if err != nil {
 		return nil, 0, err
@@ -356,7 +356,7 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 
 	if config.GetBool(CONF_DEBUG) {
 		for height, spots := range sub.Spots {
-			fmt.Println(height)
+			fmt.Printf("%d: ", height)
 			for _, spot := range spots {
 				if spot != nil && len(spot.Reagents) != 0 {
 					fmt.Printf("%s", spot.Reagents[0].Name)
@@ -364,6 +364,7 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 					fmt.Printf("%s", "-")
 				}
 			}
+			fmt.Println()
 		}
 	}
 

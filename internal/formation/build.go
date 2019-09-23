@@ -289,7 +289,7 @@ func (b *Bin) BuildWithoutMotor(
 	preview bool,
 ) (countc chan int, outputc chan Output) {
 	output := Output{}
-	step := geometry.DPI / b.Substrate().ResolutionY
+	step := 1
 	fmt.Println("preview", preview)
 	countc = make(chan int)
 	outputc = make(chan Output)

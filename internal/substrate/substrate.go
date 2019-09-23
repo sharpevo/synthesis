@@ -2,7 +2,13 @@ package substrate
 
 import (
 	"fmt"
+	"strings"
 	"synthesis/internal/geometry"
+)
+
+const (
+	RESOLUTION_X = 600
+	RESOLUTION_Y = 600
 )
 
 type Substrate struct {
@@ -45,15 +51,16 @@ func NewSubstrate(
 ) (*Substrate, error) {
 	s := &Substrate{
 		SpotCount:    len(spots),
-		SpotSpaceu:   geometry.DPI / resolutionX,
+		SpotSpaceu:   geometry.DPI / RESOLUTION_X,
 		SlideNumh:    slideNumh,
 		SlideNumv:    slideNumv,
 		SlideWidth:   slideWidth,
 		SlideHeight:  slideHeight,
-		SlideWidthu:  geometry.RoundedDot(slideWidth, resolutionX),
+		SlideWidthu:  geometry.RoundedDot(slideWidth, RESOLUTION_X),
 		SlideHeightu: geometry.Millimeter2Dot(slideHeight),
-		SlideSpacehu: geometry.RoundedDot(slideSpaceh, resolutionX),
-		SlideSpacevu: geometry.RoundedDot(slideSpacev, resolutionY),
+		//SlideHeightu: geometry.RoundedDot(slideHeight, resolutionY),
+		SlideSpacehu: geometry.RoundedDot(slideSpaceh, RESOLUTION_X),
+		SlideSpacevu: geometry.RoundedDot(slideSpacev, RESOLUTION_Y),
 		ResolutionX:  resolutionX,
 		ResolutionY:  resolutionY,
 	}
@@ -64,7 +71,8 @@ func NewSubstrate(
 	s.MaxSpotsv = s.MaxSpotsvu(slideSpacev)
 	s.Width = s.MaxSpotsh + 1
 	s.Height = s.MaxSpotsv + 1
-	s.LeftMostu = geometry.RoundDot(leftmostu, resolutionX)
+	s.LeftMostu = geometry.RoundDot(leftmostu, RESOLUTION_X)
+	fmt.Printf("%+v\n", s)
 	if err := s.loadSpots(spots); err != nil {
 		return nil, err
 	}
@@ -90,7 +98,38 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 	s.curColumn = 1
 	x := 0
 	y := s.MaxSpotsv
-	for _, spot := range spots {
+	spotsCount := 0
+	//prevY := y
+	x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
+	if err != nil {
+		return err
+	}
+	if s.Spots[y][x] != nil {
+		return fmt.Errorf("invalid location")
+	}
+	//holderSeqs := strings.Repeat("T", len(spots[0].Reagents))
+	holderSeqs := strings.Repeat("-", len(spots[0].Reagents))
+	realSpotsPerRow := (s.SlideWidthu-1)*s.ResolutionX/geometry.DPI + 1
+	prevS := 1
+	for spotIndex, spot := range spots {
+		fmt.Printf(
+			"real spot(%d, %d): spotIndex %d; spotsCount %d; spotSum %d\n",
+			x, y,
+			spotIndex,
+			spotsCount,
+			len(spots),
+		)
+		spot.Pos = geometry.NewPosition(x, y)
+		s.Spots[y][x] = spot
+		x += s.SpotSpaceu
+		spotsCount++
+
+		//prevU := s.marginRightu()
+		prevS = s.curSlide
+
+		if spotIndex == len(spots)-1 {
+			break
+		}
 		x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
 		if err != nil {
 			return err
@@ -98,9 +137,66 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 		if s.Spots[y][x] != nil {
 			return fmt.Errorf("invalid location")
 		}
-		spot.Pos = geometry.NewPosition(x, y)
-		s.Spots[y][x] = spot
-		x += s.SpotSpaceu
+		fmt.Printf(
+			"next: (%d, %d)\n",
+			x, y,
+		)
+
+		// y of next available spot
+		if (spotIndex+1)%realSpotsPerRow == 0 && // last spot of line
+			//x == prevU-s.SlideWidthu { // same slide of next line
+			s.curSlide == prevS {
+			fmt.Println("new line", spotIndex, realSpotsPerRow, s.curSlide)
+			spotsNumberPerLine := s.SlideWidthu
+			for k := 0; k < spotsNumberPerLine*(geometry.DPI/s.ResolutionY-1); k++ {
+				fmt.Printf("y: (%d, %d) %d %d\n", x, y, spotsCount, spotIndex)
+				holderSpots, _ := ParseSpots(holderSeqs, false)
+				holderSpot := holderSpots[0]
+				holderSpot.Pos = geometry.NewPosition(x, y)
+				s.Spots[y][x] = holderSpot
+				x += s.SpotSpaceu
+				spotsCount++
+				x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
+				if err != nil {
+					return err
+				}
+				if s.Spots[y][x] != nil {
+					return fmt.Errorf("invalid location")
+				}
+				//if s.curSlide != prevS {
+				//break
+				//}
+			}
+			continue
+		}
+
+		// x
+		if x <= s.marginRightu() && // add holders except the last spot
+			s.curSlide == prevS { // next available spot is in the same slide
+			for i := 1; i < geometry.DPI/s.ResolutionX; i++ {
+				fmt.Printf(
+					"x: (%d, %d) spotIndex %d; spotsCount %d; spotSum %d\n",
+					x, y,
+					spotIndex,
+					spotsCount,
+					len(spots),
+				)
+				// TODO: activatable
+				holderSpots, _ := ParseSpots(holderSeqs, false)
+				holderSpot := holderSpots[0]
+				holderSpot.Pos = geometry.NewPosition(x, y)
+				s.Spots[y][x] = holderSpot
+				x += s.SpotSpaceu
+				spotsCount++
+				x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
+				if err != nil {
+					return err
+				}
+				if s.Spots[y][x] != nil {
+					return fmt.Errorf("invalid location")
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -116,17 +212,23 @@ func (s *Substrate) marginBottomu() int {
 
 func (s *Substrate) allocate(
 	x, y, marginRightu, marginBottomu int) (int, int, error) {
-	if x <= marginRightu {
+	// next spot in the same row
+	//if x <= marginRightu {
+	if x < marginRightu { // not include last element since x starts from zero
 		return x, y, nil
 	}
-	if y >= marginBottomu+s.SpotSpaceu {
+	// next line in the same slide
+	//if y >= marginBottomu+s.SpotSpaceu {
+	if y > marginBottomu+s.SpotSpaceu { //
 		x = marginRightu - s.SlideWidthu
 		y -= s.SpotSpaceu
 		return x, y, nil
 	}
+	// next slide
 	if s.curSlide <= s.SlideNumv-1 {
+		fmt.Println("new slide", s.curSlide+1)
 		x = marginRightu - s.SlideWidthu
-		y -= s.SlideSpacevu
+		y -= s.SlideSpacevu + s.SpotSpaceu
 		s.curSlide++
 		return x, y, nil
 	}
@@ -135,6 +237,7 @@ func (s *Substrate) allocate(
 	s.curColumn++
 	s.curSlide = 1
 	if s.curColumn > s.SlideNumh {
+		fmt.Println("max", s.MaxSpotsh, s.MaxSpotsv)
 		return x, y, fmt.Errorf(
 			"not enough space for spots in horizon: %v > %v",
 			s.curColumn, s.SlideNumh)
@@ -147,7 +250,7 @@ func (s *Substrate) Top() int {
 }
 
 func (s *Substrate) Bottom() int {
-	return s.MaxSpotsv % (geometry.DPI / s.ResolutionY)
+	return s.MaxSpotsv % (geometry.DPI / RESOLUTION_Y)
 }
 
 func (s *Substrate) Strip() (count int) {
@@ -176,7 +279,7 @@ func (s *Substrate) isOverloaded() error {
 }
 
 func (s *Substrate) spotsPerSlide() int {
-	spotsHorizon := (geometry.Millimeter2Dot(s.SlideWidth)/(geometry.DPI/s.ResolutionX) + 1)
-	spotsVertical := (geometry.Millimeter2Dot(s.SlideHeight)/(geometry.DPI/s.ResolutionY) + 1)
+	spotsHorizon := (geometry.Millimeter2Dot(s.SlideWidth)/(geometry.DPI/RESOLUTION_X) + 1)
+	spotsVertical := (geometry.Millimeter2Dot(s.SlideHeight)/(geometry.DPI/RESOLUTION_Y) + 1)
 	return spotsHorizon * spotsVertical
 }
