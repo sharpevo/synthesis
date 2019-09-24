@@ -305,10 +305,9 @@ func (b *Bin) BuildWithoutMotor(
 				log.V("strip count", stripCount).Debug()
 				posx := stripCount * 1280
 				posy := b.Substrate().Top()
-				innerStripSum := b.Substrate().ResolutionX / b.PrintheadArray.Printheads[0].RowResolution
-				for innerStrip := 0; innerStrip < innerStripSum; innerStrip++ {
+				for innerStrip := 0; innerStrip < 4; innerStrip++ {
 					output = append(output, SEPARATOR)
-					fmt.Println("innerStrip", innerStrip, innerStripSum)
+					fmt.Println("innerStrip", innerStrip)
 					posy = b.Substrate().Top()
 
 					rowIndex := 3 // lack one line of A {{{
