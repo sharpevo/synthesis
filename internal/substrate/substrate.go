@@ -99,7 +99,6 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 	x := 0
 	y := s.MaxSpotsv
 	spotsCount := 0
-	//prevY := y
 	x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
 	if err != nil {
 		return err
@@ -107,8 +106,7 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 	if s.Spots[y][x] != nil {
 		return fmt.Errorf("invalid location")
 	}
-	//holderSeqs := strings.Repeat("T", len(spots[0].Reagents))
-	holderSeqs := strings.Repeat("-", len(spots[0].Reagents))
+	placeholder := strings.Repeat("-", len(spots[0].Reagents))
 	realSpotsPerRow := (s.SlideWidthu-1)*s.ResolutionX/geometry.DPI + 1
 	prevS := 1
 	for spotIndex, spot := range spots {
@@ -148,10 +146,7 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 			spotsNumberPerLine := s.SlideWidthu
 			for k := 0; k < spotsNumberPerLine*(geometry.DPI/s.ResolutionY-1); k++ {
 				fmt.Printf("y: (%d, %d) %d %d\n", x, y, spotsCount, spotIndex)
-				holderSpots, _ := ParseSpots(holderSeqs, false)
-				holderSpot := holderSpots[0]
-				holderSpot.Pos = geometry.NewPosition(x, y)
-				s.Spots[y][x] = holderSpot
+				s.addPlaceholder(x, y, placeholder)
 				x += s.SpotSpaceu
 				spotsCount++
 				x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
@@ -177,10 +172,7 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 					len(spots),
 				)
 				// TODO: activatable
-				holderSpots, _ := ParseSpots(holderSeqs, false)
-				holderSpot := holderSpots[0]
-				holderSpot.Pos = geometry.NewPosition(x, y)
-				s.Spots[y][x] = holderSpot
+				s.addPlaceholder(x, y, placeholder)
 				x += s.SpotSpaceu
 				spotsCount++
 				x, y, err = s.allocate(x, y, s.marginRightu(), s.marginBottomu())
@@ -194,6 +186,14 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 		}
 	}
 	return nil
+}
+
+func (s *Substrate) addPlaceholder(x int, y int, placeholder string) {
+	// TODO: activatable
+	spots, _ := ParseSpots(placeholder, false)
+	spot := spots[0]
+	spot.Pos = geometry.NewPosition(x, y)
+	s.Spots[y][x] = spot
 }
 
 func (s *Substrate) marginRightu() int {
