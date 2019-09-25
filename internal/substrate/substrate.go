@@ -124,7 +124,6 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 		x += s.SpotSpaceu
 		spotsCount++
 
-		//prevU := s.marginRightu()
 		prevS = s.curSlide
 
 		if spotIndex == len(spots)-1 {
@@ -144,7 +143,6 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 
 		// y of next available spot
 		if (spotIndex+1)%realSpotsPerRow == 0 && // last spot of line
-			//x == prevU-s.SlideWidthu { // same slide of next line
 			s.curSlide == prevS {
 			fmt.Println("new line", spotIndex, realSpotsPerRow, s.curSlide)
 			spotsNumberPerLine := s.SlideWidthu
@@ -163,9 +161,6 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 				if s.Spots[y][x] != nil {
 					return fmt.Errorf("invalid location")
 				}
-				//if s.curSlide != prevS {
-				//break
-				//}
 			}
 			continue
 		}
@@ -213,12 +208,10 @@ func (s *Substrate) marginBottomu() int {
 func (s *Substrate) allocate(
 	x, y, marginRightu, marginBottomu int) (int, int, error) {
 	// next spot in the same row
-	//if x <= marginRightu {
 	if x < marginRightu { // not include last element since x starts from zero
 		return x, y, nil
 	}
 	// next line in the same slide
-	//if y >= marginBottomu+s.SpotSpaceu {
 	if y > marginBottomu+s.SpotSpaceu { //
 		x = marginRightu - s.SlideWidthu
 		y -= s.SpotSpaceu
