@@ -57,7 +57,7 @@ func TestSplitByChar(t *testing.T) { // {{{
 	}
 } // }}}
 
-func TestAddReagent(t *testing.T) {
+func TestAddReagent(t *testing.T) { // {{{
 	cases := []struct {
 		input       string
 		spotsLength int
@@ -97,4 +97,4 @@ func TestAddReagent(t *testing.T) {
 		})
 	}
 
-}
+} // }}}
