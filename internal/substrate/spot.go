@@ -1,9 +1,9 @@
 package substrate
 
 import (
+	"strings"
 	"synthesis/internal/geometry"
 	"synthesis/internal/reagent"
-	"strings"
 )
 
 type Spot struct {
@@ -11,54 +11,36 @@ type Spot struct {
 	Reagents []*reagent.Reagent
 }
 
-func NewSpot() *Spot {
-	return &Spot{}
-}
-
-func (s *Spot) addReagent(r *reagent.Reagent) {
-	s.Reagents = append(s.Reagents, r)
-}
-
-func (s *Spot) AddReagents(names []string, activatable bool) {
+func (s *Spot) addReagents(names []string) {
 	for _, name := range names {
 		r := reagent.NewReagent(name)
-		s.addReagent(r)
-		if activatable {
-			if r.Name != reagent.Nil.Name {
-				s.addReagent(reagent.Activator)
-			} else {
-				s.addReagent(reagent.Nil)
-			}
-		}
+		s.Reagents = append(s.Reagents, r)
 	}
 }
 
-func ParseSpots(input string, activatable bool) ([]*Spot, int) {
+func ParseSpots(input string) ([]*Spot, int) {
 	spots := []*Spot{}
 	cycleCount := 0
-	for _, line := range parseLines(input) {
+	for _, line := range splitByLine(input) {
 		if line == "" {
 			continue
 		}
-		spot := NewSpot()
-		names := parseReagentNames(line)
+		spot := &Spot{}
+		names := splitByChar(line)
 		length := len(names)
 		if length > cycleCount {
 			cycleCount = length
 		}
-		spot.AddReagents(names, activatable)
+		spot.addReagents(names)
 		spots = append(spots, spot)
-	}
-	if activatable {
-		return spots, cycleCount * 2
 	}
 	return spots, cycleCount
 }
 
-func parseLines(input string) []string {
+func splitByLine(input string) []string {
 	return strings.Split(strings.Replace(input, "\r\n", "\n", -1), "\n")
 }
 
-func parseReagentNames(input string) []string {
+func splitByChar(input string) []string {
 	return strings.Split(strings.Trim(input, " "), "")
 }

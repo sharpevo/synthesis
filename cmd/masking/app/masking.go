@@ -344,10 +344,7 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	spots, cycleCount := substrate.ParseSpots(
-		seqText,
-		config.GetBool(CONF_ACT_ENABLE),
-	)
+	spots, cycleCount := substrate.ParseSpots(seqText)
 	sub, err := substrate.NewSubstrate(
 		sch,
 		scv,

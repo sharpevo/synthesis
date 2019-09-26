@@ -36,5 +36,5 @@ func (s *Substrate) Allocate(x, y, right, bottom int) (int, int, error) {
 	return s.allocate(x, y, right, bottom)
 }
 
-var ParseLines = parseLines
-var ParseReagentNames = parseReagentNames
+var SplitByLine = splitByLine
+var SplitByChar = splitByChar

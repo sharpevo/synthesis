@@ -2,200 +2,99 @@ package substrate_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"synthesis/internal/substrate"
 	"reflect"
+	"synthesis/internal/substrate"
 	"testing"
 )
 
-func TestParseLines(t *testing.T) { // {{{
-	windata, err := ioutil.ReadFile("testfiles/seq.with.windows.new.line")
-	if err != nil {
-		t.Fatal(err)
-	}
+const tmpl = "\nEXPECT: %#v\n GET: %#v\n\n"
+
+func TestSplitByLine(t *testing.T) { // {{{
 	cases := []struct {
 		input  string
 		output []string
 	}{
 		{
-			"1ACTG\nACGT",
-			[]string{"1ACTG", "ACGT"},
+			input:  "one\ntwo\nthree",
+			output: []string{"one", "two", "three"},
 		},
 		{
-			"2ACTG\r\nACGT",
-			[]string{"2ACTG", "ACGT"},
-		},
-		{
-			string(windata),
-			[]string{"1", "2", "3", "4", "5"},
+			input:  "one\r\ntwo\r\nthree\r\n",
+			output: []string{"one", "two", "three", ""},
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.input, func(t *testing.T) {
-			actual := substrate.ParseLines(c.input)
-			if !reflect.DeepEqual(actual, c.output) {
-				t.Errorf(
-					"\nEXPECT: %#v\n GET: %#v\n\n",
-					c.output,
-					actual,
-				)
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			output := substrate.SplitByLine(c.input)
+			if !reflect.DeepEqual(output, c.output) {
+				t.Errorf(tmpl, c.output, output)
 			}
 		})
 	}
 } // }}}
 
-func TestAddReagents(t *testing.T) { // {{{
-	cases := []struct {
-		names       []string
-		activatable bool
-		expect      []string
-	}{
-		{
-			[]string{"A", "C", "T", "G"},
-			false,
-			[]string{"A", "C", "T", "G"},
-		},
-		{
-			[]string{"A", "C", "T", "G"},
-			true,
-			[]string{"A", "Z", "C", "Z", "T", "Z", "G", "Z"},
-		},
-		{
-			[]string{"A", "-", "T", "G"},
-			false,
-			[]string{"A", "-", "T", "G"},
-		},
-		{
-			[]string{"A", "-", "T", "G"},
-			true,
-			[]string{"A", "Z", "-", "-", "T", "Z", "G", "Z"}, // never activate nil
-		},
-		{
-			[]string{"A", "B", "T", "G"},
-			false,
-			[]string{"A", "B", "T", "G"},
-		},
-		{
-			[]string{"A", "B", "T", "G"},
-			true,
-			[]string{"A", "Z", "B", "Z", "T", "Z", "G", "Z"},
-		},
-	}
-	for _, c := range cases {
-		t.Run(fmt.Sprintf("%v", c.names), func(t *testing.T) {
-			s := substrate.NewSpot()
-			s.AddReagents(c.names, c.activatable)
-			names := []string{}
-			for _, r := range s.Reagents {
-				names = append(names, r.Name)
-			}
-			if !reflect.DeepEqual(names, c.expect) {
-				t.Errorf(
-					"\nEXPECT: %#v\n GET: %#v\n\n",
-					c.expect,
-					names,
-				)
-			}
-		})
-	}
-} // }}}
-
-func TestParseReagentName(t *testing.T) { // {{{
+func TestSplitByChar(t *testing.T) { // {{{
 	cases := []struct {
 		input  string
-		expect []string
+		output []string
 	}{
 		{
-			"ACTG",
-			[]string{"A", "C", "T", "G"},
+			input:  "abcd",
+			output: []string{"a", "b", "c", "d"},
 		},
 		{
-			"A CTG",
-			[]string{"A", " ", "C", "T", "G"}, // allow space in sequences ?
-		},
-		{
-			" ACTG ",
-			[]string{"A", "C", "T", "G"},
+			input:  "  abcd   ",
+			output: []string{"a", "b", "c", "d"},
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.input, func(t *testing.T) {
-			actual := substrate.ParseReagentNames(c.input)
-			if !reflect.DeepEqual(actual, c.expect) {
-				t.Errorf(
-					"\nEXPECT: %#v\n GET: %#v\n\n",
-					c.expect,
-					actual,
-				)
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			output := substrate.SplitByChar(c.input)
+			if !reflect.DeepEqual(output, c.output) {
+				t.Errorf(tmpl, c.output, output)
 			}
 		})
 	}
 } // }}}
 
-func TestParseSpots(t *testing.T) { // {{{
+func TestAddReagent(t *testing.T) {
 	cases := []struct {
-		input             string
-		activatable       bool
-		expectSpotsLength int
-		expectCycleCount  int
+		input       string
+		spotsLength int
+		cycleCount  int
 	}{
 		{
-			"ACGT",
-			false,
-			1,
-			4,
+			input:       "ACGT",
+			spotsLength: 1,
+			cycleCount:  4,
 		},
 		{
-			"ACGT\nCCCC",
-			false,
-			2,
-			4,
+			input:       "A\nCGT",
+			spotsLength: 2,
+			cycleCount:  3,
 		},
 		{
-			"A\nCCCCC",
-			false,
-			2,
-			5,
+			input:       "",
+			spotsLength: 0,
+			cycleCount:  0,
 		},
 		{
-			"A\nCCCCC",
-			true,
-			2,
-			10,
-		},
-		{
-			"A\n\n",
-			false,
-			1,
-			1,
-		},
-		{
-			"",
-			true,
-			0,
-			0,
-		},
-		{
-			"\n",
-			false,
-			0,
-			0,
+			input:       "\n",
+			spotsLength: 0,
+			cycleCount:  0,
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.input, func(t *testing.T) {
-			spots, cycleCount := substrate.ParseSpots(c.input, c.activatable)
-			if len(spots) != c.expectSpotsLength ||
-				cycleCount != c.expectCycleCount {
-				t.Error(
-					"\nEXPECT\n",
-					c.expectSpotsLength,
-					c.expectCycleCount,
-					"\nGET\n",
-					len(spots),
-					cycleCount,
+	for i, c := range cases {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			spots, cycleCount := substrate.ParseSpots(c.input)
+			if cycleCount != c.cycleCount || len(spots) != c.spotsLength {
+				t.Errorf(
+					tmpl,
+					fmt.Sprintf("%+v %+v", c.cycleCount, c.spotsLength),
+					fmt.Sprintf("%+v %+v", cycleCount, len(spots)),
 				)
 			}
 		})
 	}
-} // }}}
+
+}
