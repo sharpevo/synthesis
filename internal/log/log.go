@@ -46,6 +46,15 @@ func init() {
 	}
 }
 
+func SetLevel(level string) {
+	switch level {
+	case "debug":
+		log.Level = logrus.DebugLevel
+	default:
+		log.Level = logrus.InfoLevel
+	}
+}
+
 type M map[string]interface{}
 
 func (m M) raw() M {

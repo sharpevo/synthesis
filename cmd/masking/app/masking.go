@@ -9,6 +9,7 @@ import (
 	"strings"
 	"synthesis/internal/formation"
 	"synthesis/internal/geometry"
+	"synthesis/internal/log"
 	"synthesis/internal/printhead"
 	"synthesis/internal/reagent"
 	"synthesis/internal/substrate"
@@ -16,11 +17,14 @@ import (
 )
 
 const (
-	CONF_DEBUG        = "general.debug"
-	CONF_RESOLUTION_X = "general.resolution.horizon"
-	CONF_RESOLUTION_Y = "general.resolution.vertical"
-	CONF_SEQ_FILE     = "seqfile"
-	CONF_ACT_ENABLE   = "activator.enabled"
+	CONF_LOG_LEVEL     = "general.loglevel"
+	CONF_DEBUG_ENABLED = "general.debug.enabled"
+	CONF_DEBUG_IMAGE   = "general.debug.image"
+	CONF_DEBUG_FILE    = "general.debug.file"
+	CONF_RESOLUTION_X  = "general.resolution.horizon"
+	CONF_RESOLUTION_Y  = "general.resolution.vertical"
+	CONF_SEQ_FILE      = "seqfile"
+	CONF_ACT_ENABLE    = "activator.enabled"
 
 	CONF_MOTOR_STROKE_X = "motor.stroke.x"
 	CONF_MOTOR_STROKE_Y = "motor.stroke.y"
@@ -62,6 +66,7 @@ type MaskCommand struct {
 
 func NewMaskCommand() *MaskCommand {
 	setDefaultConfig()
+	log.SetLevel(config.GetString(CONF_LOG_LEVEL))
 	return &MaskCommand{}
 }
 
@@ -124,7 +129,7 @@ func build(
 	close(lotc)
 	paintedc := make(chan struct{})
 	//countc := bin.Build(step, lotc, img, paintedc, true)
-	countc, outputc := bin.BuildWithoutMotor(lotc, img, paintedc, true)
+	countc, outputc := bin.BuildWithoutMotor(lotc, img, paintedc, config.GetBool(CONF_DEBUG_IMAGE))
 	//go func() {
 	for _ = range countc {
 		//for count := range countc {
@@ -143,33 +148,35 @@ func build(
 	//}
 	output := <-outputc
 	//fmt.Printf("%#v\n", output)
-	fmt.Println(len(output))
 
-	zero := strings.Repeat("0", 320)
-	dash := strings.Repeat("-", 320)
-	var f *os.File
-	var err error
-	count := 0
-	for _, o := range output {
-		if o[0] == dash {
-			if f != nil {
-				f.Close()
-			}
-			f, err = os.OpenFile(
-				fmt.Sprintf("output-%d.txt", count),
-				os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
-			if err != nil {
-				fmt.Println(err)
-			}
-			count++
-		} else {
-			fmt.Fprintln(f, o[0])
-			if o[0] != zero {
-				//fmt.Println(i, o[0])
+	if config.GetBool(CONF_DEBUG_FILE) {
+		fmt.Println(len(output))
+		zero := strings.Repeat("0", 320)
+		dash := strings.Repeat("-", 320)
+		var f *os.File
+		var err error
+		count := 0
+		for _, o := range output {
+			if o[0] == dash {
+				if f != nil {
+					f.Close()
+				}
+				f, err = os.OpenFile(
+					fmt.Sprintf("output-%d.txt", count),
+					os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
+				if err != nil {
+					fmt.Println(err)
+				}
+				count++
+			} else {
+				fmt.Fprintln(f, o[0])
+				if o[0] != zero {
+					//fmt.Println(i, o[0])
+				}
 			}
 		}
+		f.Close()
 	}
-	f.Close()
 }
 
 func dpi(input string) int {
@@ -178,7 +185,10 @@ func dpi(input string) int {
 }
 
 func setDefaultConfig() {
-	config.SetDefault(CONF_DEBUG, false)
+	config.SetDefault(CONF_LOG_LEVEL, "info")
+	config.SetDefault(CONF_DEBUG_ENABLED, false)
+	config.SetDefault(CONF_DEBUG_IMAGE, false)
+	config.SetDefault(CONF_DEBUG_FILE, false)
 	config.SetDefault(CONF_SEQ_FILE, "input.txt")
 	config.SetDefault(CONF_ACT_ENABLE, false)
 	config.SetDefault(CONF_MOTOR_STROKE_X, 100.00)
@@ -354,7 +364,7 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 		return nil, 0, err
 	}
 
-	if config.GetBool(CONF_DEBUG) {
+	if config.GetBool(CONF_DEBUG_ENABLED) {
 		for height, spots := range sub.Spots {
 			fmt.Printf("%d: ", height)
 			for _, spot := range spots {
