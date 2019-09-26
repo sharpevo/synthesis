@@ -40,8 +40,8 @@ type Substrate struct {
 func NewSubstrate(
 	slideNumh int,
 	slideNumv int,
-	slideWidth float64,
-	slideHeight float64,
+	slideCapacityHori int,
+	slideCapacityVert int,
 	slideSpaceh float64,
 	slideSpacev float64,
 	spots []*Spot,
@@ -49,13 +49,15 @@ func NewSubstrate(
 	resolutionX int,
 	resolutionY int,
 ) (*Substrate, error) {
+	slideWidth := length(slideCapacityHori, RESOLUTION_X/resolutionX-1)
+	slideHeight := length(slideCapacityVert, RESOLUTION_Y/resolutionY-1)
 	s := &Substrate{
 		SpotCount:    len(spots),
 		SpotSpaceu:   geometry.DPI / RESOLUTION_X,
-		SlideNumh:    slideNumh,
-		SlideNumv:    slideNumv,
 		SlideWidth:   slideWidth,
 		SlideHeight:  slideHeight,
+		SlideNumh:    slideNumh,
+		SlideNumv:    slideNumv,
 		SlideWidthu:  geometry.RoundedDot(slideWidth, RESOLUTION_X),
 		SlideHeightu: geometry.Millimeter2Dot(slideHeight),
 		//SlideHeightu: geometry.RoundedDot(slideHeight, resolutionY),
@@ -77,6 +79,10 @@ func NewSubstrate(
 		return nil, err
 	}
 	return s, nil
+}
+
+func length(capacity int, ratio int) float64 {
+	return geometry.Dot2Millimeter(capacity + (capacity-1)*ratio)
 }
 
 func (s *Substrate) MaxSpotshu(slideSpaceh float64) int {

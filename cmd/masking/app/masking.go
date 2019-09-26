@@ -47,12 +47,12 @@ const (
 
 	CONF_PRINT_MODE = "print.mode"
 
-	CONF_SLIDE_COUNT_H = "slide.count.horizon"
-	CONF_SLIDE_COUNT_V = "slide.count.vertical"
-	CONF_SLIDE_WIDTH   = "slide.width"
-	CONF_SLIDE_HEIGHT  = "slide.height"
-	CONF_SLIDE_SPACE_H = "slide.space.horizon"
-	CONF_SLIDE_SPACE_V = "slide.space.vertical"
+	CONF_SLIDE_COUNT_H           = "slide.count.horizon"
+	CONF_SLIDE_COUNT_V           = "slide.count.vertical"
+	CONF_SLIDE_CAPACITY_HORIZON  = "slide.capacity.horizon"
+	CONF_SLIDE_CAPACITY_VERTICAL = "slide.capacity.vertical"
+	CONF_SLIDE_SPACE_H           = "slide.space.horizon"
+	CONF_SLIDE_SPACE_V           = "slide.space.vertical"
 )
 
 var offsetX, offsetY float64
@@ -70,18 +70,18 @@ func (c *MaskCommand) Validate() (err error) {
 }
 
 func (c *MaskCommand) Execute() error {
-	array, err := buildPrintheadArray()
+	subs, cycleCount, err := buildSubstrate()
 	if err != nil {
 		return err
 	}
-	substrate, cycleCount, err := buildSubstrate()
+	array, err := buildPrintheadArray(subs.SlideHeight)
 	if err != nil {
 		return err
 	}
 	build(
 		cycleCount,
 		array,
-		substrate,
+		subs,
 		config.GetString(CONF_MOTOR_PATH),
 		config.GetString(CONF_MOTOR_SPEED),
 		config.GetString(CONF_MOTOR_ACCEL),
@@ -202,8 +202,8 @@ func setDefaultConfig() {
 	config.SetDefault(CONF_PRINT_MODE, formation.MODE_CIJ)
 	config.SetDefault(CONF_SLIDE_COUNT_H, 3)
 	config.SetDefault(CONF_SLIDE_COUNT_V, 1)
-	config.SetDefault(CONF_SLIDE_WIDTH, 20)
-	config.SetDefault(CONF_SLIDE_HEIGHT, 29)
+	config.SetDefault(CONF_SLIDE_CAPACITY_HORIZON, 20)
+	config.SetDefault(CONF_SLIDE_CAPACITY_VERTICAL, 29)
 	config.SetDefault(CONF_SLIDE_SPACE_H, 5)
 	config.SetDefault(CONF_SLIDE_SPACE_V, 25)
 	config.SetDefault(CONF_RESOLUTION_X, 600)
@@ -231,7 +231,7 @@ func toFloat(inputString string) (float64, error) {
 	return inputFloat, nil
 }
 
-func buildPrintheadArray() (*printhead.Array, error) {
+func buildPrintheadArray(slideHeight float64) (*printhead.Array, error) {
 	p0x := config.GetFloat(CONF_PRINTHEAD_OFFSET_0_X)
 	p0y := config.GetFloat(CONF_PRINTHEAD_OFFSET_0_Y)
 	p1x := config.GetFloat(CONF_PRINTHEAD_OFFSET_1_X)
@@ -239,13 +239,13 @@ func buildPrintheadArray() (*printhead.Array, error) {
 	if err := validateOffsetX(p0x, config.GetFloat(CONF_MOTOR_STROKE_X)); err != nil {
 		return nil, err
 	}
-	if err := validateOffsetY(p0y, config.GetFloat(CONF_SLIDE_HEIGHT)); err != nil {
+	if err := validateOffsetY(p0y, slideHeight); err != nil {
 		return nil, err
 	}
 	if err := validateOffsetX(p1x, config.GetFloat(CONF_MOTOR_STROKE_X)); err != nil {
 		return nil, err
 	}
-	if err := validateOffsetY(p1y, config.GetFloat(CONF_SLIDE_HEIGHT)); err != nil {
+	if err := validateOffsetY(p1y, slideHeight); err != nil {
 		return nil, err
 	}
 	offsetX = p0x
@@ -326,8 +326,8 @@ func buildSubstrate() (*substrate.Substrate, int, error) {
 	scv := config.GetInt(CONF_SLIDE_COUNT_V)
 	ssh := config.GetFloat(CONF_SLIDE_SPACE_H)
 	ssv := config.GetFloat(CONF_SLIDE_SPACE_V)
-	sw := config.GetFloat(CONF_SLIDE_WIDTH)
-	sh := config.GetFloat(CONF_SLIDE_HEIGHT)
+	sw := config.GetInt(CONF_SLIDE_CAPACITY_HORIZON)
+	sh := config.GetInt(CONF_SLIDE_CAPACITY_VERTICAL)
 	rx := config.GetInt(CONF_RESOLUTION_X)
 	ry := config.GetInt(CONF_RESOLUTION_Y)
 	seqText, err := loadSeqText()
