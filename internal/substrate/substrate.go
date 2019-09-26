@@ -196,7 +196,7 @@ func (s *Substrate) loadSpots(spots []*Spot) (err error) {
 
 func (s *Substrate) addPlaceholder(x int, y int, placeholder string) {
 	// TODO: activatable
-	spots, _ := ParseSpots(placeholder, false)
+	spots, _ := ParseSpots(placeholder)
 	spot := spots[0]
 	spot.Pos = geometry.NewPosition(x, y)
 	s.Spots[y][x] = spot
